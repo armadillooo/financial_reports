@@ -6,6 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-
-[workspacies]
-member = ["api", "session"]
+axum = { version = "0.5.6", features = ["headers"] }
+tokio = { version = "1.18.2", features = ["full"] }
