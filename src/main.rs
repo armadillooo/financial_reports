@@ -5,7 +5,7 @@ use std::{net::SocketAddr, str::FromStr};
 
 use dotenvy::{self, dotenv};
 
-use api::api_routes;
+use api::{app_config, database::connect_pool};
 
 #[tokio::main]
 async fn main() {
@@ -14,7 +14,9 @@ async fn main() {
     // Default Logger初期化
     tracing_subscriber::fmt::init();
 
-    let app = api_routes();
+    let pool = connect_pool().await;
+
+    let app = app_config();
 
     let addr = dotenvy::var("SOCKET_ADDRESS").unwrap();
     let addr = SocketAddr::from_str(&addr).unwrap();
