@@ -3,9 +3,12 @@ mod session;
 
 use std::{net::SocketAddr, str::FromStr};
 
+use axum::Extension;
 use dotenvy::{self, dotenv};
 
-use api::{app_config, database::connect_pool};
+use api::app_config;
+use api::database::Db;
+use session::database::Store;
 
 #[tokio::main]
 async fn main() {
@@ -14,9 +17,9 @@ async fn main() {
     // Default Logger初期化
     tracing_subscriber::fmt::init();
 
-    let pool = connect_pool().await;
-
-    let app = app_config();
+    let pool = Db::new().await;
+    let store = Store::new();
+    let app = app_config().layer(Extension(pool)).layer(Extension(store));
 
     let addr = dotenvy::var("SOCKET_ADDRESS").unwrap();
     let addr = SocketAddr::from_str(&addr).unwrap();

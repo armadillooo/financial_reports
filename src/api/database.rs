@@ -1,13 +1,26 @@
 //! DBへ接続する
 use sqlx::postgres::{PgPool, PgPoolOptions};
+use std::sync::Arc;
 
-/// コネクションプール初期化
-pub async fn connect_pool() -> PgPool {
-    let database_url = dotenvy::var("DATABASE_URL").unwrap();
+/// DB接続用インターフェース
+///
+/// axumのExtensionで共有するためCloneトレイトを実装
+#[derive(Clone)]
+pub struct Db(pub(crate) Arc<PgPool>);
 
-    PgPoolOptions::new()
-        .max_connections(10)
-        .connect(&database_url)
-        .await
-        .unwrap()
+impl Db {
+    /// コネクションプール生成
+    ///
+    /// 非同期タスク間で共有するためArc<>に内包させる
+    pub async fn new() -> Db {
+        let database_url = dotenvy::var("DATABASE_URL").unwrap();
+
+        let pool = PgPoolOptions::new()
+            .max_connections(10)
+            .connect(&database_url)
+            .await
+            .unwrap();
+
+        Db(Arc::new(pool))
+    }
 }
