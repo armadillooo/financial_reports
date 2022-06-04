@@ -44,7 +44,7 @@ where
         };
 
         // CookieにセッションIDが存在する場合は、Sessionからuser idを検索する
-        let user_id = if let Some(session) = (&*store.0)
+        let user_id = if let Some(session) = (*store.0)
             .load_session(session_cookie.unwrap().to_owned())
             .await
             .unwrap()

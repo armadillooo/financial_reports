@@ -1,5 +1,6 @@
 //! Session DBへの接続を行う
 use std::sync::Arc;
+use std::ops::Deref;
 
 use async_redis_session::RedisSessionStore;
 use async_session::{Session, SessionStore};
@@ -23,10 +24,7 @@ impl Store {
         Store(Arc::new(store))
     }
 
-    /// (Key, Value) = (Cookie Name, User id)でSessionを新規作成する
-    ///
-    /// # Returns
-    /// Http Header
+    /// Sessionを新規作成する
     pub async fn create_session(&self, user_id: UserId) -> anyhow::Result<HeaderMap> {
         let mut session = Session::new();
 
@@ -45,5 +43,21 @@ impl Store {
         );
 
         Ok(headers)
+    }
+
+    /// Sessionを削除する
+    pub async fn destroy_session(&self, session: Session) -> anyhow::Result<()> {
+        (*self.0).destroy_session(session).await
+    }
+
+    /// SessionのCookieを更新する
+    pub async fn regrate_session(&self, cookie: &str) -> anyhow::Result<()> {}
+}
+
+impl Deref for Store {
+    type Target = Arc<RedisSessionStore>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
