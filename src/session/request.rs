@@ -1,5 +1,4 @@
 //! Http RequestからセッションIDを抽出する
-use async_session::SessionStore;
 use axum::{
     extract::{Extension, FromRequest, RequestParts, TypedHeader},
     headers::Cookie,
@@ -7,7 +6,7 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::session::{database::Store, SESSION_COOKIE_NAME, SESSION_USER_ID_KEY};
+use crate::session::{database::Store, SESSION_USER_ID_KEY};
 
 /// Sessionに保存されるユーザーID
 #[derive(Deserialize, Serialize)]
@@ -29,37 +28,20 @@ where
         let Extension(store) = Extension::<Store>::from_request(req).await.unwrap();
 
         // HTTPリクエストヘッダーからすべてのクッキーを取得
-        let cookies = Option::<TypedHeader<Cookie>>::from_request(req)
+        let cookies = <TypedHeader<Cookie>>::from_request(req)
             .await
             .expect("Session store missing.");
 
-        // クッキーの中からセッションIDを取得する
-        let session_cookie = cookies
-            .as_ref()
-            .and_then(|cookie| cookie.get(SESSION_COOKIE_NAME));
-
-        // CookieがRequestにセットされていない
-        if session_cookie.is_none() {
-            return Err((StatusCode::FORBIDDEN, "Authentication required"));
+        let session = match store.find_session(&cookies).await {
+            Ok(session) => session,
+            Err(_) => return Err((StatusCode::FORBIDDEN, "Authentication required")),
         };
 
         // CookieにセッションIDが存在する場合は、Sessionからuser idを検索する
-        let user_id = if let Some(session) = (*store.0)
-            .load_session(session_cookie.unwrap().to_owned())
-            .await
-            .unwrap()
-        {
-            // user idがセッションに登録されている場合はユーザーIDを返す
-            if let Some(user_id) = session.get::<UserId>(SESSION_USER_ID_KEY) {
-                user_id
-            } else {
-                return Err((
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "No user id found in session",
-                ));
-            }
+        let user_id = if let Some(user_id) = session.get(SESSION_USER_ID_KEY) {
+            user_id
         } else {
-            return Err((StatusCode::BAD_REQUEST, "No session found for cookie"));
+            return Err((StatusCode::BAD_REQUEST, "No user id found in session"));
         };
 
         Ok(user_id)

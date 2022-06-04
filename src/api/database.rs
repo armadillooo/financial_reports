@@ -1,4 +1,6 @@
 //! DBへ接続する
+use std::ops::Deref;
+
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use std::sync::Arc;
 
@@ -22,5 +24,13 @@ impl Db {
             .unwrap();
 
         Db(Arc::new(pool))
+    }
+}
+
+impl Deref for Db {
+    type Target = Arc<PgPool>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }

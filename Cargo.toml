@@ -16,3 +16,4 @@ sqlx = { version = "0.5.13", features = ["runtime-tokio-rustls", "postgres"] }
 async-session = "3.0.0"
 async-redis-session = "0.2.2"
 serde = { version = "1.0.137", features = ["derive"] }
+validator = {version = "0.15.0", features = ["derive"] }

@@ -1,10 +1,12 @@
 //! Session DBへの接続を行う
 use std::sync::Arc;
-use std::ops::Deref;
+use std::{fmt::Error, ops::Deref};
 
 use async_redis_session::RedisSessionStore;
 use async_session::{Session, SessionStore};
+use axum::headers::Cookie;
 use axum::http::{self, HeaderMap, HeaderValue};
+use axum::TypedHeader;
 
 use super::{request::UserId, SESSION_COOKIE_NAME, SESSION_USER_ID_KEY};
 
@@ -24,12 +26,12 @@ impl Store {
         Store(Arc::new(store))
     }
 
-    /// Sessionを新規作成する
-    pub async fn create_session(&self, user_id: UserId) -> anyhow::Result<HeaderMap> {
+    /// Sessionを作成し、user idを登録する
+    pub async fn regist_userid(&self, user_id: UserId) -> anyhow::Result<HeaderMap> {
         let mut session = Session::new();
 
         // Sessionにuser_idを登録
-        session.insert(SESSION_USER_ID_KEY, user_id.0)?;
+        session.insert(SESSION_USER_ID_KEY, user_id)?;
 
         // SessionをStoreに保存する
         let cookie = (*self.0).store_session(session).await?.unwrap();
@@ -45,13 +47,30 @@ impl Store {
         Ok(headers)
     }
 
-    /// Sessionを削除する
-    pub async fn destroy_session(&self, session: Session) -> anyhow::Result<()> {
-        (*self.0).destroy_session(session).await
+    /// Session・Cookieを削除する
+    pub async fn delete_session(&self, session: Session) -> anyhow::Result<HeaderMap> {
+        self.destroy_session(session).await?;
+
+        // Cookieを空文字に設定する
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            http::header::SET_COOKIE,
+            HeaderValue::from_str(&format!("{}=", SESSION_COOKIE_NAME))?,
+        );
+
+        Ok(headers)
     }
 
-    /// SessionのCookieを更新する
-    pub async fn regrate_session(&self, cookie: &str) -> anyhow::Result<()> {}
+    /// CookieにセットされているSessionIDからセッションを取得する
+    pub async fn find_session(&self, TypedHeader(cookies): &TypedHeader<Cookie>) -> anyhow::Result<Session> {
+        let cookie_value = cookies.get(SESSION_COOKIE_NAME).ok_or(Error)?;
+        let session = self
+            .load_session(cookie_value.to_string())
+            .await?
+            .ok_or(Error)?;
+
+        Ok(session)
+    }
 }
 
 impl Deref for Store {
