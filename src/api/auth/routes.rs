@@ -17,7 +17,7 @@ use crate::{
 /// auth apiのエンドポイント
 pub fn auth_api_routes() -> Router {
     Router::new()
-        .route("/singup", post(signup))
+        .route("/signup", post(signup))
         .route("/login", post(login))
         .route("/logout", post(logout))
 }
