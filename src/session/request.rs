@@ -1,10 +1,11 @@
 //! Http RequestからセッションIDを抽出する
 use axum::{
-    extract::{Extension, FromRequest, RequestParts, TypedHeader},
+    extract::{Extension, FromRequest, Json, RequestParts, TypedHeader},
     headers::Cookie,
     http::StatusCode,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 
 use crate::session::{database::Store, SESSION_USER_ID_KEY};
 
@@ -20,7 +21,7 @@ where
     T: Send,
 {
     // エラー時の戻り値の型
-    type Rejection = (StatusCode, &'static str);
+    type Rejection = (StatusCode, Json<serde_json::Value>);
 
     /// ログインが必要なリクエストに対して、Sessionの存在確認を行う
     async fn from_request(req: &mut RequestParts<T>) -> Result<Self, Self::Rejection> {
@@ -34,14 +35,22 @@ where
 
         let session = match store.find_session(&cookies).await {
             Ok(session) => session,
-            Err(_) => return Err((StatusCode::FORBIDDEN, "Authentication required")),
+            Err(_) => {
+                return Err((
+                    StatusCode::FORBIDDEN,
+                    Json(json!({"message": "Authentication required"})),
+                ))
+            }
         };
 
         // CookieにセッションIDが存在する場合は、Sessionからuser idを検索する
         let user_id = if let Some(user_id) = session.get(SESSION_USER_ID_KEY) {
             user_id
         } else {
-            return Err((StatusCode::BAD_REQUEST, "No user id found in session"));
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(json!({"message": "No user id found in session"})),
+            ));
         };
 
         Ok(user_id)
