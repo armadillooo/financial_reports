@@ -6,7 +6,6 @@ use async_redis_session::RedisSessionStore;
 use async_session::{Session, SessionStore};
 use axum::headers::Cookie;
 use axum::http::{self, HeaderMap, HeaderValue};
-use axum::TypedHeader;
 
 use super::{request::UserId, SESSION_COOKIE_NAME, SESSION_USER_ID_KEY};
 
@@ -27,7 +26,7 @@ impl Store {
     }
 
     /// Sessionを作成し、user idを登録する
-    pub async fn register_user_id(&self, user_id: UserId) -> anyhow::Result<HeaderMap> {
+    pub async fn start_session(&self, user_id: UserId) -> anyhow::Result<HeaderMap> {
         let mut session = Session::new();
 
         // Sessionにuser_idを登録
@@ -48,7 +47,7 @@ impl Store {
     }
 
     /// Session・Cookieを削除する
-    pub async fn delete_session(&self, session: Session) -> anyhow::Result<HeaderMap> {
+    pub async fn reset_session(&self, session: Session) -> anyhow::Result<HeaderMap> {
         self.destroy_session(session).await?;
 
         // Cookieを空文字に設定する
@@ -62,7 +61,7 @@ impl Store {
     }
 
     /// CookieにセットされているSessionIDからセッションを取得する
-    pub async fn find_session(&self, cookies: &TypedHeader<Cookie>) -> anyhow::Result<Session> {
+    pub async fn find_session(&self, cookies: &Cookie) -> anyhow::Result<Session> {
         let cookie_value = cookies.get(SESSION_COOKIE_NAME).ok_or(Error)?;
         let session = self
             .load_session(cookie_value.to_string())
@@ -73,11 +72,8 @@ impl Store {
     }
 
     /// User IDを取得
-    pub async fn find_user_id(&self, cookies: &TypedHeader<Cookie>) -> anyhow::Result<UserId> {
-        let session = self.find_session(cookies).await?;
-        let user_id = session.get(SESSION_USER_ID_KEY).ok_or(Error)?;
-
-        Ok(user_id)
+    pub fn find_user_id(&self, session: &Session) -> Option<UserId> {
+        session.get(SESSION_USER_ID_KEY)
     }
 }
 

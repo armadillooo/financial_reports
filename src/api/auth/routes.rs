@@ -1,3 +1,4 @@
+use async_session::SessionStore;
 use axum::{
     extract::Json,
     headers::Cookie,
@@ -47,20 +48,28 @@ async fn login(
             .into_response();
     };
 
-    // Sessionが既に存在する場合
-    if let Ok(user_id) = store.find_user_id(&cookies).await {
-        if user_id.0 == user.id {
-            return (
+    // Sessionが既に存在するかをチェック
+    if let Ok(session) = store.find_session(&cookies).await {
+        if let Some(user_id) = store.find_user_id(&session) {
+            if user_id.0 == user.id {
+                return (
                 StatusCode::OK,
                 Json(
                     json!({"message": "You are already logged in", "username": user.username, "email": user.email}),
                 ),
             ).into_response();
-        };
+            // Sessionのuser idが送られたものと異なる
+            } else {
+                store.destroy_session(session).await.unwrap();
+            }
+        // Sessionにuser idが存在しない
+        } else {
+            store.destroy_session(session).await.unwrap();
+        }
     };
 
     // Sessionを新規作成
-    let header = if let Ok(header) = store.register_user_id(UserId(user.id)).await {
+    let header = if let Ok(header) = store.start_session(UserId(user.id)).await {
         header
     } else {
         return (
@@ -91,7 +100,7 @@ async fn logout(
             .into_response();
     };
 
-    let header = if let Ok(header) = store.delete_session(session).await {
+    let header = if let Ok(header) = store.reset_session(session).await {
         header
     } else {
         return (
@@ -125,7 +134,7 @@ async fn signup(Extension(pool): Extension<Db>, form: Json<Signup>) -> Response 
     };
 
     (
-        StatusCode::OK,
+        StatusCode::CREATED,
         Json(json!({"username": user.username, "email": user.email})),
     )
         .into_response()

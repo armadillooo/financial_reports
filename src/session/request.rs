@@ -31,16 +31,15 @@ where
         // HTTPリクエストヘッダーからすべてのクッキーを取得
         let cookies = <TypedHeader<Cookie>>::from_request(req)
             .await
-            .expect("Session store missing.");
+            .expect("Cannot extract cookie from request");
 
-        let session = match store.find_session(&cookies).await {
-            Ok(session) => session,
-            Err(_) => {
-                return Err((
-                    StatusCode::FORBIDDEN,
-                    Json(json!({"message": "Authentication required"})),
-                ))
-            }
+        let session = if let Ok(session) = store.find_session(&cookies).await {
+            session
+        } else {
+            return Err((
+                StatusCode::UNAUTHORIZED,
+                Json(json!({"message": "Authentication required"})),
+            ));
         };
 
         // CookieにセッションIDが存在する場合は、Sessionからuser idを検索する
