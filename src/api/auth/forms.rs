@@ -5,6 +5,7 @@ use serde::Deserialize;
 /// Login Form
 #[derive(Deserialize)]
 pub struct Login {
+    pub id: i64,
     pub email: String,
     pub password: String,
 }

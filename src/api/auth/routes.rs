@@ -9,7 +9,10 @@ use axum::{
 };
 use serde_json::json;
 
-use super::forms::{Login, Signup};
+use super::{
+    forms::{Login, Signup},
+    models::User,
+};
 use crate::{
     api::database::Db,
     session::{database::Store, request::UserId},
@@ -31,7 +34,8 @@ async fn login(
     form: Json<Login>,
 ) -> Response {
     //ユーザー情報を取得
-    let user = if let Ok(record) = sqlx::query!(
+    let user = if let Ok(record) = sqlx::query_as!(
+        User,
         "select * from users where email = $1 AND password = $2;",
         form.email,
         form.password
@@ -115,8 +119,9 @@ async fn logout(
 
 /// ユーザー新規作成
 async fn signup(Extension(pool): Extension<Db>, form: Json<Signup>) -> Response {
-    let user = if let Ok(record) = sqlx::query!(
-        "insert into users (email, username, password) VALUES ($1, $2, $3) RETURNING id, email, username;",
+    let user = if let Ok(record) = sqlx::query_as!(
+        User,
+        "insert into users (email, username, password) VALUES ($1, $2, $3) RETURNING id, email, username, password;",
         form.email,
         form.username,
         form.password
