@@ -104,7 +104,7 @@ async fn logout(
             .into_response();
     };
 
-    let header = if let Ok(header) = store.reset_session(session).await {
+    let header = if let Ok(header) = store.delete_session(session).await {
         header
     } else {
         return (

@@ -47,7 +47,7 @@ impl Store {
     }
 
     /// Session・Cookieを削除する
-    pub async fn reset_session(&self, session: Session) -> anyhow::Result<HeaderMap> {
+    pub async fn delete_session(&self, session: Session) -> anyhow::Result<HeaderMap> {
         self.destroy_session(session).await?;
 
         // Cookieを空文字に設定する
