@@ -2,7 +2,7 @@
 
 #[derive(PartialEq, Eq)]
 pub struct UserName {
-    pub value: String,
+    value: String,
 }
 
 impl UserName {
@@ -10,7 +10,7 @@ impl UserName {
     pub fn new(value: String) -> Self {
         Self { value }
     }
-    
+
     pub fn value(&self) -> &str {
         &self.value
     }

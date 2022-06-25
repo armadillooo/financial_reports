@@ -1,6 +1,6 @@
 //! Userドメインサービス
-use super::user_repository::{self, UserRepository};
-use super::User;
+use super::user_model::User;
+use super::user_repository::UserRepository;
 
 pub struct UserService<T>
 where
@@ -18,7 +18,11 @@ where
         Self { user_repository }
     }
 
-    pub fn exists(&self, user: User) -> Option<User> {
-        self.user_repository.find(user.id)
+    pub fn exists(&self, user: &User) -> bool {
+        if let Ok(_) = self.user_repository.find(user.id()) {
+            true
+        } else {
+            false
+        }
     }
 }

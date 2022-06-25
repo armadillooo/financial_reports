@@ -8,8 +8,8 @@ pub struct UserId {
 
 impl UserId {
     /// コンストラクタ
-    pub fn new() -> Self {
-        Self { value: Ulid::new().to_string() }
+    pub fn new(value: String) -> Self {
+        Self { value }
     }
 
     pub fn value(&self) -> &str {
