@@ -2,6 +2,7 @@ use super::user_id::UserId;
 use super::user_name::UserName;
 
 /// Userドメインモデル
+#[derive(Clone)]
 pub struct User {
     /// Unique id
     id: UserId,

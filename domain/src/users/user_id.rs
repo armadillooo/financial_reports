@@ -1,7 +1,5 @@
 //! UserId Valueオブジェクト
-use ulid::Ulid;
-
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct UserId {
     value: String,
 }
