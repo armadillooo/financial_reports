@@ -36,17 +36,19 @@ mod tests {
             let repository = Arc::new(InMemoryUserRepository::new());
             let app_service = UserApplicationService::new(Arc::clone(&repository));
             let id = "1";
-            let name = "hoge";
-            let command = CreateCommand::new(id, name);
-            let id2 = "1";
+            let name1 = "hoge";
+            let command = CreateCommand::new(id, name1);
             let name2 = "sample name";
-            let second_command = CreateCommand::new(id2, name2);
+            let second_command = CreateCommand::new(id, name2);
+            let get_command = GetCommand::new(id);
 
             app_service.save(command).expect("Save user failed");
-            let result = app_service.save(second_command);
 
-            assert!(matches!(result, Err(_)));
-            assert_eq!(Arc::clone(&repository).store.borrow().len(), 1)
+            assert!(matches!(app_service.save(second_command), Err(_)));
+            assert_eq!(
+                app_service.get(get_command).expect("User not found"),
+                UserData::new(id, name1)
+            );
         }
 
         #[test]
@@ -90,7 +92,9 @@ mod tests {
             app_service.save(create_command).expect("User save failed");
             assert!(matches!(app_service.get(get_command), Ok(_)));
 
-            app_service.delete(delete_command).expect("User not found");
+            app_service
+                .delete(delete_command)
+                .expect("User delete failed");
             let get_command = GetCommand::new(id);
             assert!(matches!(app_service.get(get_command), Err(_)))
         }
