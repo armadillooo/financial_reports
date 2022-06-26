@@ -4,7 +4,7 @@ pub struct GetCommand {
 
 impl GetCommand {
     /// コンストラクタ
-    pub fn new(id: String) -> Self {
-        Self { id }
+    pub fn new(id: impl Into<String>) -> Self {
+        Self { id: id.into() }
     }
 }

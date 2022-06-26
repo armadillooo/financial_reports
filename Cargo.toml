@@ -20,4 +20,10 @@ serde_json = "1.0.81"
 validator = { version = "0.15.0", features = ["derive"] }
 
 [workspace]
-members = ["domain", "applications", "presentation", "infrastructures"]
+members = [
+    "domain",
+    "applications",
+    "presentation",
+    "infrastructures",
+    "application_tests",
+]
