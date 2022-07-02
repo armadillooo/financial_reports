@@ -4,6 +4,7 @@ use std::sync::Arc;
 use super::user_model::User;
 use super::user_repository::UserRepository;
 
+#[derive(Debug)]
 pub struct UserService<T>
 where
     T: UserRepository,
@@ -17,7 +18,9 @@ where
 {
     /// コンストラクタ
     pub fn new(user_repository: Arc<T>) -> Self {
-        Self { user_repository }
+        Self {
+            user_repository: Arc::clone(&user_repository),
+        }
     }
 
     pub fn exists(&self, user: &User) -> bool {

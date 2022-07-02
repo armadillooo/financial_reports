@@ -7,6 +7,7 @@ use super::get::get_command::GetCommand;
 use domain::users::{User, UserId, UserName, UserRepository, UserService};
 
 /// User application service
+#[derive(Debug)]
 pub struct UserApplicationService<T>
 where
     T: UserRepository,

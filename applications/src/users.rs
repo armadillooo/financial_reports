@@ -5,7 +5,6 @@ mod get;
 mod update;
 mod user_application_service;
 
-pub use common::session_repository::SessionRepository;
 pub use common::user_data::UserData;
 pub use create::create_command::CreateCommand;
 pub use delete::delete_command::DeleteCommand;

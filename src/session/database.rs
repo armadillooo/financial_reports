@@ -75,6 +75,7 @@ impl Store {
     pub fn find_user_id(&self, session: &Session) -> Option<UserId> {
         session.get(SESSION_USER_ID_KEY)
     }
+    
 }
 
 impl Deref for Store {
