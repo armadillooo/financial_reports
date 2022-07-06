@@ -18,9 +18,7 @@ where
 {
     /// コンストラクタ
     pub fn new(user_repository: Arc<T>) -> Self {
-        Self {
-            user_repository: Arc::clone(&user_repository),
-        }
+        Self { user_repository }
     }
 
     pub fn exists(&self, user: &User) -> bool {

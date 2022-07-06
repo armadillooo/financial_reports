@@ -4,6 +4,7 @@ mod delete;
 mod get;
 mod update;
 mod user_application_service;
+mod inmemory_user_repository;
 
 pub use common::user_data::UserData;
 pub use create::create_command::CreateCommand;

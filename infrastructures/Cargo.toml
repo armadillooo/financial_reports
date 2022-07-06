@@ -6,5 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-domain ={ path = "../domain"}
+applications = { path = "../applications" }
+domain = { path = "../domain" }
+presentation = { path = "../presentation" }
 anyhow = "1.0.58"

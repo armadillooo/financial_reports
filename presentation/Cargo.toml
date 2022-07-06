@@ -6,5 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+applications = { path = "../applications" }
 anyhow = "1.0.58"
-serde = { version = "1.0.137", features = ["derive"] }
+async-session = "3.0.0"
+tokio = { version = "1.18.2", features = ["full"] }
+
+[dev-dependencies]
+base64 = "0.13.0"
