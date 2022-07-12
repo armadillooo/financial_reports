@@ -929,6 +929,9 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "applications",
+ "async-redis-session",
+ "async-session",
+ "async-trait",
  "domain",
  "presentation",
 ]

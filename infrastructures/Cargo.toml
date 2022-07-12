@@ -10,3 +10,6 @@ applications = { path = "../applications" }
 domain = { path = "../domain" }
 presentation = { path = "../presentation" }
 anyhow = "1.0.58"
+async-session = "3.0.0"
+async-redis-session = "0.2.2"
+async-trait = "0.1.56"
