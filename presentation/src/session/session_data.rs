@@ -5,9 +5,7 @@ use async_session::Session;
 const USER_ID_KEY: &str = "user id";
 
 #[derive(Debug, Clone)]
-pub struct SessionData {
-    session: Session,
-}
+pub struct SessionData(Session);
 
 impl SessionData {
     /// コンストラクタ
@@ -20,39 +18,39 @@ impl SessionData {
         let expiry = Duration::from_secs(60 * 60);
         session.expire_in(expiry);
 
-        Self { session }
+        Self(session)
     }
 
     /// session id取得
     pub fn id(&self) -> &str {
-        self.session.id()
+        self.0.id()
     }
 
     /// Sessionの有効期限を現在時刻＋Durationに設定する
     pub fn set_expiry(&mut self, expiry: Duration) {
-        self.session.expire_in(expiry);
+        self.0.expire_in(expiry);
     }
 
     /// 有効期限のDurationを取得
     pub fn expires_in(&self) -> Option<Duration> {
-        self.session.expires_in()
+        self.0.expires_in()
     }
 
     /// user id取得
     pub fn user_id(&self) -> Option<String> {
-        self.session.get(USER_ID_KEY)
+        self.0.get(USER_ID_KEY)
     }
 }
 
 impl Into<Session> for SessionData {
     fn into(self) -> Session {
-        self.session
+        self.0
     }
 }
 
 impl From<Session> for SessionData {
     fn from(session: Session) -> Self {
-        Self { session }
+        Self(session)
     }
 }
 

@@ -4,7 +4,7 @@ use async_redis_session::RedisSessionStore;
 use async_session::SessionStore;
 use async_trait::async_trait;
 
-use applications::session::{SessionData, SessionRepository};
+use presentation::session::{SessionData, SessionRepository};
 
 pub struct RedisSessionRepository {
     store: Arc<RedisSessionStore>,

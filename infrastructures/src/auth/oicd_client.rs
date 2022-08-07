@@ -1,5 +1,7 @@
 use anyhow::anyhow;
-use openidconnect::core::{CoreAuthenticationFlow, CoreClient, CoreProviderMetadata};
+use openidconnect::core::{
+    CoreAuthenticationFlow, CoreClient, CoreProviderMetadata, CoreUserInfoClaims,
+};
 use openidconnect::url::Url;
 use openidconnect::{
     reqwest::async_http_client, AuthorizationCode, ClientId, ClientSecret, CsrfToken, IssuerUrl,
@@ -41,7 +43,7 @@ impl OICDClient {
     }
 
     /// リダイレクト先URLを取得
-    pub async fn auth_redirect(&self) -> OICDInfo {
+    pub async fn redirect_url(&self) -> OICDInfo {
         // Generate a PKCE challenge
         let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
 
@@ -68,7 +70,7 @@ impl OICDClient {
     }
 
     /// 検証
-    pub async fn verify(&self, oicd_info: OICDInfo) -> anyhow::Result<()> {
+    pub async fn verify(&self, oicd_info: OICDInfo) -> anyhow::Result<CoreUserInfoClaims> {
         // Exchange it for an access token and ID token
         let token_response = self
             .client
@@ -97,6 +99,14 @@ impl OICDClient {
             }
         }
 
-        Ok(())
+        let user_info = self
+            .client
+            .user_info(token_response.access_token().to_owned(), None)
+            .map_err(|err| anyhow!("No user info endpoint: {:?}", err))?
+            .request_async(async_http_client)
+            .await
+            .map_err(|err| anyhow!("Failed requesting user info: {:?}", err))?;
+
+        Ok(user_info)
     }
 }

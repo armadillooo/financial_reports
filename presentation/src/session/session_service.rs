@@ -1,4 +1,5 @@
-use applications::session::{SessionData, SessionRepository};
+use super::session_data::SessionData;
+use super::session_repository::SessionRepository;
 
 pub struct SessionService<T>
 where
@@ -40,7 +41,8 @@ where
 mod tests {
     use std::sync::Arc;
 
-    use applications::session::{InMemorySessionRepository, SessionData};
+    use super::super::inmemory_session_repository::InMemorySessionRepository;
+    use super::super::session_data::SessionData;
     use async_session::MemoryStore;
 
     use super::SessionService;

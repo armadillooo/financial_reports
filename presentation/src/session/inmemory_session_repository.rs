@@ -1,9 +1,11 @@
 use std::sync::Arc;
 
+use anyhow::anyhow;
 use async_session::{MemoryStore, SessionStore};
 use async_trait::async_trait;
 
-use crate::session::{SessionData, SessionRepository};
+use super::session_data::SessionData;
+use super::session_repository::SessionRepository;
 
 pub struct InMemorySessionRepository {
     store: Arc<MemoryStore>,
@@ -33,13 +35,13 @@ impl SessionRepository for InMemorySessionRepository {
     }
 
     /// Session保存
-    /// 
+    ///
     /// 保存に成功した場合Session idを返す
     async fn save(&self, session: SessionData) -> anyhow::Result<String> {
         if let Some(session_id) = self.store.store_session(session.into()).await? {
             Ok(session_id)
         } else {
-            Err(std::fmt::Error.into())
+            Err(anyhow!("Failed to save session data"))
         }
     }
 }

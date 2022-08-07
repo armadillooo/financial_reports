@@ -10,6 +10,7 @@ applications = { path = "../applications" }
 anyhow = "1.0.58"
 async-session = "3.0.0"
 tokio = { version = "1.18.2", features = ["full"] }
+async-trait = "0.1.56"
 
 [dev-dependencies]
 base64 = "0.13.0"

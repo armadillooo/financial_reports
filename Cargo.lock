@@ -1360,6 +1360,7 @@ dependencies = [
  "anyhow",
  "applications",
  "async-session",
+ "async-trait",
  "base64",
  "tokio",
 ]
