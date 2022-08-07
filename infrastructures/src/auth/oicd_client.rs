@@ -36,8 +36,8 @@ impl OICDClient {
         Ok(Self { client })
     }
 
-    /// リダイレクト先URLを取得
-    pub async fn redirect_url(&self) -> OICDData {
+    /// リダイレクト情報を取得
+    pub fn redirect_info(&self) -> OICDData {
         // Generate a PKCE challenge
         let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
 
