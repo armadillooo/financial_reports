@@ -6,10 +6,12 @@ use domain::users::{User, UserId, UserName, UserRepository};
 /// テスト用Userレポジトリ
 #[derive(Debug)]
 pub struct InMemoryUserRepository {
-    pub store: Mutex<HashMap<String, User>>,
+    store: Mutex<HashMap<String, User>>,
 }
 
 impl InMemoryUserRepository {
+    /// コンストラクタ
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self {
             store: Mutex::new(HashMap::<String, User>::new()),

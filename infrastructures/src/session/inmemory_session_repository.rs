@@ -1,32 +1,35 @@
-use std::sync::Arc;
-
 use anyhow::anyhow;
 use async_session::{MemoryStore, SessionStore};
 use async_trait::async_trait;
 
-use super::session_data::SessionData;
-use super::session_repository::SessionRepository;
+use presentation::session::SessionRepository;
+
+use super::SessionDataImpl;
 
 pub struct InMemorySessionRepository {
-    store: Arc<MemoryStore>,
+    store: MemoryStore,
 }
 
 impl InMemorySessionRepository {
-    pub fn new(store: Arc<MemoryStore>) -> Self {
+    /// コンストラクタ
+    #[allow(dead_code)]
+    pub fn new(store: MemoryStore) -> Self {
         Self { store }
     }
 }
 
 #[async_trait]
 impl SessionRepository for InMemorySessionRepository {
+    type Data = SessionDataImpl;
+
     /// Session削除
-    async fn delete(&self, session: SessionData) -> anyhow::Result<()> {
+    async fn delete(&self, session: Self::Data) -> anyhow::Result<()> {
         let session = session.into();
         self.store.destroy_session(session).await
     }
 
     /// Session取得
-    async fn find(&self, session_id: &str) -> anyhow::Result<Option<SessionData>> {
+    async fn find(&self, session_id: &str) -> anyhow::Result<Option<Self::Data>> {
         if let Some(session) = self.store.load_session(session_id.to_string()).await? {
             Ok(Some(session.into()))
         } else {
@@ -37,7 +40,7 @@ impl SessionRepository for InMemorySessionRepository {
     /// Session保存
     ///
     /// 保存に成功した場合Session idを返す
-    async fn save(&self, session: SessionData) -> anyhow::Result<String> {
+    async fn save(&self, session: Self::Data) -> anyhow::Result<String> {
         if let Some(session_id) = self.store.store_session(session.into()).await? {
             Ok(session_id)
         } else {

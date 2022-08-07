@@ -21,10 +21,10 @@ where
     T: UserRepository,
 {
     /// コンストラクタ
-    pub fn new(user_repository: Arc<T>) -> Self {
+    pub fn new(user_repository: &Arc<T>) -> Self {
         Self {
-            user_repository: Arc::clone(&user_repository),
-            user_service: UserService::new(Arc::clone(&user_repository)),
+            user_repository: Arc::clone(user_repository),
+            user_service: UserService::new(user_repository),
         }
     }
 
@@ -80,7 +80,7 @@ mod tests {
         // テストに必要なオブジェクトの初期化
         fn setup() -> UserApplicationService<InMemoryUserRepository> {
             let user_repository = Arc::new(InMemoryUserRepository::new());
-            let user_application = UserApplicationService::new(Arc::clone(&user_repository));
+            let user_application = UserApplicationService::new(&user_repository);
 
             user_application
         }

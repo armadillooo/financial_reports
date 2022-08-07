@@ -2,22 +2,16 @@ use anyhow::anyhow;
 use openidconnect::core::{
     CoreAuthenticationFlow, CoreClient, CoreProviderMetadata, CoreUserInfoClaims,
 };
-use openidconnect::url::Url;
 use openidconnect::{
     reqwest::async_http_client, AuthorizationCode, ClientId, ClientSecret, CsrfToken, IssuerUrl,
-    Nonce, PkceCodeChallenge, PkceCodeVerifier, RedirectUrl, Scope,
+    Nonce, PkceCodeChallenge, RedirectUrl, Scope,
 };
 use openidconnect::{AccessTokenHash, OAuth2TokenResponse, TokenResponse};
 
+use super::oicd_data::OICDData;
+
 pub struct OICDClient {
     client: CoreClient,
-}
-
-pub struct OICDInfo {
-    pub auth_url: Url,
-    pub pkce_verifier: PkceCodeVerifier,
-    pub csrf_token: CsrfToken,
-    pub nonce: Nonce,
 }
 
 impl OICDClient {
@@ -43,7 +37,7 @@ impl OICDClient {
     }
 
     /// リダイレクト先URLを取得
-    pub async fn redirect_url(&self) -> OICDInfo {
+    pub async fn redirect_url(&self) -> OICDData {
         // Generate a PKCE challenge
         let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
 
@@ -61,7 +55,7 @@ impl OICDClient {
             .set_pkce_challenge(pkce_challenge)
             .url();
 
-        OICDInfo {
+        OICDData {
             auth_url,
             pkce_verifier,
             csrf_token,
@@ -70,7 +64,7 @@ impl OICDClient {
     }
 
     /// 検証
-    pub async fn verify(&self, oicd_info: OICDInfo) -> anyhow::Result<CoreUserInfoClaims> {
+    pub async fn verify(&self, oicd_info: OICDData) -> anyhow::Result<CoreUserInfoClaims> {
         // Exchange it for an access token and ID token
         let token_response = self
             .client

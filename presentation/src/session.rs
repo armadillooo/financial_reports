@@ -1,4 +1,3 @@
-mod inmemory_session_repository;
 mod session_data;
 mod session_repository;
 mod session_service;

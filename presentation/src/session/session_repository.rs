@@ -4,7 +4,9 @@ use super::session_data::SessionData;
 
 #[async_trait]
 pub trait SessionRepository {
-    async fn save(&self, session: SessionData) -> anyhow::Result<String>;
-    async fn find(&self, session_id: &str) -> anyhow::Result<Option<SessionData>>;
-    async fn delete(&self, session: SessionData) -> anyhow::Result<()>;
+    type Data: SessionData;
+
+    async fn save(&self, session: Self::Data) -> anyhow::Result<String>;
+    async fn find(&self, session_id: &str) -> anyhow::Result<Option<Self::Data>>;
+    async fn delete(&self, session: Self::Data) -> anyhow::Result<()>;
 }
