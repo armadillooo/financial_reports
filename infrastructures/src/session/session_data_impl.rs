@@ -6,6 +6,7 @@ use crate::auth::OICDData;
 use presentation::session::SessionData;
 
 const USER_ID_KEY: &str = "user_id";
+const OICD_INFO_KEY: &str = "oicd_info";
 
 pub struct SessionDataImpl(Session);
 
@@ -52,12 +53,12 @@ impl SessionData for SessionDataImpl {
 
     /// OICD情報取得
     fn oicd_info(&self) -> Option<Self::SessionOICDInfo> {
-        unimplemented!()
+        self.0.get(OICD_INFO_KEY)
     }
 
     /// OICD情報設定
     fn set_oicd_info(&mut self, oicd_info: Self::SessionOICDInfo) {
-        unimplemented!()
+        let _ = self.0.insert(OICD_INFO_KEY, oicd_info);
     }
 }
 

@@ -7,7 +7,7 @@ use presentation::session::SessionRepository;
 
 pub struct OICDserviceImpl<T>
 where
-    T: SessionRepository + Sync + Send,
+    T: SessionRepository,
     // <T>はどんなオブジェクトが入るかわからないため, Send + Syncを実装していない可能性がある
     // そのため、トレイト境界を設定する
 {
@@ -17,7 +17,7 @@ where
 
 impl<T> OICDserviceImpl<T>
 where
-    T: SessionRepository + Sync + Send,
+    T: SessionRepository,
 {
     /// コンストラクタ
     pub fn new(oicd_client: OICDClient, sessioin_repository: &Arc<T>) -> Self {
@@ -31,7 +31,7 @@ where
 #[async_trait::async_trait]
 impl<T> OICDService for OICDserviceImpl<T>
 where
-    T: SessionRepository + Sync + Send,
+    T: SessionRepository + Send + Sync,
 {
     async fn redirect(&self) -> anyhow::Result<String> {
         let oicd_info = self.oicd_client.redirect_url().await;

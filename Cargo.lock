@@ -983,6 +983,7 @@ dependencies = [
  "domain",
  "openidconnect",
  "presentation",
+ "serde",
  "tokio",
 ]
 
