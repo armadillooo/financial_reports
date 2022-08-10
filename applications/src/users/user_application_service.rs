@@ -1,9 +1,6 @@
 use std::sync::Arc;
 
-use super::common::user_data::UserData;
-use super::create::create_command::CreateCommand;
-use super::delete::delete_command::DeleteCommand;
-use super::get::get_command::GetCommand;
+use crate::users::{CreateCommand, DeleteCommand, GetCommand, UserData};
 use domain::users::{User, UserId, UserName, UserRepository, UserService};
 
 /// User application service

@@ -1,5 +1,4 @@
-use super::user_id::UserId;
-use super::user_name::UserName;
+use crate::users::{UserId, UserName};
 
 /// Userドメインモデル
 #[derive(Clone, Debug)]

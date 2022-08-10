@@ -1,8 +1,7 @@
 //! Userドメインサービス
 use std::sync::Arc;
 
-use super::user_model::User;
-use super::user_repository::UserRepository;
+use crate::users::{User, UserRepository};
 
 #[derive(Debug)]
 pub struct UserService<T>

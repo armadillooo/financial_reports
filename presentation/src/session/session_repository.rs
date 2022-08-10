@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use super::session_data::SessionData;
+use crate::session::SessionData;
 
 #[async_trait]
 pub trait SessionRepository {

@@ -1,6 +1,4 @@
-use super::user_id::UserId;
-use super::user_model::User;
-use super::user_name::UserName;
+use crate::users::{User, UserId, UserName};
 
 /// User永続化インターフェース
 pub trait UserRepository {

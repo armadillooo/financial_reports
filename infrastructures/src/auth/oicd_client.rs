@@ -8,7 +8,7 @@ use openidconnect::{
 };
 use openidconnect::{AccessTokenHash, OAuth2TokenResponse, TokenResponse};
 
-use super::oicd_data::OICDData;
+use crate::auth::OICDData;
 
 pub struct OICDClient {
     client: CoreClient,

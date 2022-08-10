@@ -1,10 +1,10 @@
 use anyhow::anyhow;
-use async_session::{MemoryStore, SessionStore};
+use async_session::SessionStore;
 use async_trait::async_trait;
 
 use presentation::session::SessionRepository;
 
-use super::SessionDataImpl;
+use crate::session::SessionDataImpl;
 
 pub struct SessionRepositoryImpl<T: SessionStore> {
     store: T,
