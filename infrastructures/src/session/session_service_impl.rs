@@ -1,8 +1,11 @@
 use std::sync::Arc;
 
-use presentation::session::{SessionData, SessionRepository, SessionService};
+use anyhow::anyhow;
 
 use crate::session::SessionDataImpl;
+use presentation::session::{
+    CreatedSession, SessionFromRequest, SessionRepository, SessionService,
+};
 
 pub struct SessionServiceImpl<T>
 where
@@ -30,41 +33,55 @@ where
 {
     type Data = SessionDataImpl;
 
-    /// Session新規作成
-    async fn start_session(&self, user_id: String) -> anyhow::Result<String> {
-        let mut session = SessionDataImpl::new();
-        session.set_user_id(user_id);
+    /// Session取得 or 新規作成
+    async fn find_or_create(
+        &self,
+        cookie_value: &str,
+    ) -> anyhow::Result<SessionFromRequest<Self::Data>> {
+        let session = if let Some(session) = self.session_repository.find(cookie_value).await? {
+            SessionFromRequest::Found(session)
+        } else {
+            let session = SessionDataImpl::new();
+            let cookie = self.save(session).await?;
+            let session = self
+                .session_repository
+                .find(&cookie)
+                .await?
+                .ok_or_else(|| anyhow!("Failed to save new session"))?;
 
-        let session_id = self.session_repository.save(session).await?;
+            SessionFromRequest::Created(CreatedSession { session, cookie })
+        };
 
-        Ok(session_id)
+        Ok(session)
+    }
+
+    /// Session保存
+    async fn save(&self, session: Self::Data) -> anyhow::Result<String> {
+        self.session_repository.save(session).await
     }
 
     /// Session削除
-    async fn delete_session(&self, session: Self::Data) -> anyhow::Result<()> {
+    async fn delete(&self, session: Self::Data) -> anyhow::Result<()> {
         self.session_repository.delete(session).await
-    }
-
-    /// Session取得
-    async fn load_session(&self, session_id: &str) -> anyhow::Result<Option<Self::Data>> {
-        self.session_repository.find(&session_id).await
     }
 }
 
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
+    use std::matches;
 
+    use anyhow::anyhow;
     use async_session::MemoryStore;
 
     use crate::session::{
-        inmemory_session_repository::InMemorySessionRepository, SessionDataImpl, SessionServiceImpl,
+        session_repository_impl::SessionRepositoryImpl, SessionDataImpl, SessionServiceImpl,
     };
-    use presentation::session::{SessionData, SessionService};
+    use presentation::session::{SessionData, SessionFromRequest, SessionService};
 
-    fn setup() -> SessionServiceImpl<InMemorySessionRepository> {
+    fn setup() -> SessionServiceImpl<SessionRepositoryImpl<MemoryStore>> {
         let store = MemoryStore::new();
-        let session_repository = Arc::new(InMemorySessionRepository::new(store));
+        let session_repository = Arc::new(SessionRepositoryImpl::new(store));
         let session_service = SessionServiceImpl::new(&session_repository);
 
         session_service
@@ -73,42 +90,65 @@ mod tests {
     #[tokio::test]
     async fn create_new_session_saved() -> anyhow::Result<()> {
         let session_service = setup();
-        let user_id = "dummy".to_string();
+        let dummy_id = base64::encode("dummy");
+        let created_session = if let SessionFromRequest::Created(session) =
+            session_service.find_or_create(&dummy_id).await?
+        {
+            session
+        } else {
+            return Err(anyhow!("Session already exist."));
+        };
+        let cookie_value = created_session.cookie;
 
-        let session_id = session_service.start_session(user_id.clone()).await?;
+        let saved_session = if let SessionFromRequest::Found(session) =
+            session_service.find_or_create(&cookie_value).await?
+        {
+            session
+        } else {
+            return Err(anyhow!("Session is not saved"));
+        };
+
+        assert_eq!(created_session.session, saved_session);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn save_session_success() -> anyhow::Result<()> {
+        let session_service = setup();
+        let mut session = SessionDataImpl::new();
+        let user_id = "sample user".to_string();
+        session.set_user_id(user_id.clone());
+        let cookie_value = session_service.save(session).await?;
+        let saved_session: SessionDataImpl = session_service.find_or_create(&cookie_value).await?.into();
+
         assert_eq!(
-            session_service
-                .load_session(&session_id)
-                .await?
-                .unwrap()
-                .user_id(),
-            Some(user_id)
+            user_id,
+            saved_session.user_id().expect("User id was not saved")
         );
 
         Ok(())
     }
 
     #[tokio::test]
-    async fn load_not_exist_session_return_none() -> anyhow::Result<()> {
+    async fn delete_session_success() -> anyhow::Result<()> {
         let session_service = setup();
-        let session_id = "dummy";
-        let session_id = base64::encode(session_id);
+        let session = SessionDataImpl::new();
+        let cookie_value = session_service.save(session).await?;
+        let session = session_service.find_or_create(&cookie_value).await?.into();
+        session_service.delete(session).await?;
 
-        assert!(session_service.load_session(&session_id).await?.is_none());
-
+        assert!(matches!(session_service.find_or_create(&cookie_value).await? , SessionFromRequest::Created(_)));
+        
         Ok(())
     }
 
     #[tokio::test]
     async fn delete_not_exist_session_return_ok() -> anyhow::Result<()> {
         let session_service = setup();
-        let user_id = "delete user".to_string();
-        let mut session = SessionDataImpl::new();
-        session.set_user_id(user_id);
-        let session_id = session.session_id();
+        let session = SessionDataImpl::new();
 
-        assert!(session_service.load_session(session_id).await?.is_none());
-        assert!(session_service.delete_session(session).await.is_ok());
+        assert!(session_service.delete(session).await.is_ok());
 
         Ok(())
     }

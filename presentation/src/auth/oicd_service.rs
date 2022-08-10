@@ -1,7 +1,10 @@
 use applications::users::UserData;
+use crate::session::SessionData;
 
 #[async_trait::async_trait]
 pub trait OICDService {
-    async fn redirect(&self, session_id: &str) -> anyhow::Result<String>;
-    async fn verify(&self, session_id: &str) -> anyhow::Result<UserData>;
+    type Session: SessionData;
+
+    async fn redirect(&self, mut session: Self::Session) -> anyhow::Result<String>;
+    async fn verify(&self, mut session: Self::Session) -> anyhow::Result<UserData>;
 }

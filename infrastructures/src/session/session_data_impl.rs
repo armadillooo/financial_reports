@@ -3,11 +3,12 @@ use std::time::Duration;
 use async_session::Session;
 
 use crate::auth::OICDData;
-use presentation::session::SessionData;
+use presentation::session::{SessionData, SessionFromRequest};
 
 const USER_ID_KEY: &str = "user_id";
 const OICD_INFO_KEY: &str = "oicd_info";
 
+#[derive(Debug, PartialEq, Clone)]
 pub struct SessionDataImpl(Session);
 
 impl SessionDataImpl {
@@ -27,10 +28,9 @@ impl SessionData for SessionDataImpl {
     type SessionOICDInfo = OICDData;
 
     /// Session Id取得
-    fn session_id(&self) -> &str {
+    fn id(&self) -> &str {
         self.0.id()
     }
-
     /// Session User Id取得
     fn user_id(&self) -> Option<Self::SessionUserId> {
         self.0.get(USER_ID_KEY)
@@ -71,6 +71,15 @@ impl Into<Session> for SessionDataImpl {
 impl From<Session> for SessionDataImpl {
     fn from(session: Session) -> Self {
         Self(session)
+    }
+}
+
+impl From<SessionFromRequest<SessionDataImpl>> for SessionDataImpl {
+    fn from(from_request: SessionFromRequest<SessionDataImpl>) -> Self {
+        match from_request {
+            SessionFromRequest::Found(session) => session,
+            SessionFromRequest::Created(info) => info.session,
+        }
     }
 }
 

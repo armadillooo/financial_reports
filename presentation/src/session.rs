@@ -5,3 +5,5 @@ mod session_service;
 pub use session_data::SessionData;
 pub use session_repository::SessionRepository;
 pub use session_service::SessionService;
+pub use session_service::SessionFromRequest;
+pub use session_service::CreatedSession;

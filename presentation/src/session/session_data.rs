@@ -5,7 +5,7 @@ pub trait SessionData {
     type SessionUserId;
     type SessionOICDInfo;
 
-    fn session_id(&self) -> &str;
+    fn id(&self) -> &str;
     fn user_id(&self) -> Option<Self::SessionUserId>;
     fn set_user_id(&mut self, user_id: Self::SessionUserId);
     fn expiry(&self) -> Option<Duration>;

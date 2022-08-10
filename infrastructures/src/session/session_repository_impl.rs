@@ -6,20 +6,20 @@ use presentation::session::SessionRepository;
 
 use super::SessionDataImpl;
 
-pub struct InMemorySessionRepository {
-    store: MemoryStore,
+pub struct SessionRepositoryImpl<T: SessionStore> {
+    store: T,
 }
 
-impl InMemorySessionRepository {
+impl<T: SessionStore> SessionRepositoryImpl<T> {
     /// コンストラクタ
     #[allow(dead_code)]
-    pub fn new(store: MemoryStore) -> Self {
+    pub fn new(store: T) -> Self {
         Self { store }
     }
 }
 
 #[async_trait]
-impl SessionRepository for InMemorySessionRepository {
+impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
     type Data = SessionDataImpl;
 
     /// Session削除
@@ -29,8 +29,8 @@ impl SessionRepository for InMemorySessionRepository {
     }
 
     /// Session取得
-    async fn find(&self, session_id: &str) -> anyhow::Result<Option<Self::Data>> {
-        if let Some(session) = self.store.load_session(session_id.to_string()).await? {
+    async fn find(&self, cookie_value: &str) -> anyhow::Result<Option<Self::Data>> {
+        if let Some(session) = self.store.load_session(cookie_value.to_string()).await? {
             Ok(Some(session.into()))
         } else {
             Ok(None)
@@ -38,13 +38,10 @@ impl SessionRepository for InMemorySessionRepository {
     }
 
     /// Session保存
-    ///
-    /// 保存に成功した場合Session idを返す
     async fn save(&self, session: Self::Data) -> anyhow::Result<String> {
-        if let Some(session_id) = self.store.store_session(session.into()).await? {
-            Ok(session_id)
-        } else {
-            Err(anyhow!("Failed to save session data"))
-        }
+        self.store
+            .store_session(session.into())
+            .await?
+            .ok_or_else(|| anyhow!(""))
     }
 }
