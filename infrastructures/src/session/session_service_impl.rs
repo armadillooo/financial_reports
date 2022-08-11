@@ -36,16 +36,16 @@ where
             SessionFromRequest::Found(session)
         } else {
             let session = SessionData::new();
-            let cookie = self.save(session).await?;
+            let new_cookie = self.save(session).await?;
             let session = self
                 .session_repository
-                .find(&cookie)
+                .find(&new_cookie)
                 .await?
-                .ok_or_else(|| anyhow!("Failed to save new session"))?;
+                .ok_or_else(|| anyhow!("Created session was not saved"))?;
 
             SessionFromRequest::Created(CreatedSession {
                 session,
-                cookie_value: cookie_value.to_string(),
+                cookie_value: new_cookie,
             })
         };
 
@@ -72,7 +72,7 @@ mod tests {
     use async_session::MemoryStore;
 
     use crate::session::{SessionRepositoryImpl, SessionServiceImpl};
-    use presentation::session::{SessionData, SessionFromRequest, SessionKey, SessionService};
+    use presentation::session::{SessionData, SessionFromRequest, SessionService};
 
     fn setup() -> SessionServiceImpl<SessionRepositoryImpl<MemoryStore>> {
         let store = MemoryStore::new();
@@ -112,16 +112,12 @@ mod tests {
     async fn save_session_success() -> anyhow::Result<()> {
         let session_service = setup();
         let session = SessionData::new();
-        let user_id = "sample user".to_string();
-        let key: SessionKey<String> = SessionKey::new("key".to_string());
         let cookie_value = session_service.save(session).await?;
-        let saved_session: SessionData =
-            session_service.find_or_create(&cookie_value).await?.into();
 
-        assert_eq!(
-            user_id,
-            saved_session.get(key).expect("User id was not saved")
-        );
+        assert!(matches!(
+            session_service.find_or_create(&cookie_value).await?,
+            SessionFromRequest::Found(_)
+        ));
 
         Ok(())
     }
