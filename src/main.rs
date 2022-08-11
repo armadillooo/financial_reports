@@ -8,7 +8,6 @@ use dotenvy::{self, dotenv};
 
 use applications::users::{InMemoryUserRepository, UserApplicationServiceImpl};
 use infrastructures::{
-    auth::{OICDClient, OICDserviceImpl},
     common::State,
     session::{SessionRepositoryImpl, SessionServiceImpl},
 };

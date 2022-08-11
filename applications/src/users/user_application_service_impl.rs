@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::users::{CreateCommand, DeleteCommand, GetCommand, UserData};
+use crate::users::{CreateCommand, DeleteCommand, GetCommand, UserApplicationService, UserData};
 use domain::users::{User, UserId, UserName, UserRepository, UserService};
 
 /// User application service
@@ -24,9 +24,14 @@ where
             user_service: UserService::new(user_repository),
         }
     }
+}
 
+impl<T> UserApplicationService for UserApplicationServiceImpl<T>
+where
+    T: UserRepository,
+{
     /// User取得
-    pub fn get(&self, command: GetCommand) -> anyhow::Result<UserData> {
+    fn get(&self, command: GetCommand) -> anyhow::Result<UserData> {
         let id = UserId::new(command.id);
         let user = self
             .user_repository
@@ -37,7 +42,7 @@ where
     }
 
     /// User新規作成
-    pub fn save(&self, command: CreateCommand) -> anyhow::Result<()> {
+    fn save(&self, command: CreateCommand) -> anyhow::Result<()> {
         let id = UserId::new(command.id);
         let name = UserName::new(command.name);
         let user = User::new(id, name);
@@ -51,7 +56,7 @@ where
     }
 
     /// User削除
-    pub fn delete(&self, command: DeleteCommand) -> anyhow::Result<()> {
+    fn delete(&self, command: DeleteCommand) -> anyhow::Result<()> {
         let id = UserId::new(command.id);
         if let Some(user) = self.user_repository.find(&id)? {
             self.user_repository.delete(user)?;
@@ -71,7 +76,8 @@ mod tests {
 
         use crate::users::inmemory_user_repository::InMemoryUserRepository;
         use crate::users::{
-            CreateCommand, DeleteCommand, GetCommand, UserApplicationServiceImpl, UserData,
+            CreateCommand, DeleteCommand, GetCommand, UserApplicationService,
+            UserApplicationServiceImpl, UserData,
         };
 
         // テストに必要なオブジェクトの初期化
