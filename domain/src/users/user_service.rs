@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crate::users::{User, UserRepository};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct UserService<T>
 where
     T: UserRepository,

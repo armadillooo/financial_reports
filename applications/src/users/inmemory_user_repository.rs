@@ -1,12 +1,12 @@
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use domain::users::{User, UserId, UserName, UserRepository};
 
 /// テスト用Userレポジトリ
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct InMemoryUserRepository {
-    store: Mutex<HashMap<String, User>>,
+    store: Arc<Mutex<HashMap<String, User>>>,
 }
 
 impl InMemoryUserRepository {
@@ -14,7 +14,7 @@ impl InMemoryUserRepository {
     #[allow(dead_code)]
     pub fn new() -> Self {
         Self {
-            store: Mutex::new(HashMap::<String, User>::new()),
+            store: Arc::new(Mutex::new(HashMap::<String, User>::new())),
         }
     }
 }
@@ -38,7 +38,13 @@ impl UserRepository for InMemoryUserRepository {
     }
 
     fn find_by_name(&self, name: &UserName) -> anyhow::Result<Option<User>> {
-        if let Some(user) = self.store.lock().unwrap().values().find(|val| val.name() == name) {
+        if let Some(user) = self
+            .store
+            .lock()
+            .unwrap()
+            .values()
+            .find(|val| val.name() == name)
+        {
             Ok(Some(user.clone()))
         } else {
             Ok(None)

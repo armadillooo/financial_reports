@@ -2,8 +2,9 @@ use anyhow::anyhow;
 use async_session::SessionStore;
 use async_trait::async_trait;
 
-use presentation::session::{SessionRepository, SessionData};
+use presentation::session::{SessionData, SessionRepository};
 
+#[derive(Debug, Clone)]
 pub struct SessionRepositoryImpl<T: SessionStore> {
     store: T,
 }
@@ -38,6 +39,6 @@ impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
         self.store
             .store_session(session.into())
             .await?
-            .ok_or_else(|| anyhow!(""))
+            .ok_or_else(|| anyhow!("Cookie value was not set"))
     }
 }

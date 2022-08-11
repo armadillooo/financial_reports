@@ -2,6 +2,7 @@ mod session_data;
 mod item_key;
 mod session_repository;
 mod session_service;
+mod session_from_request;
 
 pub use session_data::SessionData;
 pub use item_key::ItemKey;

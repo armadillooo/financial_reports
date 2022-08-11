@@ -6,6 +6,7 @@ use presentation::session::{
     CreatedSession, SessionData, SessionFromRequest, SessionRepository, SessionService,
 };
 
+#[derive(Debug, Clone)]
 pub struct SessionServiceImpl<T>
 where
     T: SessionRepository,

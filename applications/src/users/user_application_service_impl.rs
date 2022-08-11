@@ -4,8 +4,8 @@ use crate::users::{CreateCommand, DeleteCommand, GetCommand, UserData};
 use domain::users::{User, UserId, UserName, UserRepository, UserService};
 
 /// User application service
-#[derive(Debug)]
-pub struct UserApplicationService<T>
+#[derive(Debug, Clone)]
+pub struct UserApplicationServiceImpl<T>
 where
     T: UserRepository,
 {
@@ -13,7 +13,7 @@ where
     user_service: UserService<T>,
 }
 
-impl<T> UserApplicationService<T>
+impl<T> UserApplicationServiceImpl<T>
 where
     T: UserRepository,
 {
@@ -71,13 +71,13 @@ mod tests {
 
         use crate::users::inmemory_user_repository::InMemoryUserRepository;
         use crate::users::{
-            CreateCommand, DeleteCommand, GetCommand, UserApplicationService, UserData,
+            CreateCommand, DeleteCommand, GetCommand, UserApplicationServiceImpl, UserData,
         };
 
         // テストに必要なオブジェクトの初期化
-        fn setup() -> UserApplicationService<InMemoryUserRepository> {
+        fn setup() -> UserApplicationServiceImpl<InMemoryUserRepository> {
             let user_repository = Arc::new(InMemoryUserRepository::new());
-            let user_application = UserApplicationService::new(&user_repository);
+            let user_application = UserApplicationServiceImpl::new(&user_repository);
 
             user_application
         }
