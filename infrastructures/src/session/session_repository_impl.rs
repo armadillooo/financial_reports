@@ -2,9 +2,7 @@ use anyhow::anyhow;
 use async_session::SessionStore;
 use async_trait::async_trait;
 
-use presentation::session::SessionRepository;
-
-use crate::session::SessionDataImpl;
+use presentation::session::{SessionRepository, SessionData};
 
 pub struct SessionRepositoryImpl<T: SessionStore> {
     store: T,
@@ -20,16 +18,14 @@ impl<T: SessionStore> SessionRepositoryImpl<T> {
 
 #[async_trait]
 impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
-    type Data = SessionDataImpl;
-
     /// Session削除
-    async fn delete(&self, session: Self::Data) -> anyhow::Result<()> {
+    async fn delete(&self, session: SessionData) -> anyhow::Result<()> {
         let session = session.into();
         self.store.destroy_session(session).await
     }
 
     /// Session取得
-    async fn find(&self, cookie_value: &str) -> anyhow::Result<Option<Self::Data>> {
+    async fn find(&self, cookie_value: &str) -> anyhow::Result<Option<SessionData>> {
         if let Some(session) = self.store.load_session(cookie_value.to_string()).await? {
             Ok(Some(session.into()))
         } else {
@@ -38,7 +34,7 @@ impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
     }
 
     /// Session保存
-    async fn save(&self, session: Self::Data) -> anyhow::Result<String> {
+    async fn save(&self, session: SessionData) -> anyhow::Result<String> {
         self.store
             .store_session(session.into())
             .await?

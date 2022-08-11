@@ -4,9 +4,7 @@ use crate::session::SessionData;
 
 #[async_trait]
 pub trait SessionRepository {
-    type Data: SessionData;
-
-    async fn find(&self, cookie_value: &str) -> anyhow::Result<Option<Self::Data>>;
-    async fn save(&self, session: Self::Data) -> anyhow::Result<String>;
-    async fn delete(&self, session: Self::Data) -> anyhow::Result<()>;
+    async fn find(&self, cookie_value: &str) -> anyhow::Result<Option<SessionData>>;
+    async fn save(&self, session: SessionData) -> anyhow::Result<String>;
+    async fn delete(&self, session: SessionData) -> anyhow::Result<()>;
 }
