@@ -1,36 +1,11 @@
-use applications::users::UserApplicationServiceImpl;
-use domain::users::UserRepository;
+use applications::users::UserApplicationService;
 use presentation::session::SessionService;
 
 /// ハンドラ間で共有されるオブジェクト
-#[derive(Debug, Clone)]
-pub struct State<U, S>
-where
-    U: UserRepository,
-    S: SessionService,
-    //O: OICDService,
-{
-    user_service: UserApplicationServiceImpl<U>,
-    session_service: S,
-    //oicd_service: O,
-}
+pub trait State {
+    type UserApplicationServiceState: UserApplicationService;
+    type SessionServiceState: SessionService;
 
-impl<U, S> State<U, S>
-where
-    U: UserRepository + Clone,
-    S: SessionService + Clone,
-    //O: OICDService,
-{
-    /// コンストラクタ
-    pub fn new(
-        user_service: UserApplicationServiceImpl<U>,
-        session_service: S,
-        //oicd_service: O,
-    ) -> Self {
-        Self {
-            user_service,
-            session_service,
-            //oicd_service,
-        }
-    }
+    fn user_application_service(&self) -> &Self::UserApplicationServiceState;
+    fn session_service(&self) -> &Self::SessionServiceState;
 }

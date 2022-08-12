@@ -1,3 +1,3 @@
-mod response;
+mod json_builder;
 
-pub use response::ResponseJson;
+pub use json_builder::JsonBuilder;

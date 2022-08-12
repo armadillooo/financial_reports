@@ -1,3 +1,4 @@
+use std::clone::Clone;
 use std::sync::Arc;
 
 use anyhow::anyhow;
@@ -29,7 +30,7 @@ where
 #[async_trait::async_trait]
 impl<T> SessionService for SessionServiceImpl<T>
 where
-    T: SessionRepository + Send + Sync,
+    T: SessionRepository + Send + Sync + Clone,
 {
     /// Session取得 or 新規作成
     async fn find_or_create(&self, cookie_value: &str) -> anyhow::Result<SessionFromRequest> {
