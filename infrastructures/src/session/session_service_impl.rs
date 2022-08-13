@@ -33,7 +33,7 @@ where
     T: SessionRepository + Send + Sync + Clone,
 {
     /// Session取得 or 新規作成
-    async fn find_or_create(&self, session_id: &SessionId) -> anyhow::Result<SessionFromRequest> {
+    async fn find_or_create(&self, session_id: SessionId) -> anyhow::Result<SessionFromRequest> {
         let session = if let Some(session) = self.find(session_id).await? {
             SessionFromRequest::Found(session)
         } else {
@@ -44,7 +44,7 @@ where
         Ok(session)
     }
 
-    async fn find(&self, session_id: &SessionId) -> anyhow::Result<Option<SessionWithId>> {
+    async fn find(&self, session_id: SessionId) -> anyhow::Result<Option<SessionWithId>> {
         Ok(self
             .session_repository
             .find(session_id.to_string())
@@ -105,7 +105,7 @@ mod tests {
         let session_service = setup();
         let session_id = session_service.create().await?.id;
 
-        assert!(session_service.find(&session_id).await?.is_some());
+        assert!(session_service.find(session_id).await?.is_some());
 
         Ok(())
     }
@@ -116,7 +116,7 @@ mod tests {
         let session = SessionData::new();
         let session_id = session_service.save(session).await?;
 
-        assert!(session_service.find(&session_id).await?.is_some());
+        assert!(session_service.find(session_id).await?.is_some());
 
         Ok(())
     }
@@ -126,11 +126,11 @@ mod tests {
         let session_service = setup();
         let session = SessionData::new();
         let session_id = session_service.save(session).await?;
-        let session = session_service.find_or_create(&session_id).await?.into();
+        let session = session_service.find_or_create(session_id.clone()).await?.into();
         session_service.delete(session).await?;
 
         assert!(matches!(
-            session_service.find_or_create(&session_id).await?,
+            session_service.find_or_create(session_id).await?,
             SessionFromRequest::Refreshed(_)
         ));
 

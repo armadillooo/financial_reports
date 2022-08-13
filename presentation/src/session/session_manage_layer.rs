@@ -1,3 +1,5 @@
+use std::sync::{Arc, RwLock};
+
 use axum::{
     extract::{FromRequest, Json, RequestParts},
     headers::{Cookie, HeaderValue},
@@ -26,7 +28,7 @@ where
             Json(
                 JsonBuilder::new()
                     .add(ApiError {
-                        message: "Session was not established",
+                        message: "Internal server error",
                     })
                     .build(),
             ),
@@ -47,7 +49,7 @@ where
             .and_then(|cookies| cookies.get(COOKIE_VALUE_KEY).map(|key| key.to_owned()))
     {
         let session_id = SessionId::new(cookie_value);
-        if let Ok(session) = state.session_service().find_or_create(&session_id).await {
+        if let Ok(session) = state.session_service().find_or_create(session_id).await {
             session
         } else {
             return rejection();
@@ -62,26 +64,37 @@ where
         SessionFromRequest::Refreshed(session)
     };
 
-    let (session_id, is_created) = match session {
-        SessionFromRequest::Refreshed(session) => (session.id, true),
-        SessionFromRequest::Found(session) => (session.id, false),
+    let (session, is_refreshed, session_id) = match session {
+        SessionFromRequest::Refreshed(session) => (session.inner, true, session.id),
+        SessionFromRequest::Found(session) => (session.inner, false, session.id),
     };
 
     let mut req = request_parts
         .try_into_request()
         .expect("Request body extracted");
-    // HandlerにSession IDを渡す
-    req.extensions_mut().insert(session_id.clone());
+
+    // HandlerにSessionを受け渡す
+    let session = Arc::new(RwLock::new(session));
+    req.extensions_mut().insert(Arc::clone(&session));
 
     // 次のLayerを実行
     let mut response = next.run(req).await;
     // Cookie Headerに新しいSession Idを設定
-    if is_created {
+    if is_refreshed {
         response.headers_mut().insert(
             http::header::SET_COOKIE,
-            HeaderValue::from_str(&format!("{}={}", COOKIE_VALUE_KEY, *session_id))
+            HeaderValue::from_str(&format!("{}={}", COOKIE_VALUE_KEY, session_id.to_string()))
                 .expect("Cookie format is invalid"),
         );
+    }
+
+    // Sessionの変更を保存
+    let mut session = session.read().unwrap().clone();
+    if session.is_changed() {
+        session.reset_id(session_id);
+        if let Err(_) = state.session_service().save(session).await {
+            return rejection();
+        }
     }
 
     response

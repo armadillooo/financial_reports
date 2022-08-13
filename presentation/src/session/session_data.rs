@@ -7,6 +7,8 @@ use serde::Serialize;
 
 use crate::session::{ItemKey, SessionFromRequest};
 
+use super::SessionId;
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct SessionData {
     inner: Session,
@@ -18,6 +20,16 @@ impl SessionData {
         // Default expiry = 1.0h
         session.expire_in(Duration::from_secs(60 * 60));
         Self { inner: session }
+    }
+
+    /// Session Idをリセットする
+    pub fn reset_id(&mut self, id: SessionId) {
+        self.inner.set_cookie_value(id.into());
+    }
+
+    /// Sessionの変更状態を取得する
+    pub fn is_changed(&self) -> bool {
+        self.inner.data_changed()
     }
 
     /// 値をSessionに追加する

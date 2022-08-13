@@ -1,6 +1,6 @@
-use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::Arc;
+use std::{net::SocketAddr, sync::RwLock};
 
 use async_session::MemoryStore;
 use axum::{middleware, response::IntoResponse, routing::get, Extension, Router};
@@ -11,11 +11,7 @@ use infrastructures::{
     common::StateImpl,
     session::{SessionRepositoryImpl, SessionServiceImpl},
 };
-use presentation::session::{SessionId, SessionService};
-use presentation::{
-    common::State,
-    session::{session_manage_layer, ItemKey},
-};
+use presentation::session::{session_manage_layer, ItemKey, SessionData};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -34,7 +30,7 @@ async fn main() -> anyhow::Result<()> {
     let state = StateImpl::new(user_service, session_service);
 
     let app = Router::new()
-        .route("/", get(handler::<StateType>))
+        .route("/", get(handler))
         .layer(middleware::from_fn(session_manage_layer::<StateType, _>))
         .layer(Extension(state));
 
@@ -49,21 +45,10 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn handler<T: State>(
-    state: Extension<T>,
-    session_id: Extension<SessionId>,
-) -> impl IntoResponse {
-    let mut session = state
-        .session_service()
-        .find(&session_id)
-        .await
-        .unwrap()
-        .unwrap()
-        .inner;
-
+async fn handler(Extension(session): Extension<Arc<RwLock<SessionData>>>) -> impl IntoResponse {
     let key = ItemKey::<i32>::new("counter".to_string());
-    let counter = session.item(&key).unwrap_or(0) + 1;
-    session.insert_item(&key, counter).unwrap();
+    let counter = session.read().unwrap().item(&key).unwrap_or(0) + 1;
+    session.write().unwrap().insert_item(&key, counter).unwrap();
 
     format!("counter = {}", counter)
 }
