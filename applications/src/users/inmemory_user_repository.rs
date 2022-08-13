@@ -22,7 +22,7 @@ impl InMemoryUserRepository {
 impl UserRepository for InMemoryUserRepository {
     /// ユーザー削除
     fn delete(&self, user: User) -> anyhow::Result<()> {
-        if let Some(_) = self.store.lock().unwrap().remove(user.id().value()) {
+        if let Some(_) = self.store.lock().unwrap().remove(&user.id().to_string()) {
             Ok(())
         } else {
             Err(anyhow::format_err!("User not exists"))
@@ -30,7 +30,7 @@ impl UserRepository for InMemoryUserRepository {
     }
 
     fn find(&self, id: &UserId) -> anyhow::Result<Option<User>> {
-        if let Some(user) = self.store.lock().unwrap().get(id.value()) {
+        if let Some(user) = self.store.lock().unwrap().get(&id.to_string()) {
             Ok(Some(user.clone()))
         } else {
             Ok(None)
@@ -52,12 +52,12 @@ impl UserRepository for InMemoryUserRepository {
     }
 
     fn save(&self, user: User) -> anyhow::Result<()> {
-        let key = user.id().value();
-        if self.store.lock().unwrap().contains_key(key) {
+        let key = user.id().to_string();
+        if self.store.lock().unwrap().contains_key(&key) {
             return Err(anyhow::format_err!("User already exists"));
         };
 
-        self.store.lock().unwrap().insert(key.to_string(), user);
+        self.store.lock().unwrap().insert(key, user);
 
         Ok(())
     }

@@ -23,7 +23,7 @@ impl User {
         &self.name
     }
 
-    pub fn change_name(&mut self, name: UserName) {
+    pub fn rename(&mut self, name: UserName) {
         self.name = name;
     }
 }

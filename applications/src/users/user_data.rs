@@ -21,8 +21,8 @@ impl From<User> for UserData {
     /// ドメインモデルからの変換
     fn from(user: User) -> Self {
         Self {
-            id: user.id().value().to_string(),
-            name: user.name().value().to_string(),
+            id: user.id().to_string(),
+            name: user.name().to_string(),
         }
     }
 }
