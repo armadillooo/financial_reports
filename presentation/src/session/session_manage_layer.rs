@@ -9,7 +9,7 @@ use axum::{
 
 use crate::common::{ApiError, JsonBuilder, State};
 
-use super::{SessionFromRequest, SessionId, SessionService, SessionWithId};
+use super::{SessionFromRequest, SessionId, SessionService};
 
 const COOKIE_VALUE_KEY: &str = "Cookie value";
 

@@ -1,9 +1,6 @@
-mod api;
-mod session;
-
+use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::Arc;
-use std::{net::SocketAddr, ops::Deref};
 
 use async_session::MemoryStore;
 use axum::{middleware, response::IntoResponse, routing::get, Extension, Router};
@@ -38,8 +35,8 @@ async fn main() -> anyhow::Result<()> {
 
     let app = Router::new()
         .route("/", get(handler::<StateType>))
-        .layer(Extension(state))
-        .layer(middleware::from_fn(session_manage_layer::<StateType, _>));
+        .layer(middleware::from_fn(session_manage_layer::<StateType, _>))
+        .layer(Extension(state));
 
     let addr = dotenvy::var("SOCKET_ADDRESS").unwrap();
     let addr = SocketAddr::from_str(&addr).unwrap();
@@ -58,8 +55,15 @@ async fn handler<T: State>(
 ) -> impl IntoResponse {
     let mut session = state
         .session_service()
-        .find_or_create(&session_id)
+        .find(&session_id)
         .await
-        .unwrap();
+        .unwrap()
+        .unwrap()
+        .inner;
+
     let key = ItemKey::<i32>::new("counter".to_string());
+    let counter = session.item(&key).unwrap_or(0) + 1;
+    session.insert_item(&key, counter).unwrap();
+
+    format!("counter = {}", counter)
 }
