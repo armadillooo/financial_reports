@@ -4,7 +4,7 @@ use std::sync::Arc;
 use anyhow::anyhow;
 
 use presentation::session::{
-    CreatedSession, SessionData, SessionFromRequest, SessionRepository, SessionService,
+    SessionData, SessionFromRequest, SessionMetadata, SessionRepository, SessionService,
 };
 
 #[derive(Debug, Clone)]
@@ -33,24 +33,34 @@ where
     T: SessionRepository + Send + Sync + Clone,
 {
     /// Session取得 or 新規作成
-    async fn find_or_create(&self, cookie_value: &str) -> anyhow::Result<SessionFromRequest> {
-        let session = if let Some(session) = self.session_repository.find(cookie_value).await? {
-            SessionFromRequest::Found(session)
-        } else {
-            let session = SessionData::new();
-            let new_cookie = self.save(session).await?;
-            let session = self
-                .session_repository
-                .find(&new_cookie)
-                .await?
-                .ok_or_else(|| anyhow!("Created session was not saved"))?;
-
-            SessionFromRequest::Created(CreatedSession {
-                session,
-                cookie_value: new_cookie,
+    async fn find_or_create(&self, cookie_value: String) -> anyhow::Result<SessionFromRequest> {
+        let session = if let Some(session) = self.session_repository.find(&cookie_value).await? {
+            SessionFromRequest::Found(SessionMetadata {
+                inner: session,
+                cookie_value: cookie_value,
             })
+        } else {
+            let session = self.create().await?;
+            SessionFromRequest::Created(session)
         };
 
+        Ok(session)
+    }
+
+    /// Session作成
+    async fn create(&self) -> anyhow::Result<SessionMetadata> {
+        let session = SessionData::new();
+        let new_cookie = self.save(session).await?;
+        let session = self
+            .session_repository
+            .find(&new_cookie)
+            .await?
+            .ok_or_else(|| anyhow!("Created session was not saved"))?;
+
+        let session = SessionMetadata {
+            inner: session,
+            cookie_value: new_cookie,
+        };
         Ok(session)
     }
 
@@ -89,7 +99,7 @@ mod tests {
         let session_service = setup();
         let dummy_id = base64::encode("dummy");
         let created_session = if let SessionFromRequest::Created(session) =
-            session_service.find_or_create(&dummy_id).await?
+            session_service.find_or_create(dummy_id).await?
         {
             session
         } else {
@@ -98,14 +108,14 @@ mod tests {
         let cookie_value = created_session.cookie_value;
 
         let saved_session = if let SessionFromRequest::Found(session) =
-            session_service.find_or_create(&cookie_value).await?
+            session_service.find_or_create(cookie_value).await?
         {
             session
         } else {
             return Err(anyhow!("Session is not saved"));
         };
 
-        assert_eq!(created_session.session, saved_session);
+        assert_eq!(created_session.inner, saved_session.inner);
 
         Ok(())
     }
@@ -117,7 +127,7 @@ mod tests {
         let cookie_value = session_service.save(session).await?;
 
         assert!(matches!(
-            session_service.find_or_create(&cookie_value).await?,
+            session_service.find_or_create(cookie_value).await?,
             SessionFromRequest::Found(_)
         ));
 
@@ -129,11 +139,11 @@ mod tests {
         let session_service = setup();
         let session = SessionData::new();
         let cookie_value = session_service.save(session).await?;
-        let session = session_service.find_or_create(&cookie_value).await?.into();
+        let session = session_service.find_or_create(cookie_value.clone()).await?.into();
         session_service.delete(session).await?;
 
         assert!(matches!(
-            session_service.find_or_create(&cookie_value).await?,
+            session_service.find_or_create(cookie_value).await?,
             SessionFromRequest::Created(_)
         ));
 

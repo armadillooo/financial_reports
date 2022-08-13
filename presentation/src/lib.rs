@@ -1,3 +1,3 @@
 pub mod auth;
 pub mod session;
-mod common;
+pub mod common;

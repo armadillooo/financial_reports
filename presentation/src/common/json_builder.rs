@@ -14,20 +14,15 @@ impl JsonBuilder {
     }
 
     /// Node追加
-    pub fn add<T: Serialize>(mut self, value: T) -> anyhow::Result<Self> {
-        let value = serde_json::to_value(value)?;
+    pub fn add<T: Serialize>(mut self, value: T) -> Self {
+        let value = serde_json::to_value(value).expect("Serialization faild");
         let map = if let Value::Object(map) = value {
             map
         } else {
-            return Err(anyhow!(
-                "The value cannot be converted to json object map ({:?})",
-                value
-            ));
+            Map::new()
         };
-
         self.node.extend(map.into_iter());
-
-        Ok(self)
+        self
     }
 
     /// JSON生成
@@ -95,8 +90,8 @@ mod tests {
             .insert("address".to_string(), 12345678.to_string());
 
         let json = JsonBuilder::new()
-            .add(errors.clone())?
-            .add(user.clone())?
+            .add(errors.clone())
+            .add(user.clone())
             .build();
         let json: All = serde_json::from_value(json)?;
         let expected = All {

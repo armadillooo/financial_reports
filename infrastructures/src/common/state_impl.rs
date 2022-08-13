@@ -1,10 +1,8 @@
 use async_session::MemoryStore;
 
+use crate::session::{SessionRepositoryImpl, SessionServiceImpl};
 use applications::users::{InMemoryUserRepository, UserApplicationServiceImpl};
-use infrastructures::{
-    common::State,
-    session::{SessionRepositoryImpl, SessionServiceImpl},
-};
+use presentation::common::State;
 
 type UserApplicationServiceType = UserApplicationServiceImpl<InMemoryUserRepository>;
 type SessionServiceType = SessionServiceImpl<SessionRepositoryImpl<MemoryStore>>;

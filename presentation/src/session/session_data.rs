@@ -65,8 +65,8 @@ impl From<Session> for SessionData {
 impl From<SessionFromRequest> for SessionData {
     fn from(from_request: SessionFromRequest) -> Self {
         match from_request {
-            SessionFromRequest::Found(session) => session,
-            SessionFromRequest::Created(info) => info.session,
+            SessionFromRequest::Found(info) => info.inner,
+            SessionFromRequest::Created(info) => info.inner,
         }
     }
 }

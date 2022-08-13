@@ -4,19 +4,20 @@ use crate::session::SessionData;
 
 #[async_trait::async_trait]
 pub trait SessionService: Clone {
-    async fn find_or_create(&self, cookie_value: &str) -> anyhow::Result<SessionFromRequest>;
+    async fn find_or_create(&self, cookie_value: String) -> anyhow::Result<SessionFromRequest>;
+    async fn create(&self) -> anyhow::Result<SessionMetadata>;
     async fn save(&self, session: SessionData) -> anyhow::Result<String>;
     async fn delete(&self, session: SessionData) -> anyhow::Result<()>;
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum SessionFromRequest {
-    Found(SessionData),
-    Created(CreatedSession),
+    Found(SessionMetadata),
+    Created(SessionMetadata),
 }
 
-#[derive(Debug)]
-pub struct CreatedSession {
-    pub session: SessionData,
+#[derive(Debug, PartialEq)]
+pub struct SessionMetadata {
+    pub inner: SessionData,
     pub cookie_value: String,
 }

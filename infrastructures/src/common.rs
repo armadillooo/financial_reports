@@ -1,3 +1,3 @@
-mod state;
+mod state_impl;
 
-pub use state::State;
+pub use state_impl::StateImpl;

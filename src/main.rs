@@ -1,6 +1,5 @@
 mod api;
 mod session;
-mod state_impl;
 
 use std::net::SocketAddr;
 use std::str::FromStr;
@@ -12,11 +11,10 @@ use dotenvy::{self, dotenv};
 
 use applications::users::{InMemoryUserRepository, UserApplicationServiceImpl};
 use infrastructures::{
-    common::State,
+    common::StateImpl,
     session::{SessionRepositoryImpl, SessionServiceImpl},
 };
-use presentation::session::session_manage_layer;
-use state_impl::StateImpl;
+use presentation::{common::State, session::session_manage_layer};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -37,7 +35,7 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .route("/", get(handler::<StateType>))
         .layer(Extension(state))
-        .layer(middleware::from_fn(session_manage_layer));
+        .layer(middleware::from_fn(session_manage_layer::<StateType, _>));
 
     let addr = dotenvy::var("SOCKET_ADDRESS").unwrap();
     let addr = SocketAddr::from_str(&addr).unwrap();
@@ -51,6 +49,5 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn handler<T: State>(state: Extension<T>) -> impl IntoResponse {
-
     "Hello"
 }
