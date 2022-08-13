@@ -1367,6 +1367,7 @@ dependencies = [
  "async-session",
  "async-trait",
  "axum",
+ "base64",
  "serde",
  "serde_json",
  "tokio",

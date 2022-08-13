@@ -1,9 +1,9 @@
 mod api;
 mod session;
 
-use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::Arc;
+use std::{net::SocketAddr, ops::Deref};
 
 use async_session::MemoryStore;
 use axum::{middleware, response::IntoResponse, routing::get, Extension, Router};
@@ -14,7 +14,11 @@ use infrastructures::{
     common::StateImpl,
     session::{SessionRepositoryImpl, SessionServiceImpl},
 };
-use presentation::{common::State, session::session_manage_layer};
+use presentation::session::{SessionId, SessionService};
+use presentation::{
+    common::State,
+    session::{session_manage_layer, ItemKey},
+};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -48,6 +52,14 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn handler<T: State>(state: Extension<T>) -> impl IntoResponse {
-    "Hello"
+async fn handler<T: State>(
+    state: Extension<T>,
+    session_id: Extension<SessionId>,
+) -> impl IntoResponse {
+    let mut session = state
+        .session_service()
+        .find_or_create(&session_id)
+        .await
+        .unwrap();
+    let key = ItemKey::<i32>::new("counter".to_string());
 }

@@ -26,8 +26,8 @@ impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
     }
 
     /// Session取得
-    async fn find(&self, cookie_value: &str) -> anyhow::Result<Option<SessionData>> {
-        if let Some(session) = self.store.load_session(cookie_value.to_string()).await? {
+    async fn find(&self, session_id: String) -> anyhow::Result<Option<SessionData>> {
+        if let Some(session) = self.store.load_session(session_id).await? {
             Ok(Some(session.into()))
         } else {
             Ok(None)
@@ -40,5 +40,21 @@ impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
             .store_session(session.into())
             .await?
             .ok_or_else(|| anyhow!("Cookie value was not set"))
+    }
+}
+
+#[cfg(test)] 
+mod tests {
+    use crate::session::SessionRepositoryImpl;
+    use async_session::MemoryStore;
+    use presentation::session::SessionRepository;
+
+    #[test]
+    fn tests() -> anyhow::Result<()> {
+        let repo = SessionRepositoryImpl::new(MemoryStore::new());
+
+        let _ = repo.find("asdfasdfa".to_string());
+        
+        Ok(())
     }
 }

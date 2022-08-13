@@ -7,7 +7,7 @@ use serde::Serialize;
 
 use crate::session::{ItemKey, SessionFromRequest};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct SessionData {
     inner: Session,
 }
@@ -35,17 +35,17 @@ impl SessionData {
     }
 
     /// 値の削除
-    fn remove_item<T>(&mut self, key: &ItemKey<T>) {
+    pub fn remove_item<T>(&mut self, key: &ItemKey<T>) {
         self.inner.remove(&key.value)
     }
 
     /// Session期限取得
-    fn limit(&self) -> Option<&DateTime<Utc>> {
+    pub fn limit(&self) -> Option<&DateTime<Utc>> {
         self.inner.expiry()
     }
 
     /// Session有効期間設定
-    fn set_limit(&mut self, expiry: Duration) {
+    pub fn set_limit(&mut self, expiry: Duration) {
         self.inner.expire_in(expiry)
     }
 }
@@ -65,8 +65,8 @@ impl From<Session> for SessionData {
 impl From<SessionFromRequest> for SessionData {
     fn from(from_request: SessionFromRequest) -> Self {
         match from_request {
-            SessionFromRequest::Found(info) => info.inner,
-            SessionFromRequest::Created(info) => info.inner,
+            SessionFromRequest::Found(session) => session.inner,
+            SessionFromRequest::Refreshed(session) => session.inner,
         }
     }
 }

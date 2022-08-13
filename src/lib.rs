@@ -2,7 +2,7 @@
 mod tests {
     use anyhow::anyhow;
     use serde::{Deserialize, Serialize};
-    use serde_json::{to_value, Map, Value};
+    use serde_json::Value;
 
     #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
     struct Serialization {

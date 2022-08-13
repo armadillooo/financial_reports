@@ -1,23 +1,24 @@
 use std::clone::Clone;
 
-use crate::session::SessionData;
+use crate::session::{SessionData, SessionId};
 
 #[async_trait::async_trait]
 pub trait SessionService: Clone {
-    async fn find_or_create(&self, cookie_value: String) -> anyhow::Result<SessionFromRequest>;
-    async fn create(&self) -> anyhow::Result<SessionMetadata>;
-    async fn save(&self, session: SessionData) -> anyhow::Result<String>;
+    async fn find_or_create(&self, session_id: &SessionId) -> anyhow::Result<SessionFromRequest>;
+    async fn find(&self, session_id: &SessionId) -> anyhow::Result<Option<SessionWithId>>;
+    async fn create(&self) -> anyhow::Result<SessionWithId>;
+    async fn save(&self, session: SessionData) -> anyhow::Result<SessionId>;
     async fn delete(&self, session: SessionData) -> anyhow::Result<()>;
 }
 
 #[derive(Debug, PartialEq)]
 pub enum SessionFromRequest {
-    Found(SessionMetadata),
-    Created(SessionMetadata),
+    Found(SessionWithId),
+    Refreshed(SessionWithId),
 }
 
 #[derive(Debug, PartialEq)]
-pub struct SessionMetadata {
+pub struct SessionWithId {
     pub inner: SessionData,
-    pub cookie_value: String,
+    pub id: SessionId,
 }

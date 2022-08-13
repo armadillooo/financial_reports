@@ -9,7 +9,7 @@ use axum::{
 
 use crate::common::{ApiError, JsonBuilder, State};
 
-use super::{SessionFromRequest, SessionService};
+use super::{SessionFromRequest, SessionId, SessionService, SessionWithId};
 
 const COOKIE_VALUE_KEY: &str = "Cookie value";
 
@@ -46,7 +46,8 @@ where
             .ok()
             .and_then(|cookies| cookies.get(COOKIE_VALUE_KEY).map(|key| key.to_owned()))
     {
-        if let Ok(session) = state.session_service().find_or_create(cookie_value).await {
+        let session_id = SessionId::new(cookie_value);
+        if let Ok(session) = state.session_service().find_or_create(&session_id).await {
             session
         } else {
             return rejection();
@@ -58,19 +59,19 @@ where
         } else {
             return rejection();
         };
-        SessionFromRequest::Created(session)
+        SessionFromRequest::Refreshed(session)
     };
 
-    let (session, is_created, cookie_value) = match session {
-        SessionFromRequest::Created(info) => (info.inner, true, info.cookie_value),
-        SessionFromRequest::Found(info) => (info.inner, false, info.cookie_value),
+    let (session_id, is_created) = match session {
+        SessionFromRequest::Refreshed(session) => (session.id, true),
+        SessionFromRequest::Found(session) => (session.id, false),
     };
 
     let mut req = request_parts
         .try_into_request()
         .expect("Request body extracted");
-    // HandlerにSessionを渡す
-    req.extensions_mut().insert(session);
+    // HandlerにSession IDを渡す
+    req.extensions_mut().insert(session_id.clone());
 
     // 次のLayerを実行
     let mut response = next.run(req).await;
@@ -78,7 +79,7 @@ where
     if is_created {
         response.headers_mut().insert(
             http::header::SET_COOKIE,
-            HeaderValue::from_str(&format!("{}={}", COOKIE_VALUE_KEY, cookie_value))
+            HeaderValue::from_str(&format!("{}={}", COOKIE_VALUE_KEY, *session_id))
                 .expect("Cookie format is invalid"),
         );
     }
