@@ -8,8 +8,9 @@ use openidconnect::{
 };
 use openidconnect::{AccessTokenHash, OAuth2TokenResponse, TokenResponse};
 
-use crate::auth::OICDData;
+use presentation::auth::OICDData;
 
+#[derive(Debug, Clone)]
 pub struct OICDClient {
     client: CoreClient,
 }
@@ -36,7 +37,7 @@ impl OICDClient {
         Ok(Self { client })
     }
 
-    /// リダイレクト情報を取得
+    /// リダイレクト先情報の取得
     pub fn redirect_info(&self) -> OICDData {
         // Generate a PKCE challenge
         let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
@@ -50,13 +51,18 @@ impl OICDClient {
                 Nonce::new_random,
             )
             // Set the desired scopes
-            .add_scope(Scope::new("read".to_string()))
-            .add_scope(Scope::new("write".to_string()))
+            .add_scope(Scope::new("openid".to_string()))
+            .add_scope(Scope::new(
+                "https://www.googleapis.com/auth/userinfo.email".to_string(),
+            ))
+            .add_scope(Scope::new(
+                "https://www.googleapis.com/auth/userinfo.profile".to_string(),
+            ))
             .set_pkce_challenge(pkce_challenge)
             .url();
 
         OICDData {
-            auth_url,
+            auth_url: auth_url.to_string(),
             pkce_verifier,
             csrf_token,
             nonce,
@@ -64,13 +70,20 @@ impl OICDClient {
     }
 
     /// 検証
-    pub async fn verify(&self, oicd_info: OICDData) -> anyhow::Result<CoreUserInfoClaims> {
+    pub async fn verify(
+        &self,
+        oicd_info: OICDData,
+        code: String,
+        state: String,
+    ) -> anyhow::Result<CoreUserInfoClaims> {
+        if oicd_info.csrf_token.secret() != &state {
+            return Err(anyhow!("state verify failed"));
+        }
+
         // Exchange it for an access token and ID token
         let token_response = self
             .client
-            .exchange_code(AuthorizationCode::new(
-                "Some authorization code".to_string(),
-            ))
+            .exchange_code(AuthorizationCode::new(code))
             .set_pkce_verifier(oicd_info.pkce_verifier)
             .request_async(async_http_client)
             .await?;

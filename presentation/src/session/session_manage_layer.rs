@@ -5,35 +5,40 @@ use axum::{
     headers::{Cookie, HeaderValue},
     http::{self, Request, StatusCode},
     middleware::Next,
-    response::{IntoResponse, Response},
+    response::Response,
     Extension, TypedHeader,
 };
 
-use crate::common::{ApiError, JsonBuilder, State};
+use crate::{
+    common::{ApiError, JsonBuilder, Rejection, Utility},
+    session::{SessionData, SessionFromRequest, SessionId, SessionService},
+};
 
-use super::{SessionFromRequest, SessionId, SessionService};
+pub type SharedSession = Arc<RwLock<SessionData>>;
 
-const COOKIE_VALUE_KEY: &str = "Cookie value";
+const COOKIE_VALUE_KEY: &str = "Cookie Value";
 
 /// Sessionが新規作成された場合にCookiにSession IDを自動で追加する
-pub async fn session_manage_layer<T, B>(req: Request<B>, next: Next<B>) -> Response
+pub async fn session_manage_layer<T, B>(
+    req: Request<B>,
+    next: Next<B>,
+) -> Result<Response, Rejection>
 where
-    T: State + Send + Sync + Clone + 'static,
+    T: Utility + Send + Sync + Clone + 'static,
     B: Send + Sync,
 {
     // エラー時の戻り値
-    let rejection = || {
+    let rejection = |_| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(
                 JsonBuilder::new()
                     .add(ApiError {
-                        message: "Internal server error",
+                        message: "Internal server error occured",
                     })
                     .build(),
             ),
         )
-            .into_response()
     };
 
     let mut request_parts = RequestParts::new(req);
@@ -46,26 +51,28 @@ where
         <TypedHeader<Cookie>>::from_request(&mut request_parts)
             .await
             .ok()
-            .and_then(|cookies| cookies.get(COOKIE_VALUE_KEY).map(|key| key.to_owned()))
-    {
-        let session_id = SessionId::new(cookie_value);
-        if let Ok(session) = state.session_service().find_or_create(session_id).await {
-            session
-        } else {
-            return rejection();
-        }
+            .and_then(|cookies| {
+                cookies
+                    .get(COOKIE_VALUE_KEY)
+                    .map(|cookie| cookie.to_owned())
+            }) {
+        state
+            .session_service()
+            .find_or_create(SessionId::new(cookie_value.to_string()))
+            .await
+            .map_err(rejection)?
     // Cookieが存在しない場合
     } else {
-        let session = if let Ok(session) = state.session_service().create().await {
-            session
-        } else {
-            return rejection();
-        };
-        SessionFromRequest::Refreshed(session)
+        state
+            .session_service()
+            .create()
+            .await
+            .map(|session| SessionFromRequest::Created(session))
+            .map_err(rejection)?
     };
 
-    let (session, is_refreshed, session_id) = match session {
-        SessionFromRequest::Refreshed(session) => (session.inner, true, session.id),
+    let (session, is_created, session_id) = match session {
+        SessionFromRequest::Created(session) => (session.inner, true, session.id),
         SessionFromRequest::Found(session) => (session.inner, false, session.id),
     };
 
@@ -80,7 +87,7 @@ where
     // 次のLayerを実行
     let mut response = next.run(req).await;
     // Cookie Headerに新しいSession Idを設定
-    if is_refreshed {
+    if is_created {
         response.headers_mut().insert(
             http::header::SET_COOKIE,
             HeaderValue::from_str(&format!("{}={}", COOKIE_VALUE_KEY, session_id.to_string()))
@@ -91,11 +98,14 @@ where
     // Sessionの変更を保存
     let mut session = session.read().unwrap().clone();
     if session.is_changed() {
-        session.reset_id(session_id);
-        if let Err(_) = state.session_service().save(session).await {
-            return rejection();
-        }
+        // SessionをCloneするとIdが削除されるため再度設定
+        session.set_id(session_id);
+        state
+            .session_service()
+            .save(session)
+            .await
+            .map_err(rejection)?;
     }
 
-    response
+    Ok(response)
 }

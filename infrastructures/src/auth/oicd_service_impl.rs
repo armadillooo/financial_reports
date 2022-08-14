@@ -1,7 +1,8 @@
-use crate::auth::{OICDClient, OICDData};
+use crate::auth::OICDClient;
 use applications::users::UserData;
-use presentation::auth::OICDService;
+use presentation::auth::{OICDData, OICDService};
 
+#[derive(Debug, Clone)]
 pub struct OICDserviceImpl
 // <T>はどんなオブジェクトが入るかわからないため, Send + Syncを実装していない可能性がある
 // そのため、トレイト境界を設定する
@@ -18,16 +19,19 @@ impl OICDserviceImpl {
 
 #[async_trait::async_trait]
 impl OICDService for OICDserviceImpl {
-    type VerifyInfo = OICDData;
-
     /// ユーザーをリダイレクトさせる
-    async fn redirect(&self) -> Self::VerifyInfo {
+    async fn redirect(&self) -> OICDData {
         self.oicd_client.redirect_info()
     }
 
     /// 認証情報の検証
-    async fn verify(&self, info: Self::VerifyInfo) -> anyhow::Result<UserData> {
-        let claims = self.oicd_client.verify(info).await?;
+    async fn verify(
+        &self,
+        verify_info: OICDData,
+        code: String,
+        state: String,
+    ) -> anyhow::Result<UserData> {
+        let claims = self.oicd_client.verify(verify_info, code, state).await?;
 
         let user_name = if let Some(email) = claims.email() {
             email.to_string()

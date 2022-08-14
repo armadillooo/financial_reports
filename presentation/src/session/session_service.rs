@@ -14,7 +14,7 @@ pub trait SessionService: Clone {
 #[derive(Debug, PartialEq)]
 pub enum SessionFromRequest {
     Found(SessionWithId),
-    Refreshed(SessionWithId),
+    Created(SessionWithId),
 }
 
 #[derive(Debug, PartialEq)]

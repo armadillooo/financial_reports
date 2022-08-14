@@ -22,8 +22,8 @@ impl SessionData {
         Self { inner: session }
     }
 
-    /// Session Idをリセットする
-    pub fn reset_id(&mut self, id: SessionId) {
+    /// Session Idをセットする
+    pub fn set_id(&mut self, id: SessionId) {
         self.inner.set_cookie_value(id.into());
     }
 
@@ -78,7 +78,7 @@ impl From<SessionFromRequest> for SessionData {
     fn from(from_request: SessionFromRequest) -> Self {
         match from_request {
             SessionFromRequest::Found(session) => session.inner,
-            SessionFromRequest::Refreshed(session) => session.inner,
+            SessionFromRequest::Created(session) => session.inner,
         }
     }
 }
@@ -98,7 +98,7 @@ mod tests {
     fn item_insert_success() -> anyhow::Result<()> {
         let mut session = SessionData::new();
         let item = vec![1, 2, 3];
-        let key = ItemKey::new("key".to_string());
+        let key = ItemKey::new("key");
         session.insert_item(&key, item)?;
 
         Ok(())
@@ -108,7 +108,7 @@ mod tests {
     fn item_get_success() -> anyhow::Result<()> {
         let mut session = SessionData::new();
         let item = "sample data".to_string();
-        let key = ItemKey::new("key".to_string());
+        let key = ItemKey::new("key");
         session.insert_item(&key, item.clone())?;
 
         assert_eq!(item, session.item(&key).expect("Item was not saved"));
@@ -119,7 +119,7 @@ mod tests {
     #[test]
     fn item_not_found_return_none() {
         let session = SessionData::new();
-        let key: ItemKey<String> = ItemKey::new("key".to_string());
+        let key: ItemKey<String> = ItemKey::new("key");
 
         assert!(session.item(&key).is_none())
     }
@@ -127,7 +127,7 @@ mod tests {
     #[test]
     fn item_remove_success() -> anyhow::Result<()> {
         let mut session = SessionData::new();
-        let key: ItemKey<String> = ItemKey::new("key".to_string());
+        let key: ItemKey<String> = ItemKey::new("key");
         let item = "item".to_string();
         session.insert_item(&key, item)?;
 

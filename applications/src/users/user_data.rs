@@ -1,7 +1,9 @@
+use serde::{Deserialize, Serialize};
+
 use domain::users::User;
 
 /// User Data Transfer Object
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct UserData {
     pub id: String,
     pub name: String,

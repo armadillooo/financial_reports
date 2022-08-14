@@ -1,3 +1,4 @@
 pub mod auth;
-pub mod session;
 pub mod common;
+pub mod session;
+pub mod user;

@@ -38,7 +38,7 @@ where
             SessionFromRequest::Found(session)
         } else {
             let session = self.create().await?;
-            SessionFromRequest::Refreshed(session)
+            SessionFromRequest::Created(session)
         };
 
         Ok(session)
@@ -126,12 +126,15 @@ mod tests {
         let session_service = setup();
         let session = SessionData::new();
         let session_id = session_service.save(session).await?;
-        let session = session_service.find_or_create(session_id.clone()).await?.into();
+        let session = session_service
+            .find_or_create(session_id.clone())
+            .await?
+            .into();
         session_service.delete(session).await?;
 
         assert!(matches!(
             session_service.find_or_create(session_id).await?,
-            SessionFromRequest::Refreshed(_)
+            SessionFromRequest::Created(_)
         ));
 
         Ok(())
