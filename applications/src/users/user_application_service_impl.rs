@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::users::{CreateCommand, DeleteCommand, GetCommand, UserApplicationService, UserData};
-use domain::users::{User, UserId, UserName, UserRepository, UserService};
+use domain::users::{User, UserEmail, UserId, UserName, UserRepository, UserService};
 
 /// User application service
 #[derive(Debug, Clone)]
@@ -45,7 +45,8 @@ where
     fn save(&self, command: CreateCommand) -> anyhow::Result<()> {
         let id = UserId::new(command.id);
         let name = UserName::new(command.name);
-        let user = User::new(id, name);
+        let email = UserEmail::new(command.email);
+        let user = User::new(id, name, email);
 
         if self.user_service.exists(&user) {
             return Err(anyhow::format_err!("User already exists"));
@@ -93,9 +94,10 @@ mod tests {
             let app_service = setup();
             let id = "1";
             let name = "hoge";
-            let create_command = CreateCommand::new(id, name);
+            let email = "mail";
+            let create_command = CreateCommand::new(id, name, email);
             let get_command = GetCommand::new(id);
-            let created_user = UserData::new(id, name);
+            let created_user = UserData::new(id, name, email);
 
             assert!(app_service.save(create_command).is_ok());
 
@@ -109,11 +111,13 @@ mod tests {
 
             let id = "1";
             let name1 = "hoge";
-            let create_command = CreateCommand::new(id, name1);
+            let email1 = "fuga";
+            let create_command = CreateCommand::new(id, name1, email1);
             let name2 = "sample name";
-            let create_same_user_command = CreateCommand::new(id, name2);
+            let email2 = "abc";
+            let create_same_user_command = CreateCommand::new(id, name2, email2);
             let get_command = GetCommand::new(id);
-            let created_user = UserData::new(id, name1);
+            let created_user = UserData::new(id, name1, email1);
 
             assert!(app_service.save(create_command).is_ok());
 
@@ -137,8 +141,9 @@ mod tests {
             let app_service = setup();
             let id = "234";
             let name = "delete user";
-            let created_user = UserData::new(id, name);
-            let create_command = CreateCommand::new(id, name);
+            let email = "hoge";
+            let created_user = UserData::new(id, name, email);
+            let create_command = CreateCommand::new(id, name, email);
             let delete_command = DeleteCommand::new(id);
             let get_command = GetCommand::new(id);
 

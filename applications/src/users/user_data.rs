@@ -7,14 +7,16 @@ use domain::users::User;
 pub struct UserData {
     pub id: String,
     pub name: String,
+    pub email: String,
 }
 
 impl UserData {
     /// コンストラクタ
-    pub fn new(id: impl Into<String>, name: impl Into<String>) -> Self {
+    pub fn new(id: impl Into<String>, name: impl Into<String>, email: impl Into<String>) -> Self {
         Self {
             id: id.into(),
             name: name.into(),
+            email: email.into(),
         }
     }
 }
@@ -25,6 +27,7 @@ impl From<User> for UserData {
         Self {
             id: user.id().to_string(),
             name: user.name().to_string(),
+            email: user.email().to_string(),
         }
     }
 }

@@ -1,4 +1,5 @@
 use crate::auth::OICDClient;
+use anyhow::anyhow;
 use applications::users::UserData;
 use presentation::auth::{OICDData, OICDService};
 
@@ -33,13 +34,20 @@ impl OICDService for OICDserviceImpl {
     ) -> anyhow::Result<UserData> {
         let claims = self.oicd_client.verify(verify_info, code, state).await?;
 
-        let user_name = if let Some(email) = claims.email() {
+        let email = if let Some(email) = claims.email() {
             email.to_string()
         } else {
-            "ゲスト".to_string()
+            return Err(anyhow!("Email address not found"));
         };
-        let user_id = claims.subject().to_string();
-        let user_data = UserData::new(user_id, user_name);
+        let name = claims
+            .name()
+            .ok_or_else(|| anyhow!("User name not found"))?
+            .get(claims.locale())
+            .ok_or_else(|| anyhow!("User name corresponded to locale not found"))?
+            .to_string();
+        let id = claims.subject().to_string();
+
+        let user_data = UserData::new(id, name, email);
 
         Ok(user_data)
     }

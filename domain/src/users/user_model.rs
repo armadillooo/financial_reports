@@ -1,18 +1,17 @@
-use crate::users::{UserId, UserName};
+use crate::users::{UserEmail, UserId, UserName};
 
 /// Userドメインモデル
 #[derive(Clone, Debug)]
 pub struct User {
-    /// Unique id
     id: UserId,
-    /// Unique name
     name: UserName,
+    email: UserEmail,
 }
 
 impl User {
     /// コンストラクタ
-    pub fn new(id: UserId, name: UserName) -> Self {
-        Self { id, name }
+    pub fn new(id: UserId, name: UserName, email: UserEmail) -> Self {
+        Self { id, name, email }
     }
 
     pub fn id(&self) -> &UserId {
@@ -21,6 +20,14 @@ impl User {
 
     pub fn name(&self) -> &UserName {
         &self.name
+    }
+
+    pub fn email(&self) -> &UserEmail {
+        &self.email
+    }
+
+    pub fn change_email(&mut self, email: UserEmail) {
+        self.email = email;
     }
 
     pub fn rename(&mut self, name: UserName) {
