@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use domain::users::User;
+use domain::users::{User, UserEmail, UserId, UserName};
 
 /// User Data Transfer Object
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
@@ -29,5 +29,15 @@ impl From<User> for UserData {
             name: user.name().to_string(),
             email: user.email().to_string(),
         }
+    }
+}
+
+impl Into<User> for UserData {
+    fn into(self) -> User {
+        let id = UserId::new(self.id);
+        let name = UserName::new(self.name);
+        let email = UserEmail::new(self.email);
+
+        User::new(id, name, email)
     }
 }

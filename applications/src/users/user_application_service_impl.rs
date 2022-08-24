@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::users::{CreateCommand, DeleteCommand, GetCommand, UserApplicationService, UserData};
-use domain::users::{User, UserEmail, UserId, UserName, UserRepository, UserService};
+use domain::users::{UserId, UserRepository, UserService};
 
 /// User application service
 #[derive(Debug, Clone)]
@@ -32,23 +32,18 @@ where
     T: UserRepository + Send + Sync,
 {
     /// User取得
-    async fn get(&self, command: GetCommand) -> anyhow::Result<UserData> {
+    async fn get(&self, command: GetCommand) -> anyhow::Result<Option<UserData>> {
         let id = UserId::new(command.id);
-        let user = self
-            .user_repository
-            .find(&id)
-            .await?
-            .ok_or(anyhow::format_err!("User not found"))?;
 
-        Ok(user.into())
+        self.user_repository
+            .find(&id)
+            .await
+            .map(|found| found.map(|found| UserData::from(found)))
     }
 
     /// User新規作成
     async fn save(&self, command: CreateCommand) -> anyhow::Result<()> {
-        let id = UserId::new(command.id);
-        let name = UserName::new(command.name);
-        let email = UserEmail::new(command.email);
-        let user = User::new(id, name, email);
+        let user = command.user.into();
 
         if self.user_service.exists(&user).await {
             return Err(anyhow::format_err!("User already exists"));
@@ -97,14 +92,15 @@ mod tests {
             let id = "1";
             let name = "hoge";
             let email = "mail";
-            let create_command = CreateCommand::new(id, name, email);
+            let create_user = UserData::new(id, name, email);
+            let create_command = CreateCommand::new(create_user);
             let get_command = GetCommand::new(id);
             let created_user = UserData::new(id, name, email);
 
             assert!(app_service.save(create_command).await.is_ok());
 
             let get_user = app_service.get(get_command).await.unwrap();
-            assert_eq!(get_user, created_user);
+            assert_eq!(get_user.unwrap(), created_user);
         }
 
         #[tokio::test]
@@ -114,10 +110,12 @@ mod tests {
             let id = "1";
             let name1 = "hoge";
             let email1 = "fuga";
-            let create_command = CreateCommand::new(id, name1, email1);
+            let user1 = UserData::new(id, name1, email1);
+            let create_command = CreateCommand::new(user1);
             let name2 = "sample name";
             let email2 = "abc";
-            let create_same_user_command = CreateCommand::new(id, name2, email2);
+            let user2 = UserData::new(id, name2, email2);
+            let create_same_user_command = CreateCommand::new(user2);
             let get_command = GetCommand::new(id);
             let created_user = UserData::new(id, name1, email1);
 
@@ -126,7 +124,7 @@ mod tests {
             assert!(app_service.save(create_same_user_command).await.is_err());
 
             let get_user = app_service.get(get_command).await.unwrap();
-            assert_eq!(get_user, created_user);
+            assert_eq!(get_user.unwrap(), created_user);
         }
 
         #[tokio::test]
@@ -145,13 +143,16 @@ mod tests {
             let name = "delete user";
             let email = "hoge";
             let created_user = UserData::new(id, name, email);
-            let create_command = CreateCommand::new(id, name, email);
+            let create_command = CreateCommand::new(created_user.clone());
             let delete_command = DeleteCommand::new(id);
             let get_command = GetCommand::new(id);
 
             assert!(app_service.save(create_command).await.is_ok());
 
-            assert_eq!(app_service.get(get_command).await.unwrap(), created_user);
+            assert_eq!(
+                app_service.get(get_command).await.unwrap().unwrap(),
+                created_user
+            );
 
             assert!(app_service.delete(delete_command).await.is_ok());
 

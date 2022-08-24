@@ -4,7 +4,7 @@ use axum::{
     extract::{Extension, Query},
     headers::{HeaderMap, HeaderValue},
     http,
-    response::IntoResponse,
+    response::{IntoResponse, Response},
     routing::get,
     Router,
 };
@@ -12,11 +12,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     auth::{OICDData, OICDService},
-    common::{Utility, UtilityImpl},
+    common::{ApiError, JsonBuilder, Utility, UtilityImpl},
     session::{ItemKey, SharedSession},
     user::{LoginedUserId, USER_ID},
 };
-use applications::users::{UserData, UserApplicationService, GetCommand};
+use applications::users::{CreateCommand, GetCommand, UserApplicationService, UserData};
 
 const AUTH_TYPE: ItemKey<AuthenticationType> = ItemKey::new("auth type");
 const OICD_INFO: ItemKey<OICDData> = ItemKey::new("oicd info");
@@ -64,26 +64,79 @@ async fn auth_finished_google(
     session: Extension<SharedSession>,
     utility: Extension<UtilityImpl>,
     params: Query<HashMap<String, String>>,
-) -> impl IntoResponse {
+) -> Response {
     let auth_type = if let Some(item) = session.read().unwrap().item(&AUTH_TYPE) {
         item
     } else {
-        return "";
+        return (
+            http::StatusCode::INTERNAL_SERVER_ERROR,
+            JsonBuilder::new()
+                .add(ApiError {
+                    message: "Internal server error occured",
+                })
+                .build(),
+        )
+            .into_response();
     };
 
-    let user = oicd_verify(&utility, &session, params).await.unwrap();
-
+    let auth_user = oicd_verify(&utility, &session, params).await.unwrap();
+    let command = GetCommand::new(auth_user.id.clone());
     match auth_type {
         AuthenticationType::Login => {
-            let command = GetCommand::new(user.id);
-            if let Ok(user) = utility.user_application_service().get(command).await {
-                
+            // ログイン成功
+            if let Some(user) = utility
+                .user_application_service()
+                .get(command)
+                .await
+                .unwrap()
+            {
+                (http::StatusCode::OK, JsonBuilder::new().add(user).build()).into_response()
+            // ログイン失敗
+            } else {
+                (
+                    http::StatusCode::BAD_REQUEST,
+                    JsonBuilder::new()
+                        .add(ApiError {
+                            message: "User registration required",
+                        })
+                        .build(),
+                )
+                    .into_response()
             }
-        },
-        AuthenticationType::Singin => {},
-    };
-
-    ""
+        }
+        AuthenticationType::Singin => {
+            // ユーザーが既に存在するため新規追加不可
+            if let Some(_) = utility
+                .user_application_service()
+                .get(command)
+                .await
+                .unwrap()
+            {
+                (
+                    http::StatusCode::BAD_REQUEST,
+                    JsonBuilder::new()
+                        .add(ApiError {
+                            message: "User is already exist",
+                        })
+                        .build(),
+                )
+                    .into_response()
+            // ユーザー新規作成可能
+            } else {
+                let command = CreateCommand::new(auth_user.clone());
+                utility
+                    .user_application_service()
+                    .save(command)
+                    .await
+                    .unwrap();
+                (
+                    http::StatusCode::OK,
+                    JsonBuilder::new().add(auth_user).build(),
+                )
+                    .into_response()
+            }
+        }
+    }
 }
 
 /// ログアウト
