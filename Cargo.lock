@@ -575,7 +575,6 @@ dependencies = [
  "axum-server",
  "domain",
  "dotenvy",
- "infrastructures",
  "presentation",
  "tokio",
  "tower-http",
@@ -863,25 +862,6 @@ checksum = "e6012d540c5baa3589337a98ce73408de9b5a25ec9fc2c6fd6be8f0d39e0ca5a"
 dependencies = [
  "autocfg",
  "hashbrown",
-]
-
-[[package]]
-name = "infrastructures"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "applications",
- "async-redis-session",
- "async-session",
- "async-trait",
- "base64",
- "domain",
- "openidconnect",
- "presentation",
- "serde",
- "tokio",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]

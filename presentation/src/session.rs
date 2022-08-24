@@ -3,7 +3,9 @@ mod session_data;
 mod session_id;
 mod session_manage_layer;
 mod session_repository;
+mod session_repository_impl;
 mod session_service;
+mod session_service_impl;
 mod user_id_from_request;
 
 pub use item_key::ItemKey;
@@ -12,6 +14,8 @@ pub use session_id::SessionId;
 pub use session_manage_layer::session_manage_layer;
 pub use session_manage_layer::SharedSession;
 pub use session_repository::SessionRepository;
+pub use session_repository_impl::SessionRepositoryImpl;
 pub use session_service::SessionFromRequest;
 pub use session_service::SessionService;
 pub use session_service::SessionWithId;
+pub use session_service_impl::SessionServiceImpl;

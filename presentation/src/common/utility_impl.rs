@@ -2,10 +2,10 @@ use async_session::MemoryStore;
 
 use crate::{
     auth::OICDserviceImpl,
+    common::Utility,
     session::{SessionRepositoryImpl, SessionServiceImpl},
 };
 use applications::users::{InMemoryUserRepository, UserApplicationServiceImpl};
-use presentation::common::Utility;
 
 type UserApplicationServiceType = UserApplicationServiceImpl<InMemoryUserRepository>;
 type SessionServiceType = SessionServiceImpl<SessionRepositoryImpl<MemoryStore>>;

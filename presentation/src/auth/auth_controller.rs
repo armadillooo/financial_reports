@@ -1,13 +1,9 @@
 use axum::{extract::Extension, response::IntoResponse, routing::get, Router};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    auth::OICDData,
-    session::{ItemKey, SharedSession},
-};
+use crate::session::{ItemKey, SharedSession};
 
 const AUTH_TYPE: ItemKey<AuthenticationType> = ItemKey::new("auth type");
-const OICD_VERIFY_INFO: ItemKey<OICDData> = ItemKey::new("oicd info");
 
 pub fn auth_controller() -> Router {
     let auth_root = Router::new()

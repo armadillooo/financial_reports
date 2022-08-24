@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use anyhow::anyhow;
 
-use presentation::session::{
+use crate::session::{
     SessionData, SessionFromRequest, SessionId, SessionRepository, SessionService, SessionWithId,
 };
 
@@ -89,8 +89,9 @@ mod tests {
 
     use async_session::MemoryStore;
 
-    use crate::session::{SessionRepositoryImpl, SessionServiceImpl};
-    use presentation::session::{SessionData, SessionFromRequest, SessionService};
+    use crate::session::{
+        SessionData, SessionFromRequest, SessionRepositoryImpl, SessionService, SessionServiceImpl,
+    };
 
     fn setup() -> SessionServiceImpl<SessionRepositoryImpl<MemoryStore>> {
         let store = MemoryStore::new();

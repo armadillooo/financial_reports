@@ -9,7 +9,6 @@ edition = "2021"
 domain = { path = "domain" }
 applications = { path = "applications" }
 presentation = { path = "presentation" }
-infrastructures = { path = "infrastructures" }
 axum = { version = "0.5.6", features = ["headers"] }
 axum-server = { version = "0.4.2", features = ["tls-rustls"] }
 tokio = { version = "1.18.2", features = ["full"] }
@@ -22,4 +21,4 @@ async-session = "3.0.0"
 async-redis-session = "0.2.2"
 
 [workspace]
-members = ["domain", "applications", "presentation", "infrastructures"]
+members = ["domain", "applications", "presentation"]

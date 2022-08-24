@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use async_session::SessionStore;
 use async_trait::async_trait;
 
-use presentation::session::{SessionData, SessionRepository};
+use crate::session::{SessionData, SessionRepository};
 
 #[derive(Debug, Clone)]
 pub struct SessionRepositoryImpl<T: SessionStore> {
@@ -43,18 +43,18 @@ impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
     }
 }
 
-#[cfg(test)] 
+#[cfg(test)]
 mod tests {
+    use crate::session::SessionRepository;
     use crate::session::SessionRepositoryImpl;
     use async_session::MemoryStore;
-    use presentation::session::SessionRepository;
 
     #[test]
     fn tests() -> anyhow::Result<()> {
         let repo = SessionRepositoryImpl::new(MemoryStore::new());
 
         let _ = repo.find("asdfasdfa".to_string());
-        
+
         Ok(())
     }
 }
