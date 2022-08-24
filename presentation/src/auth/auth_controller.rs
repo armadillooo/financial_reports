@@ -23,10 +23,10 @@ const OICD_INFO: ItemKey<OICDData> = ItemKey::new("oicd info");
 
 pub fn auth_controller() -> Router {
     let auth_root = Router::new()
-        .nest("/signin", get(signin_redirect_google))
-        .nest("/login", get(login_redirect_google))
-        .nest("/logout", get(logout))
-        .nest("/google", get(auth_finished_google));
+        .route("/signin", get(signin_redirect_google))
+        .route("/login", get(login_redirect_google))
+        .route("/logout", get(logout))
+        .route("/redirect", get(auth_verify_google));
 
     Router::new().nest("/auth", auth_root)
 }
@@ -60,7 +60,7 @@ async fn login_redirect_google(
 }
 
 /// 認証結果検証
-async fn auth_finished_google(
+async fn auth_verify_google(
     session: Extension<SharedSession>,
     utility: Extension<UtilityImpl>,
     params: Query<HashMap<String, String>>,
@@ -79,7 +79,19 @@ async fn auth_finished_google(
             .into_response();
     };
 
-    let auth_user = oicd_verify(&utility, &session, params).await.unwrap();
+    let auth_user = if let Ok(user) = oicd_verify(&utility, &session, params).await {
+        user
+    } else {
+        return (
+            http::StatusCode::BAD_REQUEST,
+            JsonBuilder::new()
+                .add(ApiError {
+                    message: "Authentication failed",
+                })
+                .build(),
+        )
+            .into_response();
+    };
     let command = GetCommand::new(auth_user.id.clone());
     match auth_type {
         AuthenticationType::Login => {

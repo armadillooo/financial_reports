@@ -10,7 +10,7 @@ use axum::{
 };
 
 use crate::{
-    common::{ApiError, JsonBuilder, Rejection, Utility},
+    common::{ApiError, JsonBuilder, Rejection, Utility, UtilityImpl},
     session::{SessionData, SessionFromRequest, SessionId, SessionService},
 };
 
@@ -19,12 +19,8 @@ pub type SharedSession = Arc<RwLock<SessionData>>;
 const COOKIE_VALUE_KEY: &str = "Cookie Value";
 
 /// Sessionが新規作成された場合にCookiにSession IDを自動で追加する
-pub async fn session_manage_layer<T, B>(
-    req: Request<B>,
-    next: Next<B>,
-) -> Result<Response, Rejection>
+pub async fn session_manage_layer<B>(req: Request<B>, next: Next<B>) -> Result<Response, Rejection>
 where
-    T: Utility + Send + Sync + Clone + 'static,
     B: Send + Sync,
 {
     // エラー時の戻り値
@@ -40,7 +36,7 @@ where
     };
 
     let mut request_parts = RequestParts::new(req);
-    let state = Extension::<T>::from_request(&mut request_parts)
+    let state = Extension::<UtilityImpl>::from_request(&mut request_parts)
         .await
         .expect("State extension was not set");
 
@@ -88,8 +84,12 @@ where
     if is_created {
         response.headers_mut().insert(
             http::header::SET_COOKIE,
-            HeaderValue::from_str(&format!("{}={}", COOKIE_VALUE_KEY, session_id.to_string()))
-                .expect("Cookie format is invalid"),
+            HeaderValue::from_str(&format!(
+                "{}={}; path=/",
+                COOKIE_VALUE_KEY,
+                session_id.to_string()
+            ))
+            .expect("Cookie format is invalid"),
         );
     }
 

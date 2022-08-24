@@ -1,3 +1,5 @@
+use openidconnect::EndUserUsername;
+
 use crate::auth::{OICDClient, OICDData, OICDService};
 use anyhow::anyhow;
 use applications::users::UserData;
@@ -33,16 +35,13 @@ impl OICDService for OICDserviceImpl {
     ) -> anyhow::Result<UserData> {
         let claims = self.oicd_client.verify(verify_info, code, state).await?;
 
-        let email = if let Some(email) = claims.email() {
-            email.to_string()
-        } else {
-            return Err(anyhow!("Email address not found"));
-        };
+        let email = claims
+            .email()
+            .ok_or_else(|| anyhow!("Email address not found"))?
+            .to_string();
         let name = claims
-            .name()
-            .ok_or_else(|| anyhow!("User name not found"))?
-            .get(claims.locale())
-            .ok_or_else(|| anyhow!("User name corresponded to locale not found"))?
+            .preferred_username()
+            .unwrap_or(&EndUserUsername::new("ゲスト".to_string()))
             .to_string();
         let id = claims.subject().to_string();
 
