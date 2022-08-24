@@ -26,6 +26,7 @@ dependencies = [
  "async-trait",
  "domain",
  "serde",
+ "tokio",
 ]
 
 [[package]]
@@ -516,6 +517,7 @@ name = "domain"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
 ]
 
 [[package]]

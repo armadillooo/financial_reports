@@ -1,6 +1,6 @@
 //! Http RequestからセッションIDを抽出する
 use axum::{
-    extract::{Extension, FromRequest, Json, RequestParts},
+    extract::{Extension, FromRequest, RequestParts},
     http::StatusCode,
 };
 
@@ -28,13 +28,11 @@ where
             .map_err(|_| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(
-                        JsonBuilder::new()
-                            .add(ApiError {
-                                message: "Internal server error occured",
-                            })
-                            .build(),
-                    ),
+                    JsonBuilder::new()
+                        .add(ApiError {
+                            message: "Internal server error occured",
+                        })
+                        .build(),
                 )
             })?
             .read()
@@ -43,13 +41,11 @@ where
             .ok_or_else(|| {
                 (
                     StatusCode::UNAUTHORIZED,
-                    Json(
-                        JsonBuilder::new()
-                            .add(ApiError {
-                                message: "Authentication required",
-                            })
-                            .build(),
-                    ),
+                    JsonBuilder::new()
+                        .add(ApiError {
+                            message: "Authentication required",
+                        })
+                        .build(),
                 )
             })?;
 

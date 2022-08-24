@@ -7,7 +7,6 @@ use std::{net::SocketAddr, sync::RwLock};
 use async_session::MemoryStore;
 use axum::extract::Query;
 use axum::{
-    extract::Json,
     headers::{HeaderMap, HeaderValue},
     http, middleware,
     response::{IntoResponse, Redirect},
@@ -117,8 +116,6 @@ async fn auth_google<T: Utility>(
         .insert_item(&OICD_VERIFY_INFO, verify_info)
         .unwrap();
 
-    tracing::info!("oicd info was saved");
-
     let mut header = HeaderMap::new();
     header.insert(
         http::header::LOCATION,
@@ -157,13 +154,11 @@ async fn auth_verify<T: Utility>(
     } else {
         return (
             http::StatusCode::INTERNAL_SERVER_ERROR,
-            Json(
-                JsonBuilder::new()
-                    .add(ApiError {
-                        message: "oicd verify faild",
-                    })
-                    .build(),
-            ),
+            JsonBuilder::new()
+                .add(ApiError {
+                    message: "oicd verify faild",
+                })
+                .build(),
         )
             .into_response();
     };

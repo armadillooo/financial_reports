@@ -22,8 +22,8 @@ where
         }
     }
 
-    pub fn exists(&self, user: &User) -> bool {
-        if let Ok(Some(_user)) = self.user_repository.find(user.id()) {
+    pub async fn exists(&self, user: &User) -> bool {
+        if let Ok(Some(_user)) = self.user_repository.find(user.id()).await {
             true
         } else {
             false

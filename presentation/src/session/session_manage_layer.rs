@@ -1,7 +1,7 @@
 use std::sync::{Arc, RwLock};
 
 use axum::{
-    extract::{FromRequest, Json, RequestParts},
+    extract::{FromRequest, RequestParts},
     headers::{Cookie, HeaderValue},
     http::{self, Request, StatusCode},
     middleware::Next,
@@ -31,13 +31,11 @@ where
     let rejection = |_| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(
-                JsonBuilder::new()
-                    .add(ApiError {
-                        message: "Internal server error occured",
-                    })
-                    .build(),
-            ),
+            JsonBuilder::new()
+                .add(ApiError {
+                    message: "Internal server error occured",
+                })
+                .build(),
         )
     };
 

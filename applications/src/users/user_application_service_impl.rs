@@ -26,41 +26,43 @@ where
     }
 }
 
+#[async_trait::async_trait]
 impl<T> UserApplicationService for UserApplicationServiceImpl<T>
 where
-    T: UserRepository,
+    T: UserRepository + Send + Sync,
 {
     /// User取得
-    fn get(&self, command: GetCommand) -> anyhow::Result<UserData> {
+    async fn get(&self, command: GetCommand) -> anyhow::Result<UserData> {
         let id = UserId::new(command.id);
         let user = self
             .user_repository
-            .find(&id)?
+            .find(&id)
+            .await?
             .ok_or(anyhow::format_err!("User not found"))?;
 
         Ok(user.into())
     }
 
     /// User新規作成
-    fn save(&self, command: CreateCommand) -> anyhow::Result<()> {
+    async fn save(&self, command: CreateCommand) -> anyhow::Result<()> {
         let id = UserId::new(command.id);
         let name = UserName::new(command.name);
         let email = UserEmail::new(command.email);
         let user = User::new(id, name, email);
 
-        if self.user_service.exists(&user) {
+        if self.user_service.exists(&user).await {
             return Err(anyhow::format_err!("User already exists"));
         }
 
-        self.user_repository.save(user)?;
+        self.user_repository.save(user).await?;
         Ok(())
     }
 
     /// User削除
-    fn delete(&self, command: DeleteCommand) -> anyhow::Result<()> {
+    async fn delete(&self, command: DeleteCommand) -> anyhow::Result<()> {
         let id = UserId::new(command.id);
-        if let Some(user) = self.user_repository.find(&id)? {
-            self.user_repository.delete(user)?;
+        if let Some(user) = self.user_repository.find(&id).await? {
+            self.user_repository.delete(user).await?;
         } else {
             // ユーザーが存在しなかった場合は削除成功扱い
             return Ok(());
@@ -89,8 +91,8 @@ mod tests {
             user_application
         }
 
-        #[test]
-        fn create_user_saved() {
+        #[tokio::test]
+        async fn create_user_saved() {
             let app_service = setup();
             let id = "1";
             let name = "hoge";
@@ -99,14 +101,14 @@ mod tests {
             let get_command = GetCommand::new(id);
             let created_user = UserData::new(id, name, email);
 
-            assert!(app_service.save(create_command).is_ok());
+            assert!(app_service.save(create_command).await.is_ok());
 
-            let get_user = app_service.get(get_command).unwrap();
+            let get_user = app_service.get(get_command).await.unwrap();
             assert_eq!(get_user, created_user);
         }
 
-        #[test]
-        fn create_same_user_not_saved() {
+        #[tokio::test]
+        async fn create_same_user_not_saved() {
             let app_service = setup();
 
             let id = "1";
@@ -119,25 +121,25 @@ mod tests {
             let get_command = GetCommand::new(id);
             let created_user = UserData::new(id, name1, email1);
 
-            assert!(app_service.save(create_command).is_ok());
+            assert!(app_service.save(create_command).await.is_ok());
 
-            assert!(app_service.save(create_same_user_command).is_err());
+            assert!(app_service.save(create_same_user_command).await.is_err());
 
-            let get_user = app_service.get(get_command).unwrap();
+            let get_user = app_service.get(get_command).await.unwrap();
             assert_eq!(get_user, created_user);
         }
 
-        #[test]
-        fn get_not_exist_user_return_error() {
+        #[tokio::test]
+        async fn get_not_exist_user_return_error() {
             let app_service = setup();
             let id = "234";
             let get_command = GetCommand::new(id);
 
-            assert!(app_service.get(get_command).is_err())
+            assert!(app_service.get(get_command).await.is_err())
         }
 
-        #[test]
-        fn delete_user_return_ok() {
+        #[tokio::test]
+        async fn delete_user_return_ok() {
             let app_service = setup();
             let id = "234";
             let name = "delete user";
@@ -147,26 +149,26 @@ mod tests {
             let delete_command = DeleteCommand::new(id);
             let get_command = GetCommand::new(id);
 
-            assert!(app_service.save(create_command).is_ok());
+            assert!(app_service.save(create_command).await.is_ok());
 
-            assert_eq!(app_service.get(get_command).unwrap(), created_user);
+            assert_eq!(app_service.get(get_command).await.unwrap(), created_user);
 
-            assert!(app_service.delete(delete_command).is_ok());
+            assert!(app_service.delete(delete_command).await.is_ok());
 
             let get_command = GetCommand::new(id);
-            assert!(app_service.get(get_command).is_err());
+            assert!(app_service.get(get_command).await.is_err());
         }
 
-        #[test]
-        fn delete_not_exist_user_return_ok() {
+        #[tokio::test]
+        async fn delete_not_exist_user_return_ok() {
             let app_service = setup();
             let id = "234";
             let get_command = GetCommand::new(id);
             let delete_command = DeleteCommand::new(id);
 
-            assert!(app_service.get(get_command).is_err());
+            assert!(app_service.get(get_command).await.is_err());
 
-            assert!(app_service.delete(delete_command).is_ok());
+            assert!(app_service.delete(delete_command).await.is_ok());
         }
     }
 }

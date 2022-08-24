@@ -1,3 +1,4 @@
+use axum::extract::Json;
 use serde::Serialize;
 use serde_json::{Map, Value};
 
@@ -25,8 +26,8 @@ impl JsonBuilder {
     }
 
     /// JSON生成
-    pub fn build(self) -> Value {
-        Value::Object(self.node)
+    pub fn build(self) -> Json<Value> {
+        Json(Value::Object(self.node))
     }
 }
 
@@ -34,6 +35,7 @@ impl JsonBuilder {
 mod tests {
     use std::collections::HashMap;
 
+    use axum::extract::Json;
     use serde::{Deserialize, Serialize};
 
     use super::JsonBuilder;
@@ -88,11 +90,11 @@ mod tests {
         user.other
             .insert("address".to_string(), 12345678.to_string());
 
-        let json = JsonBuilder::new()
+        let Json(value) = JsonBuilder::new()
             .add(errors.clone())
             .add(user.clone())
             .build();
-        let json: All = serde_json::from_value(json)?;
+        let json: All = serde_json::from_value(value)?;
         let expected = All {
             name: user.name,
             authenticated: user.authenticated,

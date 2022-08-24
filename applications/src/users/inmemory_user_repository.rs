@@ -19,9 +19,10 @@ impl InMemoryUserRepository {
     }
 }
 
+#[async_trait::async_trait]
 impl UserRepository for InMemoryUserRepository {
     /// ユーザー削除
-    fn delete(&self, user: User) -> anyhow::Result<()> {
+    async fn delete(&self, user: User) -> anyhow::Result<()> {
         if let Some(_) = self.store.lock().unwrap().remove(&user.id().to_string()) {
             Ok(())
         } else {
@@ -29,7 +30,7 @@ impl UserRepository for InMemoryUserRepository {
         }
     }
 
-    fn find(&self, id: &UserId) -> anyhow::Result<Option<User>> {
+    async fn find(&self, id: &UserId) -> anyhow::Result<Option<User>> {
         if let Some(user) = self.store.lock().unwrap().get(&id.to_string()) {
             Ok(Some(user.clone()))
         } else {
@@ -37,7 +38,7 @@ impl UserRepository for InMemoryUserRepository {
         }
     }
 
-    fn find_by_name(&self, name: &UserName) -> anyhow::Result<Option<User>> {
+    async fn find_by_name(&self, name: &UserName) -> anyhow::Result<Option<User>> {
         if let Some(user) = self
             .store
             .lock()
@@ -51,7 +52,7 @@ impl UserRepository for InMemoryUserRepository {
         }
     }
 
-    fn save(&self, user: User) -> anyhow::Result<()> {
+    async fn save(&self, user: User) -> anyhow::Result<()> {
         let key = user.id().to_string();
         if self.store.lock().unwrap().contains_key(&key) {
             return Err(anyhow::format_err!("User already exists"));
