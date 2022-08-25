@@ -3,17 +3,19 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use applications::users::{InMemoryUserRepository, UserApplicationServiceImpl};
+use anyhow::Context;
 use async_session::MemoryStore;
 use axum::{middleware, Extension};
 use axum_server::tls_rustls::RustlsConfig;
 use dotenvy::{self, dotenv};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+
+use applications::users::{InMemoryUserRepository, UserApplicationServiceImpl};
 use presentation::{
     auth::{OICDClient, OICDserviceImpl},
     common::{controllers, UtilityImpl},
     session::{session_manage_layer, SessionRepositoryImpl, SessionServiceImpl},
 };
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -22,14 +24,13 @@ async fn main() -> anyhow::Result<()> {
     // Default Logger初期化
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(
-            std::env::var("RUST_LOG")
-                .unwrap_or_else(|_| "example_tracing_aka_logging=debug,tower_http=debug".into()),
+            std::env::var("RUST_LOG").context("RUST_LOG env var is not set")?,
         ))
         .with(tracing_subscriber::fmt::layer())
         .init();
 
     let base_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("self_signed_certs");
-    tracing::info!("tls config directory = {:?}", base_path);
+    tracing::debug!("tls config directory = {:?}", base_path);
 
     let tls_config = RustlsConfig::from_pem_file(
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -39,8 +40,7 @@ async fn main() -> anyhow::Result<()> {
             .join("self_signed_certs")
             .join("key.pem"),
     )
-    .await
-    .unwrap();
+    .await?;
 
     let user_repository = Arc::new(InMemoryUserRepository::new());
     let user_service = UserApplicationServiceImpl::new(&user_repository);
@@ -52,8 +52,7 @@ async fn main() -> anyhow::Result<()> {
         "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".to_string(),
         "https://127.0.0.1:3000/api/auth/redirect".to_string(),
     )
-    .await
-    .unwrap();
+    .await?;
     let oicd_service = OICDserviceImpl::new(oicd_client);
 
     let state = UtilityImpl::new(user_service, session_service, oicd_service);
@@ -67,8 +66,7 @@ async fn main() -> anyhow::Result<()> {
 
     axum_server::bind_rustls(addr, tls_config)
         .serve(app.into_make_service())
-        .await
-        .unwrap();
+        .await?;
 
     Ok(())
 }
