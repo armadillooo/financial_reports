@@ -3,7 +3,6 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use anyhow::Context;
 use async_session::MemoryStore;
 use axum::{middleware, Extension};
 use axum_server::tls_rustls::RustlsConfig;
@@ -23,9 +22,9 @@ async fn main() -> anyhow::Result<()> {
     dotenv().ok();
     // Default Logger初期化
     tracing_subscriber::registry()
-        .with(tracing_subscriber::EnvFilter::new(
-            std::env::var("RUST_LOG").context("RUST_LOG env var is not set")?,
-        ))
+        .with(tracing_subscriber::EnvFilter::new(std::env::var(
+            "RUST_LOG",
+        )?))
         .with(tracing_subscriber::fmt::layer())
         .init();
 

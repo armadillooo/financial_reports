@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use anyhow::Context;
+use anyhow::anyhow;
 use async_session::chrono::{DateTime, Utc};
 use async_session::Session;
 use serde::Serialize;
@@ -38,7 +38,7 @@ impl SessionData {
     pub fn insert_item<T: Serialize>(&mut self, key: &ItemKey<T>, item: T) -> anyhow::Result<()> {
         self.inner
             .insert(&key.value, item)
-            .context("Serialization fault")
+            .map_err(|err| anyhow!("Serialize failed: {:?}", err))
     }
 
     /// 値の取得

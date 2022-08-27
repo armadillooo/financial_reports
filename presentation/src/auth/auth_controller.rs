@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     auth::{OICDData, OICDService},
-    common::{ApiError, JsonBuilder, Utility, UtilityImpl},
+    common::{ErrorResponse, JsonBuilder, Utility, UtilityImpl},
     session::{ItemKey, SharedSession},
     user::{LoginedUserId, USER_ID},
 };
@@ -71,7 +71,7 @@ async fn auth_verify_google(
         return (
             http::StatusCode::INTERNAL_SERVER_ERROR,
             JsonBuilder::new()
-                .add(ApiError {
+                .add(ErrorResponse {
                     message: "Internal server error occured",
                 })
                 .build(),
@@ -85,7 +85,7 @@ async fn auth_verify_google(
         return (
             http::StatusCode::BAD_REQUEST,
             JsonBuilder::new()
-                .add(ApiError {
+                .add(ErrorResponse {
                     message: "Authentication failed",
                 })
                 .build(),
@@ -108,7 +108,7 @@ async fn auth_verify_google(
                 (
                     http::StatusCode::BAD_REQUEST,
                     JsonBuilder::new()
-                        .add(ApiError {
+                        .add(ErrorResponse {
                             message: "User registration required",
                         })
                         .build(),
@@ -127,7 +127,7 @@ async fn auth_verify_google(
                 (
                     http::StatusCode::BAD_REQUEST,
                     JsonBuilder::new()
-                        .add(ApiError {
+                        .add(ErrorResponse {
                             message: "User is already exist",
                         })
                         .build(),

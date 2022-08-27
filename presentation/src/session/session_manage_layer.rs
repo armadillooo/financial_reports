@@ -3,37 +3,26 @@ use std::sync::{Arc, RwLock};
 use axum::{
     extract::{FromRequest, RequestParts},
     headers::{Cookie, HeaderValue},
-    http::{self, Request, StatusCode},
+    http::{self, Request},
     middleware::Next,
-    response::Response,
+    response::{IntoResponse, Response},
     Extension, TypedHeader,
 };
 
 use crate::{
-    common::{ApiError, JsonBuilder, Rejection, Utility, UtilityImpl},
+    common::{internal_error, Utility, UtilityImpl},
     session::{SessionData, SessionFromRequest, SessionId, SessionService},
 };
 
 pub type SharedSession = Arc<RwLock<SessionData>>;
-
 const COOKIE_VALUE_KEY: &str = "Cookie Value";
 
 /// Sessionが新規作成された場合にCookiにSession IDを自動で追加する
-pub async fn session_manage_layer<B>(req: Request<B>, next: Next<B>) -> Result<Response, Rejection>
+pub async fn session_manage_layer<B>(req: Request<B>, next: Next<B>) -> Result<Response, Response>
 where
     B: Send + Sync,
 {
-    // エラー時の戻り値
-    let rejection = |_| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            JsonBuilder::new()
-                .add(ApiError {
-                    message: "Internal server error occured",
-                })
-                .build(),
-        )
-    };
+    let rejection = |_| internal_error().into_response();
 
     let mut request_parts = RequestParts::new(req);
     let state = Extension::<UtilityImpl>::from_request(&mut request_parts)

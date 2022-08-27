@@ -5,7 +5,7 @@ use axum::{
 };
 
 use crate::{
-    common::{self, ApiError, JsonBuilder},
+    common::{internal_error, ApiResponse, ErrorResponse, JsonBuilder},
     session::SharedSession,
     user::{LoginedUserId, USER_ID},
 };
@@ -18,23 +18,14 @@ where
     T: Send,
 {
     // エラー時の戻り値の型
-    type Rejection = common::Rejection;
+    type Rejection = ApiResponse;
 
     /// ログインが必要なリクエストに対して、Sessionの存在確認を行う
     async fn from_request(req: &mut RequestParts<T>) -> Result<Self, Self::Rejection> {
         // Extensinからメモリストアを取得
         let user_id = Extension::<SharedSession>::from_request(req)
             .await
-            .map_err(|_| {
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    JsonBuilder::new()
-                        .add(ApiError {
-                            message: "Internal server error occured",
-                        })
-                        .build(),
-                )
-            })?
+            .map_err(|_| internal_error())?
             .read()
             .unwrap()
             .item(&USER_ID)
@@ -42,7 +33,7 @@ where
                 (
                     StatusCode::UNAUTHORIZED,
                     JsonBuilder::new()
-                        .add(ApiError {
+                        .add(ErrorResponse {
                             message: "Authentication required",
                         })
                         .build(),

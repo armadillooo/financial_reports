@@ -1,26 +1,23 @@
 use axum::{extract::Json, http::StatusCode};
-use once_cell::sync::Lazy;
 use serde::Serialize;
 use serde_json::Value;
 
-use crate::common::JsonBuilder;
+pub type ApiResponse = (StatusCode, Json<Value>);
 
 /// 汎用エラーメッセージ
 #[derive(Debug, Clone, PartialEq, Serialize)]
-pub struct ApiError {
+pub struct ErrorResponse {
     pub message: &'static str,
 }
 
-// 汎用エラー型
-pub type Rejection = (StatusCode, Json<Value>);
-
-static INTERNAL_ERROR_RESPONSE: Lazy<Rejection> = Lazy::new(|| {
+pub fn internal_error() -> ApiResponse {
     (
         StatusCode::INTERNAL_SERVER_ERROR,
-        JsonBuilder::new()
-            .add(ApiError {
+        Json(
+            serde_json::to_value(ErrorResponse {
                 message: "Internal server problem",
             })
-            .build(),
+            .unwrap(),
+        ),
     )
-});
+}
