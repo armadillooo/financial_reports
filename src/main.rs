@@ -12,7 +12,8 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use applications::users::{InMemoryUserRepository, UserApplicationServiceImpl};
 use presentation::{
     auth::{OICDClient, OICDserviceImpl},
-    common::{controllers, UtilityImpl},
+    common::UtilityImpl,
+    controllers,
     session::{session_manage_layer, SessionRepositoryImpl, SessionServiceImpl},
 };
 
