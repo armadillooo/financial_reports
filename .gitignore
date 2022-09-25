@@ -3,3 +3,4 @@ target/
 client_secret_525690818902-l0urmj6r09omclbguobeq6ef1iqr561k.apps.googleusercontent.com.json
 self_signed_certs/
 *.env
+PublicDoc/
