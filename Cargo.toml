@@ -21,4 +21,4 @@ async-session = "3.0.0"
 async-redis-session = "0.2.2"
 
 [workspace]
-members = ["domain", "applications", "presentation", "xbrl_parser"]
+members = ["domain", "applications", "presentation"]
