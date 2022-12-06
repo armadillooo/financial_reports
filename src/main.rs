@@ -9,7 +9,7 @@ use axum_server::tls_rustls::RustlsConfig;
 use dotenvy::{self, dotenv};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use applications::users::{InMemoryUserRepository, UserApplicationServiceImpl};
+use applications::users::{InMemoryUserRepositoryImpl, UserApplicationServiceImpl};
 use presentation::{
     auth::{OICDClient, OICDserviceImpl},
     common::UtilityImpl,
@@ -42,7 +42,7 @@ async fn main() -> anyhow::Result<()> {
     )
     .await?;
 
-    let user_repository = Arc::new(InMemoryUserRepository::new());
+    let user_repository = Arc::new(InMemoryUserRepositoryImpl::new());
     let user_service = UserApplicationServiceImpl::new(&user_repository);
     let session_repository = Arc::new(SessionRepositoryImpl::new(MemoryStore::new()));
     let session_service = SessionServiceImpl::new(&session_repository);

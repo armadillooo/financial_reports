@@ -4,4 +4,6 @@ pub struct CompanyQueryParameters {
     pub sector: Option<String>,
     pub industry: Option<String>,
     pub order_by: Option<String>,
+    pub page: Option<i32>,
+    pub limit: Option<i32>,
 }

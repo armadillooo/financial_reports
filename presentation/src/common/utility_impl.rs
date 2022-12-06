@@ -5,9 +5,9 @@ use crate::{
     common::Utility,
     session::{SessionRepositoryImpl, SessionServiceImpl},
 };
-use applications::users::{InMemoryUserRepository, UserApplicationServiceImpl};
+use applications::users::{InMemoryUserRepositoryImpl, UserApplicationServiceImpl};
 
-type UserApplicationServiceType = UserApplicationServiceImpl<InMemoryUserRepository>;
+type UserApplicationServiceType = UserApplicationServiceImpl<InMemoryUserRepositoryImpl>;
 type SessionServiceType = SessionServiceImpl<SessionRepositoryImpl<MemoryStore>>;
 type OICDServiceType = OICDserviceImpl;
 

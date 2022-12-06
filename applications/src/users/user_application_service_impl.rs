@@ -72,15 +72,15 @@ mod tests {
     mod user_usecase_tests {
         use std::sync::Arc;
 
-        use crate::users::inmemory_user_repository::InMemoryUserRepository;
+        use crate::users::inmemory_user_repository_impl::InMemoryUserRepositoryImpl;
         use crate::users::{
             CreateCommand, DeleteCommand, GetCommand, UserApplicationService,
             UserApplicationServiceImpl, UserData,
         };
 
         // テストに必要なオブジェクトの初期化
-        fn setup() -> UserApplicationServiceImpl<InMemoryUserRepository> {
-            let user_repository = Arc::new(InMemoryUserRepository::new());
+        fn setup() -> UserApplicationServiceImpl<InMemoryUserRepositoryImpl> {
+            let user_repository = Arc::new(InMemoryUserRepositoryImpl::new());
             let user_application = UserApplicationServiceImpl::new(&user_repository);
 
             user_application
