@@ -19,30 +19,30 @@ impl StockQueryService for InmemoryStockQueryServiceImpl {
             }
         };
         // ID検索
-        let filter_by_id = |s: &StockData| &s.stock_id == &param.stock_id;
-        // 日付範囲(下限)
-        let filter_by_date_from = |s: &StockData| {
+        let find_by_id = |s: &StockData| &s.stock_id == &param.stock_id;
+        // 日付範囲指定(下限)
+        let find_by_date_from = |s: &StockData| {
             if let Some(from) = &param.date_from {
                 &s.date >= from
             } else {
                 true
             }
         };
-        // 日付範囲(上限)
-        let filter_by_date_to = |s: &StockData| {
+        // 日付範囲指定(上限)
+        let find_by_date_to = |s: &StockData| {
             if let Some(to) = &param.date_to {
                 &s.date <= to
             } else {
                 true
             }
         };
-        // ページ番号
+        // ページ番号指定
         let page_index = if let Some(page) = param.page {
             page - 1
         } else {
             0
         };
-        // ページサイズ
+        // ページサイズ指定
         let page_size = if let Some(size) = param.size {
             size as usize
         } else {
@@ -53,9 +53,9 @@ impl StockQueryService for InmemoryStockQueryServiceImpl {
             .stocks
             .to_vec()
             .into_iter()
-            .filter(filter_by_id)
-            .filter(filter_by_date_from)
-            .filter(filter_by_date_to)
+            .filter(find_by_id)
+            .filter(find_by_date_from)
+            .filter(find_by_date_to)
             .skip(page_index as usize * page_size)
             .take(page_size);
 
