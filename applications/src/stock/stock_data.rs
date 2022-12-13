@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 
 /// 株価情報
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct StockData {
     pub stock_id: String,
     /// 日付
@@ -16,4 +16,10 @@ pub struct StockData {
     pub high_price: i32,
     /// 安値
     pub low_price: i32,
+}
+
+impl StockData {
+    pub fn new() -> Self {
+        Self::default()
+    }
 }

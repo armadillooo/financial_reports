@@ -9,6 +9,13 @@ pub struct InmemoryStockQueryServiceImpl {
     pub stocks: Vec<StockData>,
 }
 
+impl InmemoryStockQueryServiceImpl {
+    /// コンストラクタ
+    pub fn new() -> Self {
+        Self { stocks: Vec::new() }
+    }
+}
+
 #[async_trait::async_trait]
 impl StockQueryService for InmemoryStockQueryServiceImpl {
     async fn find(&self, param: StockQueryParameters) -> anyhow::Result<Vec<StockData>> {
@@ -60,5 +67,38 @@ impl StockQueryService for InmemoryStockQueryServiceImpl {
             .take(page_size);
 
         Ok(iter.collect::<Vec<StockData>>())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::stock::{
+        stock_data::StockData, stock_query_parameters::StockQueryParameters,
+        stock_query_service::StockQueryService,
+    };
+
+    use super::InmemoryStockQueryServiceImpl;
+
+    fn setup() -> InmemoryStockQueryServiceImpl {
+        InmemoryStockQueryServiceImpl::new()
+    }
+
+    #[tokio::test]
+    async fn find_by_id() -> anyhow::Result<()> {
+        let mut service = setup();
+        let mut param = StockQueryParameters::new();
+        let target_id = "2";
+        param.stock_id = target_id.to_string();
+
+        let mut stocks = Vec::new();
+        for i in 0..3 {
+            stocks.insert(i, StockData::new());
+            stocks[i].stock_id = i.to_string();
+        }
+        service.stocks = stocks;
+
+        assert!(service.find(param).await?.pop().unwrap().stock_id == target_id);
+
+        Ok(())
     }
 }
