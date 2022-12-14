@@ -1,3 +1,5 @@
+use std::process::id;
+
 use anyhow::anyhow;
 
 use super::stock_data::StockData;
@@ -26,7 +28,13 @@ impl StockQueryService for InmemoryStockQueryServiceImpl {
             }
         };
         // ID検索
-        let find_by_id = |s: &StockData| &s.stock_id == &param.stock_id;
+        let find_by_id = |s: &StockData| {
+            if let Some(id) = &param.stock_id {
+                &s.stock_id == id
+            } else {
+                true
+            }
+        };
         // 日付範囲指定(下限)
         let find_by_date_from = |s: &StockData| {
             if let Some(from) = &param.date_from {
@@ -57,11 +65,15 @@ impl StockQueryService for InmemoryStockQueryServiceImpl {
         };
         let skip_count = page_index as usize * page_size;
 
-        let iter = self.stocks.to_vec().into_iter().filter(find_by_id)
-        .filter(find_by_date_from)
-        .filter(find_by_date_to)
-        .skip(skip_count)
-        .take(page_size);
+        let iter = self
+            .stocks
+            .to_vec()
+            .into_iter()
+            .filter(find_by_id)
+            .filter(find_by_date_from)
+            .filter(find_by_date_to)
+            .skip(skip_count)
+            .take(page_size);
 
         let result = iter.collect::<Vec<StockData>>();
 
@@ -87,7 +99,7 @@ mod test {
         let mut service = setup();
         let mut param = StockQueryParameters::new();
         let target_id = "2";
-        param.stock_id = target_id.to_string();
+        param.stock_id = Some(target_id.to_string());
 
         let mut stocks = Vec::new();
         for i in 0..3 {
@@ -97,7 +109,7 @@ mod test {
         service.stocks = stocks;
 
         let found = service.find(param).await?;
-        
+
         assert!(found.len() == 1);
         assert!(found[0].stock_id == target_id);
 
@@ -170,7 +182,7 @@ mod test {
 
         let found = service.find(param).await?;
         assert!(found.len() as i32 == page_size.unwrap());
-        assert!(found[0].stock_id == index.unwrap().to_string());
+        assert!(found[0].stock_id == (index.unwrap() - 1).to_string());
 
         Ok(())
     }

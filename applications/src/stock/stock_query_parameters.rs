@@ -2,7 +2,7 @@ use chrono::NaiveDate;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct StockQueryParameters {
-    pub stock_id: String,
+    pub stock_id: Option<String>,
     pub date_from: Option<NaiveDate>,
     pub date_to: Option<NaiveDate>,
     pub page: Option<i32>,
