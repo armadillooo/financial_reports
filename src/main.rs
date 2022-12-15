@@ -9,7 +9,13 @@ use axum_server::tls_rustls::RustlsConfig;
 use dotenvy::{self, dotenv};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use applications::users::{InMemoryUserRepositoryImpl, UserApplicationServiceImpl};
+use applications::{
+    stock::{
+        CompanyQueryService, InmemoryCompanyQueryServiceImpl, InmemoryStockQueryServiceImpl,
+        StockQueryService,
+    },
+    users::{InMemoryUserRepositoryImpl, UserApplicationServiceImpl},
+};
 use presentation::{
     auth::{OICDClient, OICDserviceImpl},
     common::UtilityImpl,
@@ -54,8 +60,16 @@ async fn main() -> anyhow::Result<()> {
     )
     .await?;
     let oicd_service = OICDserviceImpl::new(oicd_client);
+    let stock_query_service = InmemoryStockQueryServiceImpl::new();
+    let company_query_service = InmemoryCompanyQueryServiceImpl::new();
 
-    let state = UtilityImpl::new(user_service, session_service, oicd_service);
+    let state = UtilityImpl::new(
+        user_service,
+        session_service,
+        oicd_service,
+        stock_query_service,
+        company_query_service,
+    );
 
     let app = controllers()
         .layer(middleware::from_fn(session_manage_layer))

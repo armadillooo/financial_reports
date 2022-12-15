@@ -5,17 +5,27 @@ use crate::{
     common::Utility,
     session::{SessionRepositoryImpl, SessionServiceImpl},
 };
-use applications::users::{InMemoryUserRepositoryImpl, UserApplicationServiceImpl};
+use applications::{
+    stock::{
+        CompanyQueryService, InmemoryCompanyQueryServiceImpl, InmemoryStockQueryServiceImpl,
+        StockQueryService,
+    },
+    users::{InMemoryUserRepositoryImpl, UserApplicationServiceImpl},
+};
 
 type UserApplicationServiceType = UserApplicationServiceImpl<InMemoryUserRepositoryImpl>;
 type SessionServiceType = SessionServiceImpl<SessionRepositoryImpl<MemoryStore>>;
 type OICDServiceType = OICDserviceImpl;
+type StockQueryServiceType = InmemoryStockQueryServiceImpl;
+type CompanyQueryServiceType = InmemoryCompanyQueryServiceImpl;
 
 #[derive(Debug, Clone)]
 pub struct UtilityImpl {
     user_application_service: UserApplicationServiceType,
     session_service: SessionServiceType,
     oicd_service: OICDServiceType,
+    stock_query_service: StockQueryServiceType,
+    company_query_service: CompanyQueryServiceType,
 }
 
 impl UtilityImpl {
@@ -23,11 +33,15 @@ impl UtilityImpl {
         user_application_service: UserApplicationServiceType,
         session_service: SessionServiceType,
         oicd_service: OICDServiceType,
+        stock_query_service: StockQueryServiceType,
+        company_query_service: CompanyQueryServiceType,
     ) -> Self {
         Self {
             user_application_service,
             session_service,
             oicd_service,
+            stock_query_service,
+            company_query_service,
         }
     }
 }
@@ -35,7 +49,9 @@ impl UtilityImpl {
 impl Utility for UtilityImpl {
     type UserApplicationServiceState = UserApplicationServiceType;
     type SessionServiceState = SessionServiceType;
-    type OICDServiceState = OICDserviceImpl;
+    type OICDServiceState = OICDServiceType;
+    type StockQueryServiceState = StockQueryServiceType;
+    type CompanyQueryServiceState = CompanyQueryServiceType;
 
     fn user_application_service(&self) -> &Self::UserApplicationServiceState {
         &self.user_application_service
@@ -47,5 +63,13 @@ impl Utility for UtilityImpl {
 
     fn oicd_service(&self) -> &Self::OICDServiceState {
         &self.oicd_service
+    }
+
+    fn stock_query_service(&self) -> &Self::StockQueryServiceState {
+        &self.stock_query_service
+    }
+
+    fn company_query_service(&self) -> &Self::CompanyQueryServiceState {
+        &self.company_query_service
     }
 }

@@ -2,9 +2,16 @@ use super::companies::Companies;
 use super::company_query_parameters::CompanyQueryParameters;
 use super::company_query_service::CompanyQueryService;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct InmemoryCompanyQueryServiceImpl {
     pub companies: Vec<Companies>,
+}
+
+impl InmemoryCompanyQueryServiceImpl {
+    /// コンストラクタ
+    pub fn new() -> Self {
+        Self::default()
+    }
 }
 
 #[async_trait::async_trait]
