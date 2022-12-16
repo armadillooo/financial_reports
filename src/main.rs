@@ -10,16 +10,13 @@ use dotenvy::{self, dotenv};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use applications::{
-    stock::{
-        CompanyQueryService, InmemoryCompanyQueryServiceImpl, InmemoryStockQueryServiceImpl,
-        StockQueryService,
-    },
+    stock::{InmemoryCompanyQueryServiceImpl, InmemoryStockQueryServiceImpl},
     users::{InMemoryUserRepositoryImpl, UserApplicationServiceImpl},
 };
 use presentation::{
     auth::{OICDClient, OICDserviceImpl},
     common::UtilityImpl,
-    controllers,
+    root_controllers,
     session::{session_manage_layer, SessionRepositoryImpl, SessionServiceImpl},
 };
 
@@ -71,7 +68,7 @@ async fn main() -> anyhow::Result<()> {
         company_query_service,
     );
 
-    let app = controllers()
+    let app = root_controllers()
         .layer(middleware::from_fn(session_manage_layer))
         .layer(Extension(state));
 

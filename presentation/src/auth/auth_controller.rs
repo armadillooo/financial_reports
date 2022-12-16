@@ -22,13 +22,11 @@ const AUTH_TYPE: ItemKey<AuthenticationType> = ItemKey::new("auth type");
 const OICD_INFO: ItemKey<OICDData> = ItemKey::new("oicd info");
 
 pub fn auth_controller() -> Router {
-    let auth_root = Router::new()
+    Router::new()
         .route("/signin", get(signin_redirect_google))
         .route("/login", get(login_redirect_google))
         .route("/logout", get(logout))
-        .route("/redirect", get(auth_verify_google));
-
-    Router::new().nest("/auth", auth_root)
+        .route("/redirect", get(auth_verify_google))
 }
 
 /// ユーザー新規作成

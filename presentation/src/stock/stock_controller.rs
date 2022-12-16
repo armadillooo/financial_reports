@@ -14,7 +14,7 @@ use axum::{
 
 use crate::common::{Utility, UtilityImpl};
 
-pub fn stock_cotroller() -> Router {
+pub fn stock_controller() -> Router {
     Router::new()
         .route("/stocks/:stock_id", get(get_stocks))
         .route("/companies", get(get_companies))
