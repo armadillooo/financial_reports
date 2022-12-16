@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use super::companies::Companies;
 use super::company_query_parameters::CompanyQueryParameters;
 use super::company_query_service::CompanyQueryService;
@@ -27,7 +29,7 @@ impl CompanyQueryService for InmemoryCompanyQueryServiceImpl {
         }
         // ID検索
         if let Some(id) = param.stock_id {
-            if let Some(company) = self.companies.iter().find(|c| c.stock_id == id) {
+            if let Some(company) = self.companies.iter().find(|c| c.stock_id.deref() == &id) {
                 return Ok(vec![company.clone()]);
             } else {
                 return Ok(vec![]);

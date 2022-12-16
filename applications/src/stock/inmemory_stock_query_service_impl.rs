@@ -1,3 +1,4 @@
+use std::ops::Deref;
 use std::process::id;
 
 use anyhow::anyhow;
@@ -30,7 +31,7 @@ impl StockQueryService for InmemoryStockQueryServiceImpl {
         // ID検索
         let find_by_id = |s: &StockData| {
             if let Some(id) = &param.stock_id {
-                &s.stock_id == id
+                &s.stock_id.deref() == &id
             } else {
                 true
             }
@@ -83,7 +84,10 @@ impl StockQueryService for InmemoryStockQueryServiceImpl {
 
 #[cfg(test)]
 mod test {
+    use std::ops::Deref;
+
     use chrono::NaiveDate;
+    use domain::stock::StockId;
 
     use crate::stock::{
         inmemory_stock_query_service_impl::InmemoryStockQueryServiceImpl, stock_data::StockData,
@@ -104,14 +108,14 @@ mod test {
         let mut stocks = Vec::new();
         for i in 0..3 {
             stocks.insert(i, StockData::new());
-            stocks[i].stock_id = i.to_string();
+            stocks[i].stock_id = StockId::new(i.to_string());
         }
         service.stocks = stocks;
 
         let found = service.find(param).await?;
 
         assert!(found.len() == 1);
-        assert!(found[0].stock_id == target_id);
+        assert!(found[0].stock_id.deref() == target_id);
 
         Ok(())
     }
@@ -176,13 +180,13 @@ mod test {
         let mut stocks = Vec::new();
         for i in 0..3 {
             stocks.insert(i, StockData::new());
-            stocks[i].stock_id = i.to_string();
+            stocks[i].stock_id = StockId::new(i.to_string());
         }
         service.stocks = stocks;
 
         let found = service.find(param).await?;
         assert!(found.len() as i32 == page_size.unwrap());
-        assert!(found[0].stock_id == (index.unwrap() - 1).to_string());
+        assert!(found[0].stock_id == StockId::new((index.unwrap() - 1).to_string()));
 
         Ok(())
     }

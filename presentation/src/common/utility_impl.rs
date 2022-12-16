@@ -6,10 +6,7 @@ use crate::{
     session::{SessionRepositoryImpl, SessionServiceImpl},
 };
 use applications::{
-    stock::{
-        CompanyQueryService, InmemoryCompanyQueryServiceImpl, InmemoryStockQueryServiceImpl,
-        StockQueryService,
-    },
+    stock::{InmemoryCompanyQueryServiceImpl, InmemoryStockQueryServiceImpl},
     users::{InMemoryUserRepositoryImpl, UserApplicationServiceImpl},
 };
 
