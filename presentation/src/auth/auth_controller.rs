@@ -16,7 +16,7 @@ use crate::{
     session::{ItemKey, SharedSession},
     user::{LoginedUserId, USER_ID},
 };
-use applications::users::{CreateCommand, GetCommand, UserApplicationService, UserData};
+use applications::users::{UserApplicationService, UserData};
 
 const AUTH_TYPE: ItemKey<AuthenticationType> = ItemKey::new("auth type");
 const OICD_INFO: ItemKey<OICDData> = ItemKey::new("oicd info");
@@ -90,13 +90,12 @@ async fn auth_verify_google(
         )
             .into_response();
     };
-    let command = GetCommand::new(auth_user.id.clone());
     match auth_type {
         AuthenticationType::Login => {
             // ログイン成功
             if let Some(user) = utility
                 .user_application_service()
-                .get(command)
+                .get(&auth_user.id)
                 .await
                 .unwrap()
             {
@@ -118,7 +117,7 @@ async fn auth_verify_google(
             // ユーザーが既に存在するため新規追加不可
             if let Some(_) = utility
                 .user_application_service()
-                .get(command)
+                .get(&auth_user.id)
                 .await
                 .unwrap()
             {
@@ -133,10 +132,9 @@ async fn auth_verify_google(
                     .into_response()
             // ユーザー新規作成可能
             } else {
-                let command = CreateCommand::new(auth_user.clone());
                 utility
                     .user_application_service()
-                    .save(command)
+                    .save(auth_user.clone())
                     .await
                     .unwrap();
                 (

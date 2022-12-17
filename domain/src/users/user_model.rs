@@ -1,4 +1,7 @@
-use crate::{users::{UserEmail, UserId, UserName}, stock::StockId};
+use crate::{
+    stock::StockId,
+    users::{UserEmail, UserId, UserName},
+};
 
 /// Userドメインモデル
 #[derive(Clone, Debug)]
@@ -15,7 +18,13 @@ pub struct User {
 impl User {
     /// コンストラクタ
     pub fn new(id: UserId, name: UserName, email: UserEmail) -> Self {
-        Self { id, name, email, favorites: vec![] }
+        Self {
+            id,
+            name,
+            email,
+            favorites: vec![],
+            portfolio: vec![],
+        }
     }
 
     pub fn id(&self) -> &UserId {
