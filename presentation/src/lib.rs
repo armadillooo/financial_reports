@@ -1,5 +1,6 @@
 pub mod auth;
 pub mod common;
+pub mod company;
 mod root_controllers;
 pub mod session;
 pub mod stock;

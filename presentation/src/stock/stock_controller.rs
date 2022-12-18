@@ -1,24 +1,18 @@
 use std::collections::HashMap;
 
-use chrono::NaiveDate;
-
-use applications::{
-    company::{CompanyQueryParameters, CompanyQueryService},
-    stock::{StockQueryParameters, StockQueryService},
-};
 use axum::{
     extract::{Extension, Path, Query},
     response::IntoResponse,
     routing::get,
     Router,
 };
+use chrono::NaiveDate;
 
 use crate::common::{Utility, UtilityImpl};
+use applications::stock::{StockQueryParameters, StockQueryService};
 
 pub fn stock_controller() -> Router {
-    Router::new()
-        .route("/stocks/:stock_id", get(get_stocks))
-        .route("/companies", get(get_companies))
+    Router::new().route("/stocks/:stock_id", get(get_stocks))
 }
 
 async fn get_stocks(
@@ -55,34 +49,6 @@ async fn get_stocks(
     };
 
     let result = utility.stock_query_service().find(params).await.unwrap();
-
-    "Ok"
-}
-
-async fn get_companies(
-    Extension(utility): Extension<UtilityImpl>,
-    Query(queries): Query<HashMap<String, String>>,
-) -> impl IntoResponse {
-    let mut params = CompanyQueryParameters::new();
-    // クエリパラメータ取得
-    params.name = queries.get("name").map(|s| s.to_string());
-    params.stock_id = queries.get("stock_id").map(|s| s.to_string());
-    params.sector = queries.get("sector").map(|s| s.to_string());
-    params.industry = queries.get("industry").map(|s| s.to_string());
-    params.page = if let Some(page) = queries.get("page") {
-        let Ok(page) = page.parse() else { return "Err"};
-        Some(page)
-    } else {
-        None
-    };
-    params.size = if let Some(size) = queries.get("size") {
-        let Ok(page) = size.parse() else { return "Err"};
-        Some(page)
-    } else {
-        None
-    };
-
-    let result = utility.company_query_service().find(params).await.unwrap();
 
     "Ok"
 }
