@@ -1,7 +1,7 @@
 //! UserId Valueオブジェクト
 
 use std::ops::Deref;
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Default)]
 pub struct UserId(String);
 
 impl UserId {
