@@ -12,7 +12,7 @@ use crate::common::{Utility, UtilityImpl};
 use applications::stock::{StockQueryParameters, StockQueryService};
 
 pub fn stock_controller() -> Router {
-    Router::new().route("/stocks/:stock_id", get(get_stocks))
+    Router::new().route("/:stock_id", get(get_stocks))
 }
 
 async fn get_stocks(

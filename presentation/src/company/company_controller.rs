@@ -11,7 +11,7 @@ use crate::common::{Utility, UtilityImpl};
 use applications::company::{CompanyQueryParameters, CompanyQueryService};
 
 pub fn company_controller() -> Router {
-    Router::new().route("/companies", get(get_companies))
+    Router::new().route("/", get(get_companies))
 }
 
 async fn get_companies(
