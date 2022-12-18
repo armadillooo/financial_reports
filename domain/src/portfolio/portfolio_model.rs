@@ -10,5 +10,5 @@ pub struct Portfolio {
     /// 保有株数
     pub stock_count: i32,
     /// 1株当たり購入価格(円)
-    pub price: i32,
+    pub purchase: i32,
 }

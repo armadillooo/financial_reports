@@ -1,4 +1,9 @@
+use super::Portfolio;
+use crate::users::UserId;
+
+#[async_trait::async_trait]
 pub trait PortfolioReposotory {
-    fn save() -> anyhow::Result<()>;
-    fn delete() -> anyhow::Result<()>;
+    async fn save(portfolio: Portfolio) -> anyhow::Result<()>;
+    async fn delete(portfolio: Portfolio) -> anyhow::Result<()>;
+    async fn find(user_id: &UserId) -> anyhow::Result<Vec<Portfolio>>;
 }

@@ -4,5 +4,5 @@ use crate::{stock::StockId, users::UserId};
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Favorite {
     pub user_id: UserId,
-    pub companies: Vec<StockId>,
+    pub stock_id: StockId,
 }
