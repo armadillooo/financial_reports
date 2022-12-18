@@ -10,7 +10,8 @@ use dotenvy::{self, dotenv};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use applications::{
-    stock::{InmemoryCompanyQueryServiceImpl, InmemoryStockQueryServiceImpl},
+    company::InmemoryCompanyQueryServiceImpl,
+    stock::InmemoryStockQueryServiceImpl,
     users::{InMemoryUserRepositoryImpl, UserApplicationServiceImpl},
 };
 use presentation::{

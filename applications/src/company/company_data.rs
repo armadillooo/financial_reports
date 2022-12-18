@@ -2,7 +2,7 @@ use domain::stock::StockId;
 
 /// 企業情報
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Companies {
+pub struct CompanyData {
     /// 企業名
     pub name: String,
     /// ID

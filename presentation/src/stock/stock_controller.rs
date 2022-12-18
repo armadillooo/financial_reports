@@ -2,8 +2,9 @@ use std::collections::HashMap;
 
 use chrono::NaiveDate;
 
-use applications::stock::{
-    CompanyQueryParameters, CompanyQueryService, StockQueryParameters, StockQueryService,
+use applications::{
+    company::{CompanyQueryParameters, CompanyQueryService},
+    stock::{StockQueryParameters, StockQueryService},
 };
 use axum::{
     extract::{Extension, Path, Query},

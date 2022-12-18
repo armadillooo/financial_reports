@@ -1,12 +1,12 @@
 use std::ops::Deref;
 
-use super::companies::Companies;
-use super::company_query_parameters::CompanyQueryParameters;
-use super::company_query_service::CompanyQueryService;
+use super::CompanyData;
+use super::CompanyQueryParameters;
+use super::CompanyQueryService;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct InmemoryCompanyQueryServiceImpl {
-    pub companies: Vec<Companies>,
+    pub companies: Vec<CompanyData>,
 }
 
 impl InmemoryCompanyQueryServiceImpl {
@@ -18,7 +18,7 @@ impl InmemoryCompanyQueryServiceImpl {
 
 #[async_trait::async_trait]
 impl CompanyQueryService for InmemoryCompanyQueryServiceImpl {
-    async fn find(&self, param: CompanyQueryParameters) -> anyhow::Result<Vec<Companies>> {
+    async fn find(&self, param: CompanyQueryParameters) -> anyhow::Result<Vec<CompanyData>> {
         // 企業名検索
         if let Some(name) = param.name {
             if let Some(company) = self.companies.iter().find(|c| c.name == name) {
@@ -36,7 +36,7 @@ impl CompanyQueryService for InmemoryCompanyQueryServiceImpl {
             };
         }
         // セクター指定
-        let find_by_sector = |c: &Companies| {
+        let find_by_sector = |c: &CompanyData| {
             if let Some(sector) = &param.sector {
                 &c.sector == sector
             } else {
@@ -44,7 +44,7 @@ impl CompanyQueryService for InmemoryCompanyQueryServiceImpl {
             }
         };
         // 産業種別指定
-        let find_by_industry = |c: &Companies| {
+        let find_by_industry = |c: &CompanyData| {
             if let Some(industry) = &param.industry {
                 &c.industry == industry
             } else {
@@ -73,6 +73,6 @@ impl CompanyQueryService for InmemoryCompanyQueryServiceImpl {
             .skip(page_index as usize * page_size)
             .take(page_size);
 
-        Ok(iter.collect::<Vec<Companies>>())
+        Ok(iter.collect::<Vec<CompanyData>>())
     }
 }

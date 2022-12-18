@@ -1,7 +1,6 @@
 use crate::{auth::OICDService, session::SessionService};
 use applications::{
-    stock::{CompanyQueryService, StockQueryService},
-    users::UserApplicationService,
+    company::CompanyQueryService, stock::StockQueryService, users::UserApplicationService,
 };
 
 /// ハンドラ間で共有されるオブジェクト
