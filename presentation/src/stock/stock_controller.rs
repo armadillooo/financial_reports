@@ -9,7 +9,7 @@ use axum::{
 use chrono::NaiveDate;
 
 use crate::common::{Utility, UtilityImpl};
-use applications::stock::{StockQueryParameters, StockQueryService};
+use applications::stock::{StockQueryCommand, StockQueryService};
 
 pub fn stock_controller() -> Router {
     Router::new().route("/:stock_id", get(get_stocks))
@@ -20,7 +20,7 @@ async fn get_stocks(
     Query(queries): Query<HashMap<String, String>>,
     Path(stock_id): Path<String>,
 ) -> impl IntoResponse {
-    let mut params = StockQueryParameters::new();
+    let mut params = StockQueryCommand::new();
     params.stock_id = Some(stock_id);
     // クエリパラメータ取得
     params.date_from = if let Some(date) = queries.get("date_from") {

@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 use domain::users::{User, UserId, UserName, UserRepository};
 
 /// テスト用Userレポジトリ
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct InMemoryUserRepositoryImpl {
     store: Arc<Mutex<HashMap<String, User>>>,
 }

@@ -2,7 +2,7 @@
 
 use std::ops::Deref;
 
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct UserName(String);
 
 impl UserName {

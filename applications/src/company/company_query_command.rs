@@ -1,5 +1,5 @@
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct CompanyQueryParameters {
+pub struct CompanyQueryCommand {
     pub name: Option<String>,
     pub stock_id: Option<String>,
     pub sector: Option<String>,
@@ -8,7 +8,7 @@ pub struct CompanyQueryParameters {
     pub size: Option<i32>,
 }
 
-impl CompanyQueryParameters {
+impl CompanyQueryCommand {
     /// コンストラクタ
     pub fn new() -> Self {
         Self::default()

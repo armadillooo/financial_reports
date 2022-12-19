@@ -11,13 +11,13 @@ pub trait SessionService: Clone {
     async fn delete(&self, session: SessionData) -> anyhow::Result<()>;
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum SessionFromRequest {
     Found(SessionWithId),
     Created(SessionWithId),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct SessionWithId {
     pub inner: SessionData,
     pub id: SessionId,

@@ -1,3 +1,4 @@
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct PortfolioData {
     pub user_id: String,
     pub stock_id: String,

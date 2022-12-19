@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 /// Sessionに保存された各要素ごとのKey
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ItemKey<T> {
     pub value: &'static str,
     phantom: PhantomData<T>,

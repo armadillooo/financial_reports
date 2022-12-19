@@ -8,7 +8,7 @@ use axum::{
 };
 
 use crate::common::{Utility, UtilityImpl};
-use applications::company::{CompanyQueryParameters, CompanyQueryService};
+use applications::company::{CompanyQueryCommand, CompanyQueryService};
 
 pub fn company_controller() -> Router {
     Router::new().route("/", get(get_companies))
@@ -18,7 +18,7 @@ async fn get_companies(
     Extension(utility): Extension<UtilityImpl>,
     Query(queries): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
-    let mut params = CompanyQueryParameters::new();
+    let mut params = CompanyQueryCommand::new();
     // クエリパラメータ取得
     params.name = queries.get("name").map(|s| s.to_string());
     params.stock_id = queries.get("stock_id").map(|s| s.to_string());

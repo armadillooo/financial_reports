@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct StockQueryParameters {
+pub struct StockQueryCommand {
     pub stock_id: Option<String>,
     pub date_from: Option<NaiveDate>,
     pub date_to: Option<NaiveDate>,
@@ -9,7 +9,7 @@ pub struct StockQueryParameters {
     pub size: Option<i32>,
 }
 
-impl StockQueryParameters {
+impl StockQueryCommand {
     pub fn new() -> Self {
         Self::default()
     }

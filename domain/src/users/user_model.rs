@@ -1,7 +1,7 @@
 use crate::users::{UserEmail, UserId, UserName};
 
 /// Userドメインモデル
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct User {
     id: UserId,
     name: UserName,

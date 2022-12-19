@@ -4,7 +4,7 @@ use crate::users::{UserApplicationService, UserData};
 use domain::users::{UserId, UserRepository, UserService};
 
 /// User application service
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct UserApplicationServiceImpl<T>
 where
     T: UserRepository,

@@ -3,10 +3,10 @@ use std::ops::Deref;
 use anyhow::anyhow;
 
 use super::stock_data::StockData;
-use super::stock_query_parameters::StockQueryParameters;
+use super::stock_query_command::StockQueryCommand;
 use super::stock_query_service::StockQueryService;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct InmemoryStockQueryServiceImpl {
     pub stocks: Vec<StockData>,
 }
@@ -20,7 +20,7 @@ impl InmemoryStockQueryServiceImpl {
 
 #[async_trait::async_trait]
 impl StockQueryService for InmemoryStockQueryServiceImpl {
-    async fn find(&self, param: StockQueryParameters) -> anyhow::Result<Vec<StockData>> {
+    async fn find(&self, param: StockQueryCommand) -> anyhow::Result<Vec<StockData>> {
         // パラメータチェック
         if let (Some(from), Some(to)) = (param.date_from, param.date_to) {
             if from > to {
@@ -90,7 +90,7 @@ mod test {
 
     use crate::stock::{
         inmemory_stock_query_service_impl::InmemoryStockQueryServiceImpl, stock_data::StockData,
-        stock_query_parameters::StockQueryParameters, stock_query_service::StockQueryService,
+        stock_query_command::StockQueryCommand, stock_query_service::StockQueryService,
     };
 
     fn setup() -> InmemoryStockQueryServiceImpl {
@@ -100,7 +100,7 @@ mod test {
     #[tokio::test]
     async fn find_by_id() -> anyhow::Result<()> {
         let mut service = setup();
-        let mut param = StockQueryParameters::new();
+        let mut param = StockQueryCommand::new();
         let target_id = "2";
         param.stock_id = Some(target_id.to_string());
 
@@ -122,7 +122,7 @@ mod test {
     #[tokio::test]
     async fn find_by_date_from() -> anyhow::Result<()> {
         let mut service = setup();
-        let mut param = StockQueryParameters::new();
+        let mut param = StockQueryCommand::new();
         let target_date = NaiveDate::from_ymd_opt(2022, 7, 12);
         param.date_from = target_date;
 
@@ -146,7 +146,7 @@ mod test {
     #[tokio::test]
     async fn find_by_date_to() -> anyhow::Result<()> {
         let mut service = setup();
-        let mut param = StockQueryParameters::new();
+        let mut param = StockQueryCommand::new();
         let target_date = NaiveDate::from_ymd_opt(2022, 7, 12);
         param.date_to = target_date;
 
@@ -170,7 +170,7 @@ mod test {
     #[tokio::test]
     async fn pagenation() -> anyhow::Result<()> {
         let mut service = setup();
-        let mut param = StockQueryParameters::new();
+        let mut param = StockQueryCommand::new();
         let index = Some(2);
         let page_size = Some(1);
         param.page = index;

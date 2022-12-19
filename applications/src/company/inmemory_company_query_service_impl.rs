@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use super::CompanyData;
-use super::CompanyQueryParameters;
+use super::CompanyQueryCommand;
 use super::CompanyQueryService;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -18,7 +18,7 @@ impl InmemoryCompanyQueryServiceImpl {
 
 #[async_trait::async_trait]
 impl CompanyQueryService for InmemoryCompanyQueryServiceImpl {
-    async fn find(&self, param: CompanyQueryParameters) -> anyhow::Result<Vec<CompanyData>> {
+    async fn find(&self, param: CompanyQueryCommand) -> anyhow::Result<Vec<CompanyData>> {
         // 企業名検索
         if let Some(name) = param.name {
             if let Some(company) = self.companies.iter().find(|c| c.name == name) {

@@ -9,7 +9,7 @@ use crate::session::{ItemKey, SessionFromRequest};
 
 use super::SessionId;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct SessionData {
     inner: Session,
 }
