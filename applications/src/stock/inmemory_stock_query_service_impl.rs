@@ -2,9 +2,7 @@ use std::ops::Deref;
 
 use anyhow::anyhow;
 
-use super::stock_data::StockData;
-use super::stock_query_command::StockQueryCommand;
-use super::stock_query_service::StockQueryService;
+use crate::stock::{StockData, StockQueryCommand, StockQueryService};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct InmemoryStockQueryServiceImpl {
@@ -78,6 +76,19 @@ impl StockQueryService for InmemoryStockQueryServiceImpl {
         let result = iter.collect::<Vec<StockData>>();
 
         Ok(result)
+    }
+
+    async fn find_latest(&self, stock_id: &str) -> anyhow::Result<Option<StockData>> {
+        let mut command = StockQueryCommand::new();
+        command.stock_id = Some(stock_id.to_string());
+
+        let latest = self
+            .find(command)
+            .await?
+            .into_iter()
+            .max_by(|s1, s2| s1.date.cmp(&s2.date));
+
+        Ok(latest)
     }
 }
 
