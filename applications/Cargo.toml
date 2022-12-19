@@ -12,6 +12,7 @@ async-session = "3.0.0"
 async-trait = "0.1.56"
 serde = { version = "1.0.137", features = ["derive"] }
 chrono = "0.4.23"
+futures = "0.3.25"
 
 [dev-dependencies]
 tokio = { version = "1.18.2", features = ["full"] }

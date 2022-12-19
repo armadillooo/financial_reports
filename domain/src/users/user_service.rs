@@ -1,7 +1,7 @@
 //! Userドメインサービス
 use std::sync::Arc;
 
-use crate::users::{User, UserRepository};
+use crate::users::UserRepository;
 
 use super::UserId;
 
