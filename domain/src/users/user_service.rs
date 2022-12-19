@@ -3,6 +3,8 @@ use std::sync::Arc;
 
 use crate::users::{User, UserRepository};
 
+use super::UserId;
+
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct UserService<T>
 where
@@ -22,8 +24,8 @@ where
         }
     }
 
-    pub async fn exists(&self, user: &User) -> bool {
-        if let Ok(Some(_user)) = self.user_repository.find(user.id()).await {
+    pub async fn exists(&self, user_id: &UserId) -> bool {
+        if let Ok(Some(_user)) = self.user_repository.find(user_id).await {
             true
         } else {
             false

@@ -12,3 +12,13 @@ pub struct Portfolio {
     /// 1株当たり購入価格(円)
     pub purchase: i32,
 }
+
+impl Portfolio {
+    pub fn update_stock_count(&mut self, stock_count: i32) {
+        self.stock_count = stock_count;
+    }
+
+    pub fn update_purchase(&mut self, purchase: i32) {
+        self.purchase = purchase;
+    }
+}

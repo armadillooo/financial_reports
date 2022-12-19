@@ -41,13 +41,13 @@ where
 
     /// User新規作成
     async fn save(&self, user: UserData) -> anyhow::Result<()> {
-        let user = user.into();
+        let user_id = UserId::new(user.id.clone());
 
-        if self.user_service.exists(&user).await {
+        if self.user_service.exists(&user_id).await {
             return Err(anyhow::format_err!("User already exists"));
         }
 
-        self.user_repository.save(user).await?;
+        self.user_repository.save(user.into()).await?;
         Ok(())
     }
 
