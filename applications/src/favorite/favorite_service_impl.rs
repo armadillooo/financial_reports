@@ -24,9 +24,11 @@ where
     U: UserRepository + Send + Sync,
 {
     async fn get_all(&self, user_id: &str) -> anyhow::Result<Vec<FavoriteData>> {
+        let user_id = UserId::new(user_id.to_string());
+
         let result = self
             .favorite_repository
-            .find(&user_id)
+            .find_all(&user_id)
             .await
             .map(|favorites| {
                 favorites

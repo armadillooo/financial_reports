@@ -33,14 +33,14 @@ impl FavoriteRepository for InmemoryFavoriteRepositoryImpl {
         Ok(())
     }
 
-    async fn find(&self, user_id: &str) -> anyhow::Result<Vec<Favorite>> {
+    async fn find_all(&self, user_id: &UserId) -> anyhow::Result<Vec<Favorite>> {
         let result = self
             .store
             .lock()
             .unwrap()
             .to_vec()
             .into_iter()
-            .filter(|favorite| favorite.user_id == UserId::new(user_id.to_string()));
+            .filter(|favorite| favorite.user_id == *user_id);
         let result = result.collect::<Vec<Favorite>>();
 
         Ok(result)
