@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use axum::{routing::{get, delete, post}, Router, response::IntoResponse, Extension, extract::{Path, Query}};
+use axum::{routing::{get, post}, Router, response::IntoResponse, Extension, extract::{Path, Query}};
 
 use crate::common::{Utility, UtilityImpl};
 use applications::{favorite::{FavoriteService, FavoriteData}, portfolio::{PortfolioService, PortfolioData, PortfolioUpdateCommand}, users::UserApplicationService};

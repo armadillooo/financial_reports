@@ -7,8 +7,8 @@ use crate::{
 };
 use applications::{
     company::InmemoryCompanyQueryServiceImpl,
-    favorite::{FavoriteService, FavoriteServiceImpl, InmemoryFavoriteRepositoryImpl},
-    portfolio::{InmemoryPortfolioRepositoryImpl, PortfolioService, PortfolioServiceImpl},
+    favorite::{FavoriteServiceImpl, InmemoryFavoriteRepositoryImpl},
+    portfolio::{InmemoryPortfolioRepositoryImpl, PortfolioServiceImpl},
     stock::InmemoryStockQueryServiceImpl,
     users::{InMemoryUserRepositoryImpl, UserApplicationServiceImpl},
 };
