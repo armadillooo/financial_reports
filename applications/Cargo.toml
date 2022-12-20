@@ -7,12 +7,12 @@ edition = "2021"
 
 [dependencies]
 domain = { path = "../domain" }
-anyhow = "1.0.58"
+anyhow = "1.0.68"
 async-session = "3.0.0"
-async-trait = "0.1.56"
-serde = { version = "1.0.137", features = ["derive"] }
+async-trait = "0.1.60"
+serde = { version = "1.0.151", features = ["derive"] }
 chrono = "0.4.23"
 futures = "0.3.25"
 
 [dev-dependencies]
-tokio = { version = "1.18.2", features = ["full"] }
+tokio = { version = "1.23.0", features = ["full"] }

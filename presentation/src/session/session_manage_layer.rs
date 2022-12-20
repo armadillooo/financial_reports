@@ -1,7 +1,6 @@
 use std::sync::{Arc, RwLock};
 
 use axum::{
-    extract::{FromRequest, RequestParts},
     headers::{Cookie, HeaderValue},
     http::{self, Request},
     middleware::Next,
@@ -18,35 +17,24 @@ pub type SharedSession = Arc<RwLock<SessionData>>;
 const COOKIE_VALUE_KEY: &str = "Cookie Value";
 
 /// Sessionが新規作成された場合にCookiにSession IDを自動で追加する
-pub async fn session_manage_layer<B>(req: Request<B>, next: Next<B>) -> Result<Response, Response>
-where
-    B: Send + Sync,
-{
+pub async fn session_manage_layer<B>(
+    Extension(utility): Extension<UtilityImpl>,
+    TypedHeader(cookie_value): TypedHeader<Cookie>,
+    mut req: Request<B>,
+    next: Next<B>,
+) -> Result<Response, Response> {
     let rejection = |_| internal_error().into_response();
 
-    let mut request_parts = RequestParts::new(req);
-    let state = Extension::<UtilityImpl>::from_request(&mut request_parts)
-        .await
-        .expect("State extension was not set");
-
     // RequestにCookieが設定されている場合
-    let session = if let Some(cookie_value) =
-        <TypedHeader<Cookie>>::from_request(&mut request_parts)
-            .await
-            .ok()
-            .and_then(|cookies| {
-                cookies
-                    .get(COOKIE_VALUE_KEY)
-                    .map(|cookie| cookie.to_owned())
-            }) {
-        state
+    let session = if let Some(cookie_value) = cookie_value.get(COOKIE_VALUE_KEY) {
+        utility
             .session_service()
             .find_or_create(SessionId::new(cookie_value.to_string()))
             .await
             .map_err(rejection)?
     // Cookieが存在しない場合
     } else {
-        state
+        utility
             .session_service()
             .create()
             .await
@@ -58,10 +46,6 @@ where
         SessionFromRequest::Created(session) => (session.inner, true, session.id),
         SessionFromRequest::Found(session) => (session.inner, false, session.id),
     };
-
-    let mut req = request_parts
-        .try_into_request()
-        .expect("Request body extracted");
 
     // HandlerにSessionを受け渡す
     let session = Arc::new(RwLock::new(session));
@@ -87,7 +71,7 @@ where
     if session.is_changed() {
         // SessionをCloneするとIdが削除されるため再度設定
         session.set_id(session_id);
-        state
+        utility
             .session_service()
             .save(session)
             .await

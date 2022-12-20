@@ -7,10 +7,10 @@ use crate::{
 
 pub fn root_controllers() -> Router {
     let api_routes = Router::new()
-        .route("/auth", auth_controller())
-        .route("/stocks", stock_controller())
-        .route("/companies", company_controller())
-        .route("/users", user_controller());
+        .nest("/auth", auth_controller())
+        .nest("/stocks", stock_controller())
+        .nest("/companies", company_controller())
+        .nest("/users", user_controller());
 
     let root = Router::new().nest("/api", api_routes);
 

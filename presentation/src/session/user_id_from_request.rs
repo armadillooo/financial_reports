@@ -1,7 +1,7 @@
 //! Http RequestからセッションIDを抽出する
 use axum::{
-    extract::{Extension, FromRequest, RequestParts},
-    http::StatusCode,
+    extract::{Extension, FromRequest},
+    http::{StatusCode, Request},
 };
 
 use crate::{
@@ -13,17 +13,18 @@ use crate::{
 // 認証が必要なAPIのハンドラに引数で渡すことで
 // 認証のチェックを自動で行う
 #[axum::async_trait]
-impl<T> FromRequest<T> for LoginedUserId
+impl<S, B> FromRequest<S, B> for LoginedUserId
 where
-    T: Send,
+    B: Send + 'static,
+    S: Send + Sync,
 {
     // エラー時の戻り値の型
     type Rejection = ApiResponse;
 
     /// ログインが必要なリクエストに対して、Sessionの存在確認を行う
-    async fn from_request(req: &mut RequestParts<T>) -> Result<Self, Self::Rejection> {
+    async fn from_request(req: Request<B>, state: &S) -> Result<Self, Self::Rejection> {
         // Extensinからメモリストアを取得
-        let user_id = Extension::<SharedSession>::from_request(req)
+        let user_id = Extension::<SharedSession>::from_request(req, state)
             .await
             .map_err(|_| internal_error())?
             .read()
