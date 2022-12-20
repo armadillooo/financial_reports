@@ -6,6 +6,13 @@ pub struct FavoriteData {
     pub stock_id: String,
 }
 
+impl FavoriteData {
+    /// コンストラクタ
+    pub fn new(user_id: String, stock_id: String) -> Self {
+        Self { user_id, stock_id }
+    }
+}
+
 impl From<Favorite> for FavoriteData {
     fn from(favorite: Favorite) -> Self {
         Self {

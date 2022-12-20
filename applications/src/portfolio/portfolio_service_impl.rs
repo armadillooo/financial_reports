@@ -13,19 +13,39 @@ use domain::{
     users::{UserId, UserRepository, UserService},
 };
 
-pub struct PortfolioServieImpl<T, U, V>
+#[derive(Debug, Clone, Eq, PartialEq, Default)]
+pub struct PortfolioServiceImpl<T, U, V>
 where
     T: PortfolioReposotory,
     U: StockQueryService,
     V: UserRepository,
 {
     portfolio_repository: Arc<T>,
-    stock_query_service: Arc<U>,
+    stock_query_service: U,
     user_service: UserService<V>,
 }
 
+impl<T, U, V> PortfolioServiceImpl<T, U, V>
+where
+    T: PortfolioReposotory,
+    U: StockQueryService,
+    V: UserRepository,
+{
+    /// コンストラクタ
+    pub fn new(
+        portfolio_repository: &Arc<T>,
+        stock_query_service: U,
+        user_service: UserService<V>,
+    ) -> Self {
+        Self {
+            portfolio_repository: Arc::clone(portfolio_repository),
+            stock_query_service,
+            user_service,
+        }
+    }
+}
 #[async_trait::async_trait]
-impl<T, U, V> PortfolioService for PortfolioServieImpl<T, U, V>
+impl<T, U, V> PortfolioService for PortfolioServiceImpl<T, U, V>
 where
     T: PortfolioReposotory + Send + Sync,
     U: StockQueryService + Send + Sync,
@@ -42,9 +62,8 @@ where
                 .map(|p| self.into_portfolio_data(p)),
         )
         .await;
-        
+
         result.into_iter().collect()
-        
     }
 
     async fn remove(&self, user_id: &str, stock_id: &str) -> anyhow::Result<()> {
@@ -87,7 +106,7 @@ where
     }
 }
 
-impl<T, U, V> PortfolioServieImpl<T, U, V>
+impl<T, U, V> PortfolioServiceImpl<T, U, V>
 where
     T: PortfolioReposotory + Send + Sync,
     U: StockQueryService + Send + Sync,

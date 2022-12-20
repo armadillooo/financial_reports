@@ -17,6 +17,20 @@ where
     user_service: UserService<U>,
 }
 
+impl<T, U> FavoriteServiceImpl<T, U>
+where
+    T: FavoriteRepository,
+    U: UserRepository,
+{
+    /// コンストラクタ
+    pub fn new(favorite_repository: &Arc<T>, user_service: UserService<U>) -> Self {
+        Self {
+            favorite_repository: Arc::clone(favorite_repository),
+            user_service,
+        }
+    }
+}
+
 #[async_trait::async_trait]
 impl<T, U> FavoriteService for FavoriteServiceImpl<T, U>
 where

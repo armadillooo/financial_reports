@@ -7,6 +7,8 @@ use crate::{
 };
 use applications::{
     company::InmemoryCompanyQueryServiceImpl,
+    favorite::{FavoriteService, FavoriteServiceImpl, InmemoryFavoriteRepositoryImpl},
+    portfolio::{InmemoryPortfolioRepositoryImpl, PortfolioService, PortfolioServiceImpl},
     stock::InmemoryStockQueryServiceImpl,
     users::{InMemoryUserRepositoryImpl, UserApplicationServiceImpl},
 };
@@ -16,6 +18,13 @@ type SessionServiceType = SessionServiceImpl<SessionRepositoryImpl<MemoryStore>>
 type OICDServiceType = OICDserviceImpl;
 type StockQueryServiceType = InmemoryStockQueryServiceImpl;
 type CompanyQueryServiceType = InmemoryCompanyQueryServiceImpl;
+type FavoriteServiceType =
+    FavoriteServiceImpl<InmemoryFavoriteRepositoryImpl, InMemoryUserRepositoryImpl>;
+type PortfolioServiceType = PortfolioServiceImpl<
+    InmemoryPortfolioRepositoryImpl,
+    InmemoryStockQueryServiceImpl,
+    InMemoryUserRepositoryImpl,
+>;
 
 #[derive(Debug, Clone)]
 pub struct UtilityImpl {
@@ -24,6 +33,8 @@ pub struct UtilityImpl {
     oicd_service: OICDServiceType,
     stock_query_service: StockQueryServiceType,
     company_query_service: CompanyQueryServiceType,
+    favorite_service: FavoriteServiceType,
+    portfolio_service: PortfolioServiceType,
 }
 
 impl UtilityImpl {
@@ -33,6 +44,8 @@ impl UtilityImpl {
         oicd_service: OICDServiceType,
         stock_query_service: StockQueryServiceType,
         company_query_service: CompanyQueryServiceType,
+        favorite_service: FavoriteServiceType,
+        portfolio_service: PortfolioServiceType,
     ) -> Self {
         Self {
             user_application_service,
@@ -40,6 +53,8 @@ impl UtilityImpl {
             oicd_service,
             stock_query_service,
             company_query_service,
+            favorite_service,
+            portfolio_service,
         }
     }
 }
@@ -50,6 +65,8 @@ impl Utility for UtilityImpl {
     type OICDServiceState = OICDServiceType;
     type StockQueryServiceState = StockQueryServiceType;
     type CompanyQueryServiceState = CompanyQueryServiceType;
+    type FavoriteServiceState = FavoriteServiceType;
+    type PortfolioServiceState = PortfolioServiceType;
 
     fn user_application_service(&self) -> &Self::UserApplicationServiceState {
         &self.user_application_service
@@ -69,5 +86,13 @@ impl Utility for UtilityImpl {
 
     fn company_query_service(&self) -> &Self::CompanyQueryServiceState {
         &self.company_query_service
+    }
+
+    fn favorite_service(&self) -> &Self::FavoriteServiceState {
+        &self.favorite_service
+    }
+
+    fn portfolio_service(&self) -> &Self::PortfolioServiceState {
+        &self.portfolio_service
     }
 }

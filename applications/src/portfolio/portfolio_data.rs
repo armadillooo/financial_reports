@@ -15,6 +15,17 @@ pub struct PortfolioData {
     pub latest_date: NaiveDate,
 }
 
+impl PortfolioData {
+    /// コンストラクタ
+    pub fn new(user_id: String, stock_id: String) -> Self {
+        Self {
+            user_id,
+            stock_id,
+            ..Default::default()
+        }
+    }
+}
+
 impl Into<Portfolio> for PortfolioData {
     fn into(self) -> Portfolio {
         Portfolio {

@@ -6,11 +6,14 @@ use std::sync::Arc;
 use async_session::MemoryStore;
 use axum::{middleware, Extension};
 use axum_server::tls_rustls::RustlsConfig;
+use domain::users::UserService;
 use dotenvy::{self, dotenv};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use applications::{
     company::InmemoryCompanyQueryServiceImpl,
+    favorite::{FavoriteServiceImpl, InmemoryFavoriteRepositoryImpl},
+    portfolio::{InmemoryPortfolioRepositoryImpl, PortfolioServiceImpl},
     stock::InmemoryStockQueryServiceImpl,
     users::{InMemoryUserRepositoryImpl, UserApplicationServiceImpl},
 };
@@ -48,8 +51,10 @@ async fn main() -> anyhow::Result<()> {
 
     let user_repository = Arc::new(InMemoryUserRepositoryImpl::new());
     let user_service = UserApplicationServiceImpl::new(&user_repository);
+
     let session_repository = Arc::new(SessionRepositoryImpl::new(MemoryStore::new()));
     let session_service = SessionServiceImpl::new(&session_repository);
+
     let oicd_client = OICDClient::new(
         "https://accounts.google.com".to_string(),
         "525690818902-l0urmj6r09omclbguobeq6ef1iqr561k.apps.googleusercontent.com".to_string(),
@@ -58,8 +63,22 @@ async fn main() -> anyhow::Result<()> {
     )
     .await?;
     let oicd_service = OICDserviceImpl::new(oicd_client);
+
     let stock_query_service = InmemoryStockQueryServiceImpl::new();
+
     let company_query_service = InmemoryCompanyQueryServiceImpl::new();
+
+    let favorite_repository = Arc::new(InmemoryFavoriteRepositoryImpl::new());
+    let user_domain_service = UserService::new(&user_repository);
+    let favorite_service =
+        FavoriteServiceImpl::new(&favorite_repository, user_domain_service.clone());
+
+    let portfolio_repository = Arc::new(InmemoryPortfolioRepositoryImpl::new());
+    let portfolio_service = PortfolioServiceImpl::new(
+        &portfolio_repository,
+        stock_query_service.clone(),
+        user_domain_service,
+    );
 
     let state = UtilityImpl::new(
         user_service,
@@ -67,6 +86,8 @@ async fn main() -> anyhow::Result<()> {
         oicd_service,
         stock_query_service,
         company_query_service,
+        favorite_service,
+        portfolio_service,
     );
 
     let app = root_controllers()
