@@ -1,7 +1,7 @@
-use crate::stock::{StockData, StockQueryCommand};
+use crate::stock::{StockData, StockQueryCommand, StockQueryResult};
 
 #[async_trait::async_trait]
 pub trait StockQueryService {
-    async fn find(&self, param: StockQueryCommand) -> anyhow::Result<Vec<StockData>>;
-    async fn find_latest(&self, stock_id: &str) -> anyhow::Result<Option<StockData>>;
+    async fn find(&self, param: StockQueryCommand) -> StockQueryResult<Vec<StockData>>;
+    async fn find_latest(&self, stock_id: &str) -> StockQueryResult<StockData>;
 }

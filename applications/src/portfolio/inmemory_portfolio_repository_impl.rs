@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use domain::{
-    portfolio::{Portfolio, PortfolioReposotory},
+    portfolio::{Portfolio, PortfolioDomainError, PortfolioDomainResult, PortfolioReposotory},
     stock::StockId,
     users::UserId,
 };
@@ -20,13 +20,13 @@ impl InmemoryPortfolioRepositoryImpl {
 
 #[async_trait::async_trait]
 impl PortfolioReposotory for InmemoryPortfolioRepositoryImpl {
-    async fn save(&self, portfolio: Portfolio) -> anyhow::Result<()> {
+    async fn save(&self, portfolio: Portfolio) -> PortfolioDomainResult<()> {
         self.store.lock().unwrap().push(portfolio);
 
         Ok(())
     }
 
-    async fn delete(&self, user_id: &UserId, stock_id: &StockId) -> anyhow::Result<()> {
+    async fn delete(&self, user_id: &UserId, stock_id: &StockId) -> PortfolioDomainResult<()> {
         let mut store = self.store.lock().unwrap();
         let Some(index) = store.iter().position(|target| target.stock_id == *stock_id && target.user_id == *user_id) else {return Ok(())};
         store.remove(index);
@@ -34,7 +34,7 @@ impl PortfolioReposotory for InmemoryPortfolioRepositoryImpl {
         Ok(())
     }
 
-    async fn find_all(&self, user_id: &UserId) -> anyhow::Result<Vec<Portfolio>> {
+    async fn find_all(&self, user_id: &UserId) -> PortfolioDomainResult<Vec<Portfolio>> {
         let result = self
             .store
             .lock()
@@ -47,18 +47,15 @@ impl PortfolioReposotory for InmemoryPortfolioRepositoryImpl {
         Ok(result)
     }
 
-    async fn find(
-        &self,
-        user_id: &UserId,
-        stock_id: &StockId,
-    ) -> anyhow::Result<Option<Portfolio>> {
+    async fn find(&self, user_id: &UserId, stock_id: &StockId) -> PortfolioDomainResult<Portfolio> {
         let result = self
             .store
             .lock()
             .unwrap()
             .iter()
             .find(|favorite| favorite.user_id == *user_id && favorite.stock_id == *stock_id)
-            .map(|found| found.clone());
+            .map(|found| found.clone())
+            .ok_or(PortfolioDomainError::NotFound)?;
 
         Ok(result)
     }

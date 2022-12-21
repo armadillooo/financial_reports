@@ -1,9 +1,7 @@
 //! Userドメインサービス
 use std::sync::Arc;
 
-use crate::users::UserRepository;
-
-use super::{UserId, UserDomainResult};
+use crate::users::{UserDomainError, UserDomainResult, UserId, UserRepository};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct UserDomainService<T>
@@ -24,11 +22,11 @@ where
         }
     }
 
-    pub async fn exists(&self, user_id: &UserId) -> UserDomainResult<bool> {
+    pub async fn exists(&self, user_id: &UserId) -> UserDomainResult<()> {
         if let Some(_user) = self.user_repository.find(user_id).await? {
-            Ok(true)
+            Ok(())
         } else {
-            Ok(false)
+            Err(UserDomainError::UserNotExist)
         }
     }
 }

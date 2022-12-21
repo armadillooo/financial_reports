@@ -56,9 +56,8 @@ where
 
     async fn add(&self, favorite: FavoriteData) -> anyhow::Result<()> {
         let user_id = UserId::new(favorite.user_id.clone());
-        if self.user_service.exists(&user_id).await? == false {
-            return Err(anyhow!("user not exists"));
-        };
+        
+        self.user_service.exists(&user_id).await?;
 
         self.favorite_repository.save(favorite.into()).await
     }

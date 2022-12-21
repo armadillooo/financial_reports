@@ -1,8 +1,8 @@
 use std::ops::Deref;
 
-use anyhow::anyhow;
-
-use crate::stock::{StockData, StockQueryCommand, StockQueryService};
+use crate::stock::{
+    StockData, StockQueryCommand, StockQueryError, StockQueryResult, StockQueryService,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct InmemoryStockQueryServiceImpl {
@@ -18,11 +18,11 @@ impl InmemoryStockQueryServiceImpl {
 
 #[async_trait::async_trait]
 impl StockQueryService for InmemoryStockQueryServiceImpl {
-    async fn find(&self, param: StockQueryCommand) -> anyhow::Result<Vec<StockData>> {
+    async fn find(&self, param: StockQueryCommand) -> StockQueryResult<Vec<StockData>> {
         // パラメータチェック
-        if let (Some(from), Some(to)) = (param.date_from, param.date_to) {
-            if from > to {
-                return Err(anyhow!("parameter error!"));
+        if let (Some(start), Some(end)) = (param.start, param.end) {
+            if start > end {
+                return Err(StockQueryError::InvalidRangeOfDate { start, end });
             }
         };
         // ID検索
@@ -35,7 +35,7 @@ impl StockQueryService for InmemoryStockQueryServiceImpl {
         };
         // 日付範囲指定(下限)
         let find_by_date_from = |s: &StockData| {
-            if let Some(from) = &param.date_from {
+            if let Some(from) = &param.start {
                 &s.date >= from
             } else {
                 true
@@ -43,7 +43,7 @@ impl StockQueryService for InmemoryStockQueryServiceImpl {
         };
         // 日付範囲指定(上限)
         let find_by_date_to = |s: &StockData| {
-            if let Some(to) = &param.date_to {
+            if let Some(to) = &param.end {
                 &s.date <= to
             } else {
                 true
@@ -78,7 +78,7 @@ impl StockQueryService for InmemoryStockQueryServiceImpl {
         Ok(result)
     }
 
-    async fn find_latest(&self, stock_id: &str) -> anyhow::Result<Option<StockData>> {
+    async fn find_latest(&self, stock_id: &str) -> StockQueryResult<StockData> {
         let mut command = StockQueryCommand::new();
         command.stock_id = Some(stock_id.to_string());
 
@@ -86,7 +86,8 @@ impl StockQueryService for InmemoryStockQueryServiceImpl {
             .find(command)
             .await?
             .into_iter()
-            .max_by(|s1, s2| s1.date.cmp(&s2.date));
+            .max_by(|s1, s2| s1.date.cmp(&s2.date))
+            .ok_or(StockQueryError::NotFound)?;
 
         Ok(latest)
     }
@@ -135,7 +136,7 @@ mod test {
         let mut service = setup();
         let mut param = StockQueryCommand::new();
         let target_date = NaiveDate::from_ymd_opt(2022, 7, 12);
-        param.date_from = target_date;
+        param.start = target_date;
 
         let mut stocks = Vec::new();
         for i in 0..4 {
@@ -159,7 +160,7 @@ mod test {
         let mut service = setup();
         let mut param = StockQueryCommand::new();
         let target_date = NaiveDate::from_ymd_opt(2022, 7, 12);
-        param.date_to = target_date;
+        param.end = target_date;
 
         let mut stocks = Vec::new();
         for i in 0..4 {

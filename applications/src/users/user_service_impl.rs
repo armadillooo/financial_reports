@@ -46,9 +46,7 @@ where
     async fn save(&self, user: UserData) -> UserApplicationResult<()> {
         let user_id = UserId::new(user.id.clone());
 
-        if self.user_service.exists(&user_id).await? {
-            return Err(UserDomainError::UserAlreadyExist.into());
-        }
+        self.user_service.exists(&user_id).await?;
 
         self.user_repository.save(user.into()).await?;
         Ok(())

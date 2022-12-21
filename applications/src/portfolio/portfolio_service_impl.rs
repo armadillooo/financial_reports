@@ -4,7 +4,9 @@ use anyhow::anyhow;
 use futures::future::join_all;
 
 use crate::{
-    portfolio::{PortfolioData, PortfolioService, PortfolioUpdateCommand},
+    portfolio::{
+        PortfoliApplicationResult, PortfolioData, PortfolioService, PortfolioUpdateCommand,
+    },
     stock::StockQueryService,
 };
 use domain::{
@@ -51,7 +53,7 @@ where
     U: StockQueryService + Send + Sync,
     V: UserRepository + Send + Sync,
 {
-    async fn get_all(&self, user_id: &str) -> anyhow::Result<Vec<PortfolioData>> {
+    async fn get_all(&self, user_id: &str) -> PortfoliApplicationResult<Vec<PortfolioData>> {
         let user_id = UserId::new(user_id.to_string());
         let all_portfolio = self.portfolio_repository.find_all(&user_id).await?;
 
@@ -66,22 +68,27 @@ where
         result.into_iter().collect()
     }
 
-    async fn remove(&self, user_id: &str, stock_id: &str) -> anyhow::Result<()> {
+    async fn remove(&self, user_id: &str, stock_id: &str) -> PortfoliApplicationResult<()> {
         let user_id = UserId::new(user_id.to_string());
         let stock_id = StockId::new(stock_id.to_string());
 
-        self.portfolio_repository.delete(&user_id, &stock_id).await
+        self.portfolio_repository
+            .delete(&user_id, &stock_id)
+            .await?;
+        Ok(())
     }
 
-    async fn update(&self, update_command: PortfolioUpdateCommand) -> anyhow::Result<()> {
+    async fn update(
+        &self,
+        update_command: PortfolioUpdateCommand,
+    ) -> PortfoliApplicationResult<()> {
         let user_id = UserId::new(update_command.user_id.to_string());
         let stock_id = StockId::new(update_command.stock_id.to_string());
 
         let mut portfolio = self
             .portfolio_repository
             .find(&user_id, &stock_id)
-            .await?
-            .ok_or(anyhow!("Portfolio not found"))?;
+            .await?;
 
         if let Some(purchase) = update_command.purchase {
             portfolio.update_purchase(purchase);
@@ -93,16 +100,17 @@ where
             return Ok(());
         }
 
-        self.portfolio_repository.save(portfolio).await
+        self.portfolio_repository.save(portfolio).await?;
+        Ok(())
     }
 
-    async fn add(&self, portfolio: PortfolioData) -> anyhow::Result<()> {
+    async fn add(&self, portfolio: PortfolioData) -> PortfoliApplicationResult<()> {
         let user_id = UserId::new(portfolio.user_id.to_string());
-        if self.user_service.exists(&user_id).await? == false {
-            return Err(anyhow!("user not exists"));
-        };
+        
+        self.user_service.exists(&user_id).await?;
 
-        self.portfolio_repository.save(portfolio.into()).await
+        self.portfolio_repository.save(portfolio.into()).await?;
+        Ok(())
     }
 }
 
@@ -112,12 +120,14 @@ where
     U: StockQueryService + Send + Sync,
     V: UserRepository + Send + Sync,
 {
-    async fn into_portfolio_data(&self, portfolio: Portfolio) -> anyhow::Result<PortfolioData> {
+    async fn into_portfolio_data(
+        &self,
+        portfolio: Portfolio,
+    ) -> PortfoliApplicationResult<PortfolioData> {
         let latest = self
             .stock_query_service
             .find_latest(&portfolio.stock_id)
-            .await?
-            .ok_or(anyhow!("Latest stock data not found"))?;
+            .await?;
 
         let portfolio_data = PortfolioData {
             stock_id: portfolio.stock_id.to_string(),

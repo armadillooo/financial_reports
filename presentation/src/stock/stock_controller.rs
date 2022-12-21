@@ -8,7 +8,7 @@ use axum::{
 };
 use chrono::NaiveDate;
 
-use crate::common::{AppState};
+use crate::common::AppState;
 use applications::stock::StockQueryCommand;
 
 pub fn stock_controller(state: AppState) -> Router {
@@ -25,13 +25,13 @@ async fn get_stocks(
     let mut params = StockQueryCommand::new();
     params.stock_id = Some(stock_id);
     // クエリパラメータ取得
-    params.date_from = if let Some(date) = queries.get("date_from") {
+    params.start = if let Some(date) = queries.get("start") {
         let Ok(date) = NaiveDate::parse_from_str(date, "%Y-%m-%d") else { return "Err"};
         Some(date)
     } else {
         None
     };
-    params.date_to = if let Some(date) = queries.get("date_to") {
+    params.end = if let Some(date) = queries.get("end") {
         let Ok(date) = NaiveDate::parse_from_str(date, "%Y-%m-%d") else { return "Err"};
         Some(date)
     } else {
