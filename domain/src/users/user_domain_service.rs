@@ -6,14 +6,14 @@ use crate::users::UserRepository;
 use super::UserId;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct UserService<T>
+pub struct UserDomainService<T>
 where
     T: UserRepository,
 {
     user_repository: Arc<T>,
 }
 
-impl<T> UserService<T>
+impl<T> UserDomainService<T>
 where
     T: UserRepository,
 {

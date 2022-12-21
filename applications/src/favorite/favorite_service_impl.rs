@@ -4,7 +4,7 @@ use crate::favorite::{FavoriteData, FavoriteService};
 use anyhow::anyhow;
 use domain::{
     favorite::FavoriteRepository,
-    users::{UserId, UserRepository, UserService},
+    users::{UserDomainService, UserId, UserRepository},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -14,7 +14,7 @@ where
     U: UserRepository,
 {
     favorite_repository: Arc<T>,
-    user_service: UserService<U>,
+    user_service: UserDomainService<U>,
 }
 
 impl<T, U> FavoriteServiceImpl<T, U>
@@ -23,7 +23,7 @@ where
     U: UserRepository,
 {
     /// コンストラクタ
-    pub fn new(favorite_repository: &Arc<T>, user_service: UserService<U>) -> Self {
+    pub fn new(favorite_repository: &Arc<T>, user_service: UserDomainService<U>) -> Self {
         Self {
             favorite_repository: Arc::clone(favorite_repository),
             user_service,

@@ -16,7 +16,7 @@ use crate::{
     session::{ItemKey, SharedSession},
     user::{LoginedUserId, USER_ID},
 };
-use applications::users::{UserApplicationService, UserData};
+use applications::users::{UserData, UserService};
 
 const AUTH_TYPE: ItemKey<AuthenticationType> = ItemKey::new("auth type");
 const OICD_INFO: ItemKey<OICDData> = ItemKey::new("oicd info");

@@ -1,12 +1,12 @@
 use crate::{auth::OICDService, session::SessionService};
 use applications::{
     company::CompanyQueryService, favorite::FavoriteService, portfolio::PortfolioService,
-    stock::StockQueryService, users::UserApplicationService,
+    stock::StockQueryService, users::UserService,
 };
 
 /// ハンドラ間で共有されるオブジェクト
 pub trait Utility {
-    type UserApplicationServiceState: UserApplicationService;
+    type UserApplicationServiceState: UserService;
     type SessionServiceState: SessionService;
     type OICDServiceState: OICDService;
     type StockQueryServiceState: StockQueryService;

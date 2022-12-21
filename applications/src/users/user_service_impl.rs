@@ -1,19 +1,19 @@
 use std::sync::Arc;
 
-use crate::users::{UserApplicationService, UserData};
-use domain::users::{UserId, UserRepository, UserService};
+use crate::users::{UserData, UserService};
+use domain::users::{UserDomainService, UserId, UserRepository};
 
 /// User application service
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct UserApplicationServiceImpl<T>
+pub struct UserServiceImpl<T>
 where
     T: UserRepository,
 {
     user_repository: Arc<T>,
-    user_service: UserService<T>,
+    user_service: UserDomainService<T>,
 }
 
-impl<T> UserApplicationServiceImpl<T>
+impl<T> UserServiceImpl<T>
 where
     T: UserRepository,
 {
@@ -21,13 +21,13 @@ where
     pub fn new(user_repository: &Arc<T>) -> Self {
         Self {
             user_repository: Arc::clone(user_repository),
-            user_service: UserService::new(user_repository),
+            user_service: UserDomainService::new(user_repository),
         }
     }
 }
 
 #[async_trait::async_trait]
-impl<T> UserApplicationService for UserApplicationServiceImpl<T>
+impl<T> UserService for UserServiceImpl<T>
 where
     T: UserRepository + Send + Sync,
 {
@@ -71,12 +71,12 @@ mod tests {
         use std::sync::Arc;
 
         use crate::users::inmemory_user_repository_impl::InMemoryUserRepositoryImpl;
-        use crate::users::{UserApplicationService, UserApplicationServiceImpl, UserData};
+        use crate::users::{UserData, UserService, UserServiceImpl};
 
         // テストに必要なオブジェクトの初期化
-        fn setup() -> UserApplicationServiceImpl<InMemoryUserRepositoryImpl> {
+        fn setup() -> UserServiceImpl<InMemoryUserRepositoryImpl> {
             let user_repository = Arc::new(InMemoryUserRepositoryImpl::new());
-            let user_application = UserApplicationServiceImpl::new(&user_repository);
+            let user_application = UserServiceImpl::new(&user_repository);
 
             user_application
         }

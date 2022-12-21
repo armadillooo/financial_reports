@@ -6,7 +6,7 @@ use std::sync::Arc;
 use async_session::MemoryStore;
 use axum::{middleware, Extension};
 use axum_server::tls_rustls::RustlsConfig;
-use domain::users::UserService;
+use domain::users::UserDomainService;
 use dotenvy::{self, dotenv};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -15,7 +15,7 @@ use applications::{
     favorite::{FavoriteServiceImpl, InmemoryFavoriteRepositoryImpl},
     portfolio::{InmemoryPortfolioRepositoryImpl, PortfolioServiceImpl},
     stock::InmemoryStockQueryServiceImpl,
-    users::{InMemoryUserRepositoryImpl, UserApplicationServiceImpl},
+    users::{InMemoryUserRepositoryImpl, UserServiceImpl},
 };
 use presentation::{
     auth::{OICDClient, OICDserviceImpl},
@@ -50,7 +50,7 @@ async fn main() -> anyhow::Result<()> {
     .await?;
 
     let user_repository = Arc::new(InMemoryUserRepositoryImpl::new());
-    let user_service = UserApplicationServiceImpl::new(&user_repository);
+    let user_service = UserServiceImpl::new(&user_repository);
 
     let session_repository = Arc::new(SessionRepositoryImpl::new(MemoryStore::new()));
     let session_service = SessionServiceImpl::new(&session_repository);
@@ -69,7 +69,7 @@ async fn main() -> anyhow::Result<()> {
     let company_query_service = InmemoryCompanyQueryServiceImpl::new();
 
     let favorite_repository = Arc::new(InmemoryFavoriteRepositoryImpl::new());
-    let user_domain_service = UserService::new(&user_repository);
+    let user_domain_service = UserDomainService::new(&user_repository);
     let favorite_service =
         FavoriteServiceImpl::new(&favorite_repository, user_domain_service.clone());
 

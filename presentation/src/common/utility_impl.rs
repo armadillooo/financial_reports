@@ -10,10 +10,10 @@ use applications::{
     favorite::{FavoriteServiceImpl, InmemoryFavoriteRepositoryImpl},
     portfolio::{InmemoryPortfolioRepositoryImpl, PortfolioServiceImpl},
     stock::InmemoryStockQueryServiceImpl,
-    users::{InMemoryUserRepositoryImpl, UserApplicationServiceImpl},
+    users::{InMemoryUserRepositoryImpl, UserServiceImpl},
 };
 
-type UserApplicationServiceType = UserApplicationServiceImpl<InMemoryUserRepositoryImpl>;
+type UserApplicationServiceType = UserServiceImpl<InMemoryUserRepositoryImpl>;
 type SessionServiceType = SessionServiceImpl<SessionRepositoryImpl<MemoryStore>>;
 type OICDServiceType = OICDserviceImpl;
 type StockQueryServiceType = InmemoryStockQueryServiceImpl;

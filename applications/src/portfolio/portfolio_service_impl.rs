@@ -10,7 +10,7 @@ use crate::{
 use domain::{
     portfolio::{Portfolio, PortfolioReposotory},
     stock::StockId,
-    users::{UserId, UserRepository, UserService},
+    users::{UserDomainService, UserId, UserRepository},
 };
 
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
@@ -22,7 +22,7 @@ where
 {
     portfolio_repository: Arc<T>,
     stock_query_service: U,
-    user_service: UserService<V>,
+    user_service: UserDomainService<V>,
 }
 
 impl<T, U, V> PortfolioServiceImpl<T, U, V>
@@ -35,7 +35,7 @@ where
     pub fn new(
         portfolio_repository: &Arc<T>,
         stock_query_service: U,
-        user_service: UserService<V>,
+        user_service: UserDomainService<V>,
     ) -> Self {
         Self {
             portfolio_repository: Arc::clone(portfolio_repository),
