@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use domain::{
-    favorite::{Favorite, FavoriteRepository},
+    favorite::{Favorite, FavoriteRepository, FavoriteDomainResult},
     users::UserId,
 };
 
@@ -19,13 +19,13 @@ impl InmemoryFavoriteRepositoryImpl {
 
 #[async_trait::async_trait]
 impl FavoriteRepository for InmemoryFavoriteRepositoryImpl {
-    async fn save(&self, favorite: Favorite) -> anyhow::Result<()> {
+    async fn save(&self, favorite: Favorite) -> FavoriteDomainResult<()> {
         self.store.lock().unwrap().push(favorite);
 
         Ok(())
     }
 
-    async fn delete(&self, favorite: Favorite) -> anyhow::Result<()> {
+    async fn delete(&self, favorite: Favorite) -> FavoriteDomainResult<()> {
         let mut store = self.store.lock().unwrap();
         let Some(index) = store.iter().position(|target| target == &favorite) else {return Ok(())};
         store.remove(index);
@@ -33,7 +33,7 @@ impl FavoriteRepository for InmemoryFavoriteRepositoryImpl {
         Ok(())
     }
 
-    async fn find_all(&self, user_id: &UserId) -> anyhow::Result<Vec<Favorite>> {
+    async fn find_all(&self, user_id: &UserId) -> FavoriteDomainResult<Vec<Favorite>> {
         let result = self
             .store
             .lock()

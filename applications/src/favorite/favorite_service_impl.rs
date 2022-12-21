@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
-use crate::favorite::{FavoriteData, FavoriteService};
-use anyhow::anyhow;
+use crate::favorite::{FavoriteData, FavoriteService, FavoriteApplicationResult};
 use domain::{
     favorite::FavoriteRepository,
     users::{UserDomainService, UserId, UserRepository},
@@ -37,7 +36,7 @@ where
     T: FavoriteRepository + Send + Sync,
     U: UserRepository + Send + Sync,
 {
-    async fn get_all(&self, user_id: &str) -> anyhow::Result<Vec<FavoriteData>> {
+    async fn get_all(&self, user_id: &str) -> FavoriteApplicationResult<Vec<FavoriteData>> {
         let user_id = UserId::new(user_id.to_string());
 
         let result = self
@@ -49,20 +48,22 @@ where
                     .into_iter()
                     .map(|f| FavoriteData::from(f))
                     .collect()
-            });
+            })?;
 
-        result
+        Ok(result)
     }
 
-    async fn add(&self, favorite: FavoriteData) -> anyhow::Result<()> {
+    async fn add(&self, favorite: FavoriteData) -> FavoriteApplicationResult<()> {
         let user_id = UserId::new(favorite.user_id.clone());
-        
         self.user_service.exists(&user_id).await?;
+        self.favorite_repository.save(favorite.into()).await?;
 
-        self.favorite_repository.save(favorite.into()).await
+        Ok(())
     }
 
-    async fn remove(&self, favorite: FavoriteData) -> anyhow::Result<()> {
-        self.favorite_repository.delete(favorite.into()).await
+    async fn remove(&self, favorite: FavoriteData) -> FavoriteApplicationResult<()> {
+        self.favorite_repository.delete(favorite.into()).await?;
+
+        Ok(())
     }
 }

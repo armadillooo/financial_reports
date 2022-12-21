@@ -89,7 +89,8 @@ async fn main() -> anyhow::Result<()> {
         Arc::new(portfolio_service),
     );
 
-    let app = root_controllers(state).layer(middleware::from_fn(session_manage_layer));
+    let app = root_controllers(state.clone())
+        .layer(middleware::from_fn_with_state(state, session_manage_layer));
 
     let addr = dotenvy::var("SOCKET_ADDRESS").unwrap();
     let addr = SocketAddr::from_str(&addr).unwrap();

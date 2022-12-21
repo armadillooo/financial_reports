@@ -12,7 +12,7 @@ pub enum PortfolioApplicationError {
     #[error(transparent)]
     FromStockQuery(#[from] StockQueryError),
     #[error("market price data not found")]
-    MarketPriceNotFound,
+    MarketDataNotFound,
 }
 
 pub type PortfoliApplicationResult<T> = Result<T, PortfolioApplicationError>;

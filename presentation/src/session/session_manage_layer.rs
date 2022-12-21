@@ -5,7 +5,8 @@ use axum::{
     http::{self, Request},
     middleware::Next,
     response::{IntoResponse, Response},
-    Extension, TypedHeader,
+    extract::State,
+    TypedHeader,
 };
 
 use crate::{
@@ -18,7 +19,7 @@ const COOKIE_VALUE_KEY: &str = "Cookie Value";
 
 /// Sessionが新規作成された場合にCookiにSession IDを自動で追加する
 pub async fn session_manage_layer<B>(
-    Extension(utility): Extension<AppState>,
+    state: State<AppState>,
     TypedHeader(cookie_value): TypedHeader<Cookie>,
     mut req: Request<B>,
     next: Next<B>,
@@ -27,14 +28,14 @@ pub async fn session_manage_layer<B>(
 
     // RequestにCookieが設定されている場合
     let session = if let Some(cookie_value) = cookie_value.get(COOKIE_VALUE_KEY) {
-        utility
+        state
             .session_service()
             .find_or_create(SessionId::new(cookie_value.to_string()))
             .await
             .map_err(rejection)?
     // Cookieが存在しない場合
     } else {
-        utility
+        state
             .session_service()
             .create()
             .await
@@ -71,7 +72,7 @@ pub async fn session_manage_layer<B>(
     if session.is_changed() {
         // SessionをCloneするとIdが削除されるため再度設定
         session.set_id(session_id);
-        utility
+        state
             .session_service()
             .save(session)
             .await
