@@ -1,21 +1,23 @@
 use std::collections::HashMap;
 
 use axum::{
-    extract::{Extension, Query},
+    extract::{Query, State},
     response::IntoResponse,
     routing::get,
     Router,
 };
 
-use crate::common::{Utility, UtilityImpl};
-use applications::company::{CompanyQueryCommand, CompanyQueryService};
+use crate::common::AppState;
+use applications::company::CompanyQueryCommand;
 
-pub fn company_controller() -> Router {
-    Router::new().route("/", get(get_companies))
+pub fn company_controller(state: AppState) -> Router {
+    Router::new()
+        .route("/", get(get_companies))
+        .with_state(state)
 }
 
 async fn get_companies(
-    Extension(utility): Extension<UtilityImpl>,
+    state: State<AppState>,
     Query(queries): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
     let mut params = CompanyQueryCommand::new();
@@ -37,7 +39,7 @@ async fn get_companies(
         None
     };
 
-    let result = utility.company_query_service().find(params).await.unwrap();
+    let result = state.company_query_service().find(params).await.unwrap();
 
     "Ok"
 }

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use axum::{
-    extract::{Extension, Query},
+    extract::{Extension, Query, State},
     headers::{HeaderMap, HeaderValue},
     http,
     response::{IntoResponse, Response},
@@ -11,28 +11,29 @@ use axum::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    auth::{OICDData, OICDService},
-    common::{ErrorResponse, JsonBuilder, Utility, UtilityImpl},
+    auth::OICDData,
+    common::{AppState, ErrorResponse, JsonBuilder},
     session::{ItemKey, SharedSession},
     user::{LoginedUserId, USER_ID},
 };
-use applications::users::{UserData, UserService};
+use applications::users::UserData;
 
 const AUTH_TYPE: ItemKey<AuthenticationType> = ItemKey::new("auth type");
 const OICD_INFO: ItemKey<OICDData> = ItemKey::new("oicd info");
 
-pub fn auth_controller() -> Router {
+pub fn auth_controller(utility: AppState) -> Router {
     Router::new()
         .route("/signin", get(signin_redirect_google))
         .route("/login", get(login_redirect_google))
         .route("/logout", get(logout))
         .route("/redirect", get(auth_verify_google))
+        .with_state(utility)
 }
 
 /// ユーザー新規作成
 async fn signin_redirect_google(
-    Extension(session): Extension<SharedSession>,
-    Extension(utility): Extension<UtilityImpl>,
+    session: Extension<SharedSession>,
+    utility: State<AppState>,
 ) -> impl IntoResponse {
     session
         .write()
@@ -46,7 +47,7 @@ async fn signin_redirect_google(
 /// ログイン
 async fn login_redirect_google(
     session: Extension<SharedSession>,
-    utility: Extension<UtilityImpl>,
+    utility: State<AppState>,
 ) -> impl IntoResponse {
     session
         .write()
@@ -60,7 +61,7 @@ async fn login_redirect_google(
 /// 認証結果検証
 async fn auth_verify_google(
     session: Extension<SharedSession>,
-    utility: Extension<UtilityImpl>,
+    utility: State<AppState>,
     params: Query<HashMap<String, String>>,
 ) -> Response {
     let auth_type = if let Some(item) = session.read().unwrap().item(&AUTH_TYPE) {
@@ -152,7 +153,7 @@ async fn logout() -> impl IntoResponse {
     unimplemented!()
 }
 
-async fn oicd_redirect(utility: &UtilityImpl, session: &SharedSession) -> impl IntoResponse {
+async fn oicd_redirect(utility: &AppState, session: &SharedSession) -> impl IntoResponse {
     let verify_info = utility.oicd_service().redirect().await;
     let redirect_url = verify_info.auth_url.clone();
     session
@@ -171,7 +172,7 @@ async fn oicd_redirect(utility: &UtilityImpl, session: &SharedSession) -> impl I
 }
 
 async fn oicd_verify(
-    utility: &UtilityImpl,
+    utility: &AppState,
     session: &SharedSession,
     params: Query<HashMap<String, String>>,
 ) -> anyhow::Result<UserData> {

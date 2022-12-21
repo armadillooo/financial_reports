@@ -4,7 +4,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use async_session::MemoryStore;
-use axum::{middleware, Extension};
+use axum::middleware;
 use axum_server::tls_rustls::RustlsConfig;
 use domain::users::UserDomainService;
 use dotenvy::{self, dotenv};
@@ -17,12 +17,11 @@ use applications::{
     stock::InmemoryStockQueryServiceImpl,
     users::{InMemoryUserRepositoryImpl, UserServiceImpl},
 };
-use presentation::{
+use infrastructures::{
     auth::{OICDClient, OICDserviceImpl},
-    common::UtilityImpl,
-    root_controllers,
-    session::{session_manage_layer, SessionRepositoryImpl, SessionServiceImpl},
+    session::{SessionRepositoryImpl, SessionServiceImpl},
 };
+use presentation::{common::AppState, root_controllers, session::session_manage_layer};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -80,19 +79,17 @@ async fn main() -> anyhow::Result<()> {
         user_domain_service,
     );
 
-    let state = UtilityImpl::new(
-        user_service,
-        session_service,
-        oicd_service,
-        stock_query_service,
-        company_query_service,
-        favorite_service,
-        portfolio_service,
+    let state = AppState::new(
+        Arc::new(user_service),
+        Arc::new(session_service),
+        Arc::new(oicd_service),
+        Arc::new(stock_query_service),
+        Arc::new(company_query_service),
+        Arc::new(favorite_service),
+        Arc::new(portfolio_service),
     );
 
-    let app = root_controllers()
-        .layer(middleware::from_fn(session_manage_layer))
-        .layer(Extension(state));
+    let app = root_controllers(state).layer(middleware::from_fn(session_manage_layer));
 
     let addr = dotenvy::var("SOCKET_ADDRESS").unwrap();
     let addr = SocketAddr::from_str(&addr).unwrap();

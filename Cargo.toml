@@ -9,6 +9,7 @@ edition = "2021"
 domain = { path = "domain" }
 applications = { path = "applications" }
 presentation = { path = "presentation" }
+infrastructures = { path = "infrastructures" }
 axum = { version = "0.6.1", features = ["headers"] }
 axum-server = { version = "0.4.4", features = ["tls-rustls"] }
 tokio = { version = "1.23.0", features = ["full"] }

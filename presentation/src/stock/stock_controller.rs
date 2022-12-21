@@ -1,23 +1,25 @@
 use std::collections::HashMap;
 
 use axum::{
-    extract::{Extension, Path, Query},
+    extract::{Path, Query, State},
     response::IntoResponse,
     routing::get,
     Router,
 };
 use chrono::NaiveDate;
 
-use crate::common::{Utility, UtilityImpl};
-use applications::stock::{StockQueryCommand, StockQueryService};
+use crate::common::{AppState};
+use applications::stock::StockQueryCommand;
 
-pub fn stock_controller() -> Router {
-    Router::new().route("/:stock_id", get(get_stocks))
+pub fn stock_controller(state: AppState) -> Router {
+    Router::new()
+        .route("/:stock_id", get(get_stocks))
+        .with_state(state)
 }
 
 async fn get_stocks(
-    Extension(utility): Extension<UtilityImpl>,
-    Query(queries): Query<HashMap<String, String>>,
+    state: State<AppState>,
+    queries: Query<HashMap<String, String>>,
     Path(stock_id): Path<String>,
 ) -> impl IntoResponse {
     let mut params = StockQueryCommand::new();
@@ -48,7 +50,7 @@ async fn get_stocks(
         None
     };
 
-    let result = utility.stock_query_service().find(params).await.unwrap();
+    let result = state.stock_query_service().find(params).await.unwrap();
 
     "Ok"
 }

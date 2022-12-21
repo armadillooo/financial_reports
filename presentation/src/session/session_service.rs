@@ -3,7 +3,7 @@ use std::clone::Clone;
 use crate::session::{SessionData, SessionId};
 
 #[async_trait::async_trait]
-pub trait SessionService: Clone {
+pub trait SessionService {
     async fn find_or_create(&self, session_id: SessionId) -> anyhow::Result<SessionFromRequest>;
     async fn find(&self, session_id: SessionId) -> anyhow::Result<Option<SessionWithId>>;
     async fn create(&self) -> anyhow::Result<SessionWithId>;

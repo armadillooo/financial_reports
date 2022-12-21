@@ -9,8 +9,8 @@ use axum::{
 };
 
 use crate::{
-    common::{internal_error, Utility, UtilityImpl},
-    session::{SessionData, SessionFromRequest, SessionId, SessionService},
+    common::{internal_error, AppState},
+    session::{SessionData, SessionFromRequest, SessionId},
 };
 
 pub type SharedSession = Arc<RwLock<SessionData>>;
@@ -18,7 +18,7 @@ const COOKIE_VALUE_KEY: &str = "Cookie Value";
 
 /// Sessionが新規作成された場合にCookiにSession IDを自動で追加する
 pub async fn session_manage_layer<B>(
-    Extension(utility): Extension<UtilityImpl>,
+    Extension(utility): Extension<AppState>,
     TypedHeader(cookie_value): TypedHeader<Cookie>,
     mut req: Request<B>,
     next: Next<B>,
