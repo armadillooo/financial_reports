@@ -2,9 +2,9 @@ use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
 
-use crate::session::ItemKey;
+use crate::session::SessionItemKey;
 
-pub const USER_ID: ItemKey<LoginedUserId> = ItemKey::new("user id");
+pub const USER_ID: SessionItemKey<LoginedUserId> = SessionItemKey::new("user id");
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LoginedUserId(String);

@@ -1,10 +1,9 @@
 use std::clone::Clone;
 use std::sync::Arc;
 
-use anyhow::anyhow;
-
 use presentation::session::{
-    SessionData, SessionFromRequest, SessionId, SessionRepository, SessionService, SessionWithId,
+    SessionData, SessionError, SessionFromRequest, SessionId, SessionRepository, SessionResult,
+    SessionService, SessionWithId,
 };
 
 #[derive(Debug, Clone)]
@@ -33,7 +32,7 @@ where
     T: SessionRepository + Send + Sync + Clone,
 {
     /// Session取得 or 新規作成
-    async fn find_or_create(&self, session_id: SessionId) -> anyhow::Result<SessionFromRequest> {
+    async fn find_or_create(&self, session_id: SessionId) -> SessionResult<SessionFromRequest> {
         let session = if let Some(session) = self.find(session_id).await? {
             SessionFromRequest::Found(session)
         } else {
@@ -44,7 +43,7 @@ where
         Ok(session)
     }
 
-    async fn find(&self, session_id: SessionId) -> anyhow::Result<Option<SessionWithId>> {
+    async fn find(&self, session_id: SessionId) -> SessionResult<Option<SessionWithId>> {
         Ok(self
             .session_repository
             .find(session_id.to_string())
@@ -56,7 +55,7 @@ where
     }
 
     /// Session作成
-    async fn create(&self) -> anyhow::Result<SessionWithId> {
+    async fn create(&self) -> SessionResult<SessionWithId> {
         let session = SessionData::new();
         let session_id = self.save(session).await?;
 
@@ -67,17 +66,17 @@ where
                 inner: session,
                 id: session_id,
             })
-            .ok_or_else(|| anyhow!("Created session was not saved"))
+            .ok_or(SessionError::Disconnect)
     }
 
     /// Session保存
-    async fn save(&self, session: SessionData) -> anyhow::Result<SessionId> {
+    async fn save(&self, session: SessionData) -> SessionResult<SessionId> {
         let cookie_value = self.session_repository.save(session).await?;
         Ok(SessionId::new(cookie_value))
     }
 
     /// Session削除
-    async fn delete(&self, session: SessionData) -> anyhow::Result<()> {
+    async fn delete(&self, session: SessionData) -> SessionResult<()> {
         self.session_repository.delete(session).await
     }
 }

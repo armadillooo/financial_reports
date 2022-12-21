@@ -11,15 +11,15 @@ use axum::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    auth::OICDData,
+    auth::{OICDData, OICDResult},
     common::{AppState, ErrorResponse, JsonBuilder},
-    session::{ItemKey, SharedSession},
+    session::{SessionItemKey, SharedSession},
     user::{LoginedUserId, USER_ID},
 };
 use applications::users::UserData;
 
-const AUTH_TYPE: ItemKey<AuthenticationType> = ItemKey::new("auth type");
-const OICD_INFO: ItemKey<OICDData> = ItemKey::new("oicd info");
+const AUTH_TYPE: SessionItemKey<AuthenticationType> = SessionItemKey::new("auth type");
+const OICD_INFO: SessionItemKey<OICDData> = SessionItemKey::new("oicd info");
 
 pub fn auth_controller(utility: AppState) -> Router {
     Router::new()
@@ -175,7 +175,7 @@ async fn oicd_verify(
     utility: &AppState,
     session: &SharedSession,
     params: Query<HashMap<String, String>>,
-) -> anyhow::Result<UserData> {
+) -> OICDResult<UserData> {
     let oicd_info = session
         .read()
         .unwrap()

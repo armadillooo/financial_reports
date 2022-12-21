@@ -1,14 +1,14 @@
 use std::clone::Clone;
 
-use crate::session::{SessionData, SessionId};
+use crate::session::{SessionData, SessionId, SessionResult};
 
 #[async_trait::async_trait]
 pub trait SessionService {
-    async fn find_or_create(&self, session_id: SessionId) -> anyhow::Result<SessionFromRequest>;
-    async fn find(&self, session_id: SessionId) -> anyhow::Result<Option<SessionWithId>>;
-    async fn create(&self) -> anyhow::Result<SessionWithId>;
-    async fn save(&self, session: SessionData) -> anyhow::Result<SessionId>;
-    async fn delete(&self, session: SessionData) -> anyhow::Result<()>;
+    async fn find_or_create(&self, session_id: SessionId) -> SessionResult<SessionFromRequest>;
+    async fn find(&self, session_id: SessionId) -> SessionResult<Option<SessionWithId>>;
+    async fn create(&self) -> SessionResult<SessionWithId>;
+    async fn save(&self, session: SessionData) -> SessionResult<SessionId>;
+    async fn delete(&self, session: SessionData) -> SessionResult<()>;
 }
 
 #[derive(Debug, Clone, PartialEq)]

@@ -1,8 +1,6 @@
-use anyhow::anyhow;
-
-use applications::users::UserData;
-use presentation::auth::{OICDData, OICDService};
 use crate::auth::OICDClient;
+use applications::users::UserData;
+use presentation::auth::{OICDData, OICDError, OICDResult, OICDService};
 
 #[derive(Debug, Clone)]
 pub struct OICDserviceImpl
@@ -32,12 +30,16 @@ impl OICDService for OICDserviceImpl {
         verify_info: OICDData,
         code: String,
         state: String,
-    ) -> anyhow::Result<UserData> {
-        let claims = self.oicd_client.verify(verify_info, code, state).await?;
+    ) -> OICDResult<UserData> {
+        let claims = self
+            .oicd_client
+            .verify(verify_info, code, state)
+            .await
+            .map_err(|_| OICDError::VerifyError)?;
 
         let mut email = claims
             .email()
-            .ok_or_else(|| anyhow!("Email address not found"))?
+            .ok_or(OICDError::NotRegisterdEmail)?
             .to_string();
         let email_domain_offset = email.find('@').unwrap_or(email.len());
         let name: String = email.drain(..email_domain_offset).collect();

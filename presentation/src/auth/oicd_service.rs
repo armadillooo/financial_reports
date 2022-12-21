@@ -1,4 +1,4 @@
-use crate::auth::OICDData;
+use crate::auth::{OICDData, OICDResult};
 use applications::users::UserData;
 
 #[async_trait::async_trait]
@@ -9,5 +9,5 @@ pub trait OICDService {
         verify_info: OICDData,
         code: String,
         state: String,
-    ) -> anyhow::Result<UserData>;
+    ) -> OICDResult<UserData>;
 }

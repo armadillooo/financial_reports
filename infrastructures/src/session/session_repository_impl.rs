@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use async_session::SessionStore;
 use async_trait::async_trait;
 
-use presentation::session::{SessionData, SessionRepository};
+use presentation::session::{SessionData, SessionError, SessionRepository, SessionResult};
 
 #[derive(Debug, Clone)]
 pub struct SessionRepositoryImpl<T: SessionStore> {
@@ -20,14 +20,22 @@ impl<T: SessionStore> SessionRepositoryImpl<T> {
 #[async_trait]
 impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
     /// Session削除
-    async fn delete(&self, session: SessionData) -> anyhow::Result<()> {
+    async fn delete(&self, session: SessionData) -> SessionResult<()> {
         let session = session.into();
-        self.store.destroy_session(session).await
+        self.store
+            .destroy_session(session)
+            .await
+            .map_err(|_| SessionError::Disconnect)
     }
 
     /// Session取得
-    async fn find(&self, session_id: String) -> anyhow::Result<Option<SessionData>> {
-        if let Some(session) = self.store.load_session(session_id).await? {
+    async fn find(&self, session_id: String) -> SessionResult<Option<SessionData>> {
+        if let Some(session) = self
+            .store
+            .load_session(session_id)
+            .await
+            .map_err(|_| SessionError::Disconnect)?
+        {
             Ok(Some(session.into()))
         } else {
             Ok(None)
@@ -35,18 +43,19 @@ impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
     }
 
     /// Session保存
-    async fn save(&self, session: SessionData) -> anyhow::Result<String> {
+    async fn save(&self, session: SessionData) -> SessionResult<String> {
         self.store
             .store_session(session.into())
-            .await?
-            .ok_or_else(|| anyhow!("Cookie value was not set"))
+            .await
+            .map_err(|e| SessionError::Disconnect)?
+            .ok_or(SessionError::Disconnect)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use async_session::MemoryStore;
-    
+
     use crate::session::SessionRepositoryImpl;
     use presentation::session::SessionRepository;
 

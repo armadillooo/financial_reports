@@ -1,10 +1,10 @@
 use async_trait::async_trait;
 
-use crate::session::SessionData;
+use crate::session::{SessionData, SessionResult};
 
 #[async_trait]
 pub trait SessionRepository {
-    async fn find(&self, session_id: String) -> anyhow::Result<Option<SessionData>>;
-    async fn save(&self, session: SessionData) -> anyhow::Result<String>;
-    async fn delete(&self, session: SessionData) -> anyhow::Result<()>;
+    async fn find(&self, session_id: String) -> SessionResult<Option<SessionData>>;
+    async fn save(&self, session: SessionData) -> SessionResult<String>;
+    async fn delete(&self, session: SessionData) -> SessionResult<()>;
 }
