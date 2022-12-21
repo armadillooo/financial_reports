@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use domain::users::{User, UserId, UserName, UserRepository};
+use domain::users::{User, UserDomainError, UserDomainResult, UserId, UserName, UserRepository};
 
 /// テスト用Userレポジトリ
 #[derive(Debug, Clone, Default)]
@@ -22,15 +22,13 @@ impl InMemoryUserRepositoryImpl {
 #[async_trait::async_trait]
 impl UserRepository for InMemoryUserRepositoryImpl {
     /// ユーザー削除
-    async fn delete(&self, user: User) -> anyhow::Result<()> {
-        if let Some(_) = self.store.lock().unwrap().remove(&user.id().to_string()) {
-            Ok(())
-        } else {
-            Err(anyhow::format_err!("User not exists"))
-        }
+    async fn delete(&self, user: User) -> UserDomainResult<()> {
+        self.store.lock().unwrap().remove(&user.id().to_string());
+
+        Ok(())
     }
 
-    async fn find(&self, id: &UserId) -> anyhow::Result<Option<User>> {
+    async fn find(&self, id: &UserId) -> UserDomainResult<Option<User>> {
         if let Some(user) = self.store.lock().unwrap().get(&id.to_string()) {
             Ok(Some(user.clone()))
         } else {
@@ -38,7 +36,7 @@ impl UserRepository for InMemoryUserRepositoryImpl {
         }
     }
 
-    async fn find_by_name(&self, name: &UserName) -> anyhow::Result<Option<User>> {
+    async fn find_by_name(&self, name: &UserName) -> UserDomainResult<Option<User>> {
         if let Some(user) = self
             .store
             .lock()
@@ -52,10 +50,10 @@ impl UserRepository for InMemoryUserRepositoryImpl {
         }
     }
 
-    async fn save(&self, user: User) -> anyhow::Result<()> {
+    async fn save(&self, user: User) -> UserDomainResult<()> {
         let key = user.id().to_string();
         if self.store.lock().unwrap().contains_key(&key) {
-            return Err(anyhow::format_err!("User already exists"));
+            return Err(UserDomainError::UserAlreadyExist);
         };
 
         self.store.lock().unwrap().insert(key, user);

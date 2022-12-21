@@ -98,7 +98,7 @@ where
 
     async fn add(&self, portfolio: PortfolioData) -> anyhow::Result<()> {
         let user_id = UserId::new(portfolio.user_id.to_string());
-        if self.user_service.exists(&user_id).await == false {
+        if self.user_service.exists(&user_id).await? == false {
             return Err(anyhow!("user not exists"));
         };
 

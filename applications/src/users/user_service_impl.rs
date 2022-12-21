@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use crate::users::{UserData, UserService};
-use domain::users::{UserDomainService, UserId, UserRepository};
+use crate::users::{UserApplicationResult, UserData, UserService};
+use domain::users::{UserDomainError, UserDomainService, UserId, UserRepository};
 
 /// User application service
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -32,19 +32,22 @@ where
     T: UserRepository + Send + Sync,
 {
     /// User取得
-    async fn get(&self, id: &str) -> anyhow::Result<Option<UserData>> {
-        self.user_repository
+    async fn get(&self, id: &str) -> UserApplicationResult<Option<UserData>> {
+        let user = self
+            .user_repository
             .find(&UserId::new(id.to_string()))
-            .await
-            .map(|found| found.map(|found| UserData::from(found)))
+            .await?
+            .map(|found| UserData::from(found));
+
+        Ok(user)
     }
 
     /// User新規作成
-    async fn save(&self, user: UserData) -> anyhow::Result<()> {
+    async fn save(&self, user: UserData) -> UserApplicationResult<()> {
         let user_id = UserId::new(user.id.clone());
 
-        if self.user_service.exists(&user_id).await {
-            return Err(anyhow::format_err!("User already exists"));
+        if self.user_service.exists(&user_id).await? {
+            return Err(UserDomainError::UserAlreadyExist.into());
         }
 
         self.user_repository.save(user.into()).await?;
@@ -52,7 +55,7 @@ where
     }
 
     /// User削除
-    async fn delete(&self, id: &str) -> anyhow::Result<()> {
+    async fn delete(&self, id: &str) -> UserApplicationResult<()> {
         let id = UserId::new(id.to_string());
         if let Some(user) = self.user_repository.find(&id).await? {
             self.user_repository.delete(user).await?;
