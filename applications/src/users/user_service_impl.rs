@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::users::{UserApplicationResult, UserData, UserService};
-use domain::users::{UserDomainError, UserDomainService, UserId, UserRepository};
+use domain::users::{UserDomainService, UserId, UserRepository};
 
 /// User application service
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
