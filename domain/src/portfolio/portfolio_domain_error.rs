@@ -5,7 +5,7 @@ pub enum PortfolioDomainError {
     #[error("internal server error")]
     Disconnect,
     #[error("portfolio not found")]
-    NotFound,
+    PortfolioNotFound,
 }
 
 pub type PortfolioDomainResult<T> = Result<T, PortfolioDomainError>;

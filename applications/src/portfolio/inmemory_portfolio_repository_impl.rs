@@ -55,7 +55,7 @@ impl PortfolioReposotory for InmemoryPortfolioRepositoryImpl {
             .iter()
             .find(|favorite| favorite.user_id == *user_id && favorite.stock_id == *stock_id)
             .map(|found| found.clone())
-            .ok_or(PortfolioDomainError::NotFound)?;
+            .ok_or(PortfolioDomainError::PortfolioNotFound)?;
 
         Ok(result)
     }

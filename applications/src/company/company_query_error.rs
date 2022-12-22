@@ -7,7 +7,7 @@ pub enum CompanyQueryError {
     #[error("invalid parameter: {name}={value}")]
     InvalidParameter { name: String, value: String },
     #[error("company data not found")]
-    NotFound,
+    CompanyNotFound,
 }
 
 pub type CompanyQueryResult<T> = Result<T, CompanyQueryError>;

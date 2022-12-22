@@ -7,7 +7,7 @@ pub enum UserDomainError {
     #[error("user is already exsist")]
     UserAlreadyExist,
     #[error("user not exist")]
-    UserNotExist,
+    UserNotFound,
 }
 
 pub type UserDomainResult<T> = Result<T, UserDomainError>;

@@ -87,7 +87,7 @@ impl StockQueryService for InmemoryStockQueryServiceImpl {
             .await?
             .into_iter()
             .max_by(|s1, s2| s1.date.cmp(&s2.date))
-            .ok_or(StockQueryError::NotFound)?;
+            .ok_or(StockQueryError::StockDataNotFound)?;
 
         Ok(latest)
     }

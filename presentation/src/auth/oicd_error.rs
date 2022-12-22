@@ -1,4 +1,3 @@
-use openidconnect::{url::ParseError, DiscoveryError};
 use thiserror::Error;
 
 #[derive(Error, Debug)]

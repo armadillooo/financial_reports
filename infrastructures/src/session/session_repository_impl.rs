@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use async_session::SessionStore;
 use async_trait::async_trait;
 
@@ -47,7 +46,7 @@ impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
         self.store
             .store_session(session.into())
             .await
-            .map_err(|e| SessionError::Disconnect)?
+            .map_err(|_| SessionError::Disconnect)?
             .ok_or(SessionError::Disconnect)
     }
 }

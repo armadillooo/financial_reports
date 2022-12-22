@@ -10,7 +10,7 @@ pub enum StockQueryError {
     #[error("start date exceeds end date")]
     InvalidRangeOfDate { start: NaiveDate, end: NaiveDate },
     #[error("stock data not found")]
-    NotFound,
+    StockDataNotFound,
 }
 
 pub type StockQueryResult<T> = Result<T, StockQueryError>;

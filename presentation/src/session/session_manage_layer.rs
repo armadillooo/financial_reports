@@ -1,16 +1,16 @@
 use std::sync::{Arc, RwLock};
 
 use axum::{
+    extract::State,
     headers::{Cookie, HeaderValue},
     http::{self, Request},
     middleware::Next,
-    response::{IntoResponse, Response},
-    extract::State,
+    response::Response,
     TypedHeader,
 };
 
 use crate::{
-    common::{internal_error, AppState},
+    common::{ApiResult, AppState},
     session::{SessionData, SessionFromRequest, SessionId},
 };
 
@@ -23,24 +23,20 @@ pub async fn session_manage_layer<B>(
     TypedHeader(cookie_value): TypedHeader<Cookie>,
     mut req: Request<B>,
     next: Next<B>,
-) -> Result<Response, Response> {
-    let rejection = |_| internal_error().into_response();
-
+) -> ApiResult<Response> {
     // RequestにCookieが設定されている場合
     let session = if let Some(cookie_value) = cookie_value.get(COOKIE_VALUE_KEY) {
         state
             .session_service()
             .find_or_create(SessionId::new(cookie_value.to_string()))
-            .await
-            .map_err(rejection)?
+            .await?
     // Cookieが存在しない場合
     } else {
         state
             .session_service()
             .create()
             .await
-            .map(|session| SessionFromRequest::Created(session))
-            .map_err(rejection)?
+            .map(|session| SessionFromRequest::Created(session))?
     };
 
     let (session, is_created, session_id) = match session {
@@ -72,11 +68,7 @@ pub async fn session_manage_layer<B>(
     if session.is_changed() {
         // SessionをCloneするとIdが削除されるため再度設定
         session.set_id(session_id);
-        state
-            .session_service()
-            .save(session)
-            .await
-            .map_err(rejection)?;
+        state.session_service().save(session).await?;
     }
 
     Ok(response)
