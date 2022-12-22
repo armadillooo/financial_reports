@@ -1,21 +1,12 @@
-use std::clone::Clone;
-
-use crate::session::{SessionId, SessionItemKey, SessionResult};
+use crate::session::{SessionId, SessionItem, SessionResult};
 
 #[async_trait::async_trait]
 pub trait SessionService {
     async fn find_or_create(&self, session_id: Option<SessionId>) -> SessionResult<SessionStatus>;
-    async fn delete(&self, session_id: &SessionId) -> SessionResult<()>;
-    async fn item<T>(
-        &self,
-        session_id: &SessionId,
-        item_key: &SessionItemKey<T>,
-    ) -> SessionResult<Option<T>>;
-    async fn insert_item<T>(
-        &self,
-        session_id: &SessionId,
-        item_key: &SessionItemKey<T>,
-    ) -> SessionResult<()>;
+    async fn delete(&self, session_id: SessionId) -> SessionResult<()>;
+    async fn item(&self, session_id: SessionId, key: &SessionItem) -> SessionResult<SessionItem>;
+    async fn insert_item(&self, session_id: SessionId, item: SessionItem) -> SessionResult<()>;
+    async fn remove_item(&self, session_id: SessionId, key: &SessionItem) -> SessionResult<()>;
 }
 
 #[derive(Debug, Clone, PartialEq)]

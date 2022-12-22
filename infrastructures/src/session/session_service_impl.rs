@@ -2,8 +2,8 @@ use std::clone::Clone;
 use std::sync::Arc;
 
 use presentation::session::{
-    SessionData, SessionError, SessionId, SessionRepository, SessionResult, SessionService,
-    SessionStatus, SessionWithId,
+    SessionData, SessionError, SessionId, SessionItem, SessionRepository, SessionResult,
+    SessionService, SessionStatus,
 };
 
 #[derive(Debug, Clone)]
@@ -24,6 +24,13 @@ where
             session_repository: Arc::clone(session_repository),
         }
     }
+
+    async fn create(&self) -> SessionResult<SessionStatus> {
+        let session = SessionData::new();
+        let session_id = self.session_repository.save(session).await?;
+
+        Ok(SessionStatus::Created(session_id))
+    }
 }
 
 #[async_trait::async_trait]
@@ -32,26 +39,52 @@ where
     T: SessionRepository + Send + Sync + Clone,
 {
     /// Session取得 or 新規作成
-    async fn find_or_create(&self, session_id: SessionId) -> SessionResult<SessionStatus> {
-        let session = if let Some(session) = self.session_repository.find(session_id).await? {
-            SessionStatus::Found(session)
+    async fn find_or_create(&self, session_id: Option<SessionId>) -> SessionResult<SessionStatus> {
+        let status = if let Some(session_id) = session_id {
+            if let Some(session) = self.session_repository.find(session_id).await? {
+                let status = SessionStatus::Found(session.into_session_id()?);
+
+                status
+            } else {
+                self.create().await?
+            }
         } else {
-            let session = self.create().await?;
-            SessionStatus::Created(session)
+            self.create().await?
         };
 
-        Ok(session)
-    }
-
-    /// Session保存
-    async fn save(&self, session: SessionData) -> SessionResult<SessionId> {
-        let cookie_value = self.session_repository.save(session).await?;
-        Ok(SessionId::new(cookie_value))
+        Ok(status)
     }
 
     /// Session削除
-    async fn delete(&self, session: SessionData) -> SessionResult<()> {
-        self.session_repository.delete(session).await
+    async fn delete(&self, session_id: SessionId) -> SessionResult<()> {
+        self.session_repository.delete(session_id).await
+    }
+
+    async fn item(
+        &self,
+        session_id: SessionId,
+        key: &SessionItem,
+    ) -> SessionResult<SessionItem> {
+        let session = self.session_repository.find(session_id).await?.ok_or(SessionError::Disconnect)?;
+
+        let item = session.item(key).ok_or(SessionError::ItemNotFound)?;
+        Ok(item)
+    }
+
+    async fn insert_item(
+        &self,
+        session_id: SessionId,
+        item: SessionItem,
+    ) -> SessionResult<()> {
+        let session = self.session_repository.find(session_id).await?;
+
+        Ok(())
+    }
+
+    async fn remove_item(&self, session_id: SessionId, Key: &SessionItem) -> SessionResult<()> {
+        let session = self.session_repository.find(session_id).await?;
+
+        Ok(())
     }
 }
 

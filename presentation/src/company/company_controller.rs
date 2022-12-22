@@ -7,17 +7,17 @@ use axum::{
     Router,
 };
 
-use crate::common::AppState;
+use crate::common::{AppState, AppStateImpl};
 use applications::company::CompanyQueryCommand;
 
-pub fn company_controller(state: AppState) -> Router {
+pub fn company_controller(state: AppStateImpl) -> Router {
     Router::new()
         .route("/", get(get_companies))
         .with_state(state)
 }
 
 async fn get_companies(
-    state: State<AppState>,
+    state: State<AppStateImpl>,
     Query(queries): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
     let mut params = CompanyQueryCommand::new();

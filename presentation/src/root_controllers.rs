@@ -1,11 +1,11 @@
 use axum::Router;
 
 use crate::{
-    auth::auth_controller, common::AppState, company::company_controller, stock::stock_controller,
-    user::user_controller,
+    auth::auth_controller, common::AppStateImpl, company::company_controller,
+    stock::stock_controller, user::user_controller,
 };
 
-pub fn root_controllers(state: AppState) -> Router {
+pub fn root_controllers(state: AppStateImpl) -> Router {
     let api_routes = Router::new()
         .nest("/auth", auth_controller(state.clone()))
         .nest("/stocks", stock_controller(state.clone()))

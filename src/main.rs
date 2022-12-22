@@ -21,7 +21,7 @@ use infrastructures::{
     auth::{OICDClient, OICDserviceImpl},
     session::{SessionRepositoryImpl, SessionServiceImpl},
 };
-use presentation::{common::AppState, root_controllers, session::session_manage_layer};
+use presentation::{common::AppStateImpl, root_controllers, session::session_manage_layer};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -79,7 +79,7 @@ async fn main() -> anyhow::Result<()> {
         user_domain_service,
     );
 
-    let state = AppState::new(
+    let state = AppStateImpl::new(
         Arc::new(user_service),
         Arc::new(session_service),
         Arc::new(oicd_service),

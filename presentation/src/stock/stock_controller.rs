@@ -8,17 +8,17 @@ use axum::{
 };
 use chrono::NaiveDate;
 
-use crate::common::AppState;
+use crate::common::{AppStateImpl, AppState};
 use applications::stock::StockQueryCommand;
 
-pub fn stock_controller(state: AppState) -> Router {
+pub fn stock_controller(state: AppStateImpl) -> Router {
     Router::new()
         .route("/:stock_id", get(get_stocks))
         .with_state(state)
 }
 
 async fn get_stocks(
-    state: State<AppState>,
+    state: State<AppStateImpl>,
     queries: Query<HashMap<String, String>>,
     Path(stock_id): Path<String>,
 ) -> impl IntoResponse {

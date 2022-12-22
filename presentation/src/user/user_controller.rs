@@ -7,13 +7,13 @@ use axum::{
     Router,
 };
 
-use crate::common::AppState;
+use crate::common::{AppStateImpl, AppState};
 use applications::{
     favorite::FavoriteData,
     portfolio::{PortfolioData, PortfolioUpdateCommand},
 };
 
-pub fn user_controller(state: AppState) -> Router {
+pub fn user_controller(state: AppStateImpl) -> Router {
     let user_route = Router::new()
         .route("/", get(get_user))
         .route("/favorites", get(get_favorites))
@@ -33,7 +33,7 @@ pub fn user_controller(state: AppState) -> Router {
     Router::new().nest("/:user_id", user_route)
 }
 
-async fn get_user(state: State<AppState>, Path(user_id): Path<String>) -> impl IntoResponse {
+async fn get_user(state: State<AppStateImpl>, Path(user_id): Path<String>) -> impl IntoResponse {
     let user = state
         .user_application_service()
         .get(&user_id)
@@ -43,14 +43,17 @@ async fn get_user(state: State<AppState>, Path(user_id): Path<String>) -> impl I
     "Ok"
 }
 
-async fn get_favorites(state: State<AppState>, Path(user_id): Path<String>) -> impl IntoResponse {
+async fn get_favorites(
+    state: State<AppStateImpl>,
+    Path(user_id): Path<String>,
+) -> impl IntoResponse {
     let favorites = state.favorite_service().get_all(&user_id).await.unwrap();
 
     "Ok"
 }
 
 async fn insert_favorite(
-    state: State<AppState>,
+    state: State<AppStateImpl>,
     Path(user_id): Path<String>,
     Path(stock_id): Path<String>,
 ) -> impl IntoResponse {
@@ -61,7 +64,7 @@ async fn insert_favorite(
 }
 
 async fn delete_favorite(
-    state: State<AppState>,
+    state: State<AppStateImpl>,
     Path(user_id): Path<String>,
     Path(stock_id): Path<String>,
 ) -> impl IntoResponse {
@@ -71,14 +74,17 @@ async fn delete_favorite(
     "Ok"
 }
 
-async fn get_portfolio(state: State<AppState>, Path(user_id): Path<String>) -> impl IntoResponse {
+async fn get_portfolio(
+    state: State<AppStateImpl>,
+    Path(user_id): Path<String>,
+) -> impl IntoResponse {
     let portfolio = state.portfolio_service().get_all(&user_id).await.unwrap();
 
     "Ok"
 }
 
 async fn insert_portfolio(
-    state: State<AppState>,
+    state: State<AppStateImpl>,
     Path(user_id): Path<String>,
     Path(stock_id): Path<String>,
 ) -> impl IntoResponse {
@@ -89,7 +95,7 @@ async fn insert_portfolio(
 }
 
 async fn update_portfolio(
-    utility: State<AppState>,
+    utility: State<AppStateImpl>,
     Path(user_id): Path<String>,
     Path(stock_id): Path<String>,
     Query(params): Query<HashMap<String, String>>,
@@ -114,7 +120,7 @@ async fn update_portfolio(
 }
 
 async fn delete_portfolio(
-    state: State<AppState>,
+    state: State<AppStateImpl>,
     Path(user_id): Path<String>,
     Path(stock_id): Path<String>,
 ) -> impl IntoResponse {

@@ -11,17 +11,16 @@ use axum::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    auth::{OICDData, OICDResult},
-    common::{ApiResult, AppState},
-    session::{SessionItemKey},
-    user::{LoginUserId, USER_ID},
+    auth::OICDData,
+    common::{ApiResult, AppState, AppStateImpl},
+    session::{SessionId, SessionItem},
+    user::LoginUserId,
 };
 use applications::users::UserData;
 
-const AUTH_TYPE: SessionItemKey<AuthenticationType> = SessionItemKey::new("auth type");
-const OICD_INFO: SessionItemKey<OICDData> = SessionItemKey::new("oicd info");
+use super::OICDError;
 
-pub fn auth_controller(utility: AppState) -> Router {
+pub fn auth_controller(utility: AppStateImpl) -> Router {
     Router::new()
         .route("/signin", get(signin_redirect_google))
         .route("/login", get(login_redirect_google))
@@ -32,116 +31,60 @@ pub fn auth_controller(utility: AppState) -> Router {
 
 /// ユーザー新規作成
 async fn signin_redirect_google(
-    utility: State<AppState>,
+    Extension(session_id): Extension<SessionId>,
+    state: State<AppStateImpl>,
 ) -> ApiResult<Response> {
-    session
-        .write()
-        .unwrap()
-        .insert_item(&AUTH_TYPE, AuthenticationType::Singin)
-        .unwrap();
+    state
+        .session_service()
+        .insert_item(session_id.clone(), SessionItem::AuthType(AuthType::Singin))
+        .await?;
 
-    Ok(oicd_redirect(&utility, &session).await)
+    oicd_redirect(session_id, &state).await
 }
 
 /// ログイン
 async fn login_redirect_google(
-    utility: State<AppState>,
+    Extension(session_id): Extension<SessionId>,
+    state: State<AppStateImpl>,
 ) -> ApiResult<Response> {
-    session
-        .write()
-        .unwrap()
-        .insert_item(&AUTH_TYPE, AuthenticationType::Login)?;
+    state
+        .session_service()
+        .insert_item(session_id.clone(), SessionItem::AuthType(AuthType::Login))
+        .await?;
 
-    Ok(oicd_redirect(&utility, &session).await)
+    oicd_redirect(session_id, &state).await
 }
 
 /// 認証結果検証
 async fn auth_verify_google(
-    utility: State<AppState>,
+    Extension(session_id): Extension<SessionId>,
+    state: State<AppStateImpl>,
     params: Query<HashMap<String, String>>,
-) -> Response {
-    let auth_type = if let Some(item) = session.read().unwrap().item(&AUTH_TYPE) {
-        item
-    } else {
-        return (
-            http::StatusCode::INTERNAL_SERVER_ERROR,
-            JsonBuilder::new()
-                .add(ErrorResponse {
-                    message: "Internal server error occured",
-                })
-                .build(),
-        )
-            .into_response();
+) -> ApiResult<Response> {
+    let key = SessionItem::AuthType(AuthType::Singin);
+    let SessionItem::AuthType(auth_type) = state.session_service().item(session_id.clone(), &key).await?  else {
+        return Err(OICDError::ItemNotFound.into());
     };
 
-    let auth_user = if let Ok(user) = oicd_verify(&utility, &session, params).await {
-        user
-    } else {
-        return (
-            http::StatusCode::BAD_REQUEST,
-            JsonBuilder::new()
-                .add(ErrorResponse {
-                    message: "Authentication failed",
-                })
-                .build(),
-        )
-            .into_response();
-    };
+    // 認証に成功した場合はユーザー情報を取得
+    let auth_user = oicd_verify(session_id, &state, params).await?;
+
     match auth_type {
-        AuthenticationType::Login => {
+        AuthType::Login => {
             // ログイン成功
-            if let Some(user) = utility
-                .user_application_service()
-                .get(&auth_user.id)
-                .await
-                .unwrap()
-            {
-                (http::StatusCode::OK, JsonBuilder::new().add(user).build()).into_response()
-            // ログイン失敗
-            } else {
-                (
-                    http::StatusCode::BAD_REQUEST,
-                    JsonBuilder::new()
-                        .add(ErrorResponse {
-                            message: "User registration required",
-                        })
-                        .build(),
-                )
-                    .into_response()
+            if let Some(_) = state.user_application_service().get(&auth_user.id).await? {
+                return Ok("Ok".into_response());
             }
         }
-        AuthenticationType::Singin => {
+        AuthType::Singin => {
             // ユーザーが既に存在するため新規追加不可
-            if let Some(_) = utility
-                .user_application_service()
-                .get(&auth_user.id)
-                .await
-                .unwrap()
-            {
-                (
-                    http::StatusCode::BAD_REQUEST,
-                    JsonBuilder::new()
-                        .add(ErrorResponse {
-                            message: "User is already exist",
-                        })
-                        .build(),
-                )
-                    .into_response()
-            // ユーザー新規作成可能
-            } else {
-                utility
-                    .user_application_service()
-                    .save(auth_user.clone())
-                    .await
-                    .unwrap();
-                (
-                    http::StatusCode::OK,
-                    JsonBuilder::new().add(auth_user).build(),
-                )
-                    .into_response()
+            if let None = state.user_application_service().get(&auth_user.id).await? {
+                return Ok("Ok".into_response());
             }
         }
-    }
+    };
+
+    Ok("Ok".into_response())
 }
 
 /// ログアウト
@@ -149,14 +92,15 @@ async fn logout() -> impl IntoResponse {
     unimplemented!()
 }
 
-async fn oicd_redirect(state: &AppState) -> Response {
-    let verify_info = state.oicd_service().redirect().await;
-    let redirect_url = verify_info.auth_url.clone();
-    session
-        .write()
-        .unwrap()
-        .insert_item(&OICD_INFO, verify_info)
-        .unwrap();
+async fn oicd_redirect(session_id: SessionId, state: &AppStateImpl) -> ApiResult<Response> {
+    let auth_info = state.oicd_service().redirect().await;
+    let redirect_url = auth_info.auth_url.clone();
+
+    let item = SessionItem::AuthInfo(auth_info);
+    state
+        .session_service()
+        .insert_item(session_id, item)
+        .await?;
 
     let mut header = HeaderMap::new();
     header.insert(
@@ -164,41 +108,51 @@ async fn oicd_redirect(state: &AppState) -> Response {
         HeaderValue::from_str(&redirect_url.to_string()).unwrap(),
     );
 
-    (http::StatusCode::FOUND, header).into_response()
+    let res = (http::StatusCode::FOUND, header).into_response();
+    Ok(res)
 }
 
 async fn oicd_verify(
-    state: &AppState,
+    session_id: SessionId,
+    state: &AppStateImpl,
     params: Query<HashMap<String, String>>,
-) -> OICDResult<UserData> {
-    let oicd_info = session
-        .read()
-        .unwrap()
-        .item(&OICD_INFO)
-        .expect("There is no verify info in the session");
+) -> ApiResult<UserData> {
+    let key = SessionItem::AuthInfo(OICDData::new());
+    let SessionItem::AuthInfo(oicd_info) = state.session_service().item(session_id.clone(), &key).await? else {
+        return Err(OICDError::ItemNotFound.into());
+    };
 
-    let code = params.get("code").expect("query param 'code' is not set");
-    let state = params.get("state").expect("query param 'state' is not set");
+    let Some(code) = params.get("code") else {
+            return Err(OICDError::VerifyError.into())
+        };
+    let Some(oicd_state) = params.get("state") else {
+        return Err(OICDError::VerifyError.into());
+    };
 
-    state
+    let user = state
         .oicd_service()
-        .verify(oicd_info, code.to_owned(), state.to_owned())
-        .await
-        .map(|user| {
-            // 不要なデータをSessionから削除
-            session.write().unwrap().remove_item(&OICD_INFO);
-            session
-                .write()
-                .unwrap()
-                .insert_item(&USER_ID, LoginUserId::new(user.id.clone()))
-                .unwrap();
+        .verify(oicd_info, code.to_owned(), oicd_state.to_owned())
+        .await?;
 
-            user
-        })
+    // 不要なデータを削除
+    let key = SessionItem::AuthInfo(OICDData::new());
+    state
+        .session_service()
+        .remove_item(session_id.clone(), &key)
+        .await?;
+
+    // ユーザーIDをセッションに登録
+    let auth_user_id = SessionItem::LoginUserId(LoginUserId::new(user.id.clone()));
+    state
+        .session_service()
+        .insert_item(session_id, auth_user_id)
+        .await?;
+
+    Ok(user)
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-enum AuthenticationType {
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum AuthType {
     Login,
     Singin,
 }

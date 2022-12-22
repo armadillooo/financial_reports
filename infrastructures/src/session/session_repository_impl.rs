@@ -1,7 +1,9 @@
 use async_session::SessionStore;
 use async_trait::async_trait;
 
-use presentation::session::{SessionData, SessionError, SessionRepository, SessionResult};
+use presentation::session::{
+    SessionData, SessionError, SessionId, SessionRepository, SessionResult,
+};
 
 #[derive(Debug, Clone)]
 pub struct SessionRepositoryImpl<T: SessionStore> {
@@ -18,19 +20,23 @@ impl<T: SessionStore> SessionRepositoryImpl<T> {
 #[async_trait]
 impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
     /// Session削除
-    async fn delete(&self, session: SessionData) -> SessionResult<()> {
-        let session = session.into();
+    async fn delete(&self, session_id: SessionId) -> SessionResult<()> {
+        let session = self
+            .find(session_id)
+            .await?
+            .ok_or(SessionError::Disconnect)?;
+
         self.store
-            .destroy_session(session)
+            .destroy_session(session.into())
             .await
             .map_err(|_| SessionError::Disconnect)
     }
 
     /// Session取得
-    async fn find(&self, session_id: String) -> SessionResult<Option<SessionData>> {
+    async fn find(&self, session_id: SessionId) -> SessionResult<Option<SessionData>> {
         if let Some(session) = self
             .store
-            .load_session(session_id)
+            .load_session(session_id.to_string())
             .await
             .map_err(|_| SessionError::Disconnect)?
         {
@@ -41,28 +47,12 @@ impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
     }
 
     /// Session保存
-    async fn save(&self, session: SessionData) -> SessionResult<String> {
+    async fn save(&self, session: SessionData) -> SessionResult<SessionId> {
         self.store
             .store_session(session.into())
             .await
             .map_err(|_| SessionError::Disconnect)?
             .ok_or(SessionError::Disconnect)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use async_session::MemoryStore;
-
-    use crate::session::SessionRepositoryImpl;
-    use presentation::session::SessionRepository;
-
-    #[test]
-    fn tests() -> anyhow::Result<()> {
-        let repo = SessionRepositoryImpl::new(MemoryStore::new());
-
-        let _ = repo.find("asdfasdfa".to_string());
-
-        Ok(())
+            .map(|id| SessionId::new(id))
     }
 }

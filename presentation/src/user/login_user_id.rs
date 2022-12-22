@@ -1,16 +1,17 @@
 use std::ops::Deref;
 
 use axum::{
-    extract::{Extension, FromRequest},
+    extract::{FromRequest},
     http::Request,
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{common::ApiError, session::SessionItemKey};
+use crate::{
+    common::{ApiError, AppState},
+    session::{SessionError, SessionId, SessionItem},
+};
 
-pub const USER_ID: SessionItemKey<LoginUserId> = SessionItemKey::new("user id");
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LoginUserId(String);
 
 impl LoginUserId {
@@ -40,20 +41,22 @@ impl Deref for LoginUserId {
 impl<S, B> FromRequest<S, B> for LoginUserId
 where
     B: Send + 'static,
-    S: Send + Sync,
+    S: AppState + Send + Sync,
 {
     // エラー時の戻り値の型
     type Rejection = ApiError;
 
-    /// ログインが必要なリクエストに対して、Sessionの存在確認を行う
     async fn from_request(req: Request<B>, state: &S) -> Result<Self, Self::Rejection> {
-        // Extensinからメモリストアを取得
-        let user_id = Extension::<SharedSession>::from_request(req, state)
-            .await?
-            .read()
-            .unwrap()
-            .item(&USER_ID)
-            .unwarp();
+        // セッションにユーザーIDが登録されている場合はログイン済み
+        let key = SessionItem::LoginUserId(LoginUserId::new("".to_string()));
+        let session_id = req
+            .extensions()
+            .get::<SessionId>()
+            .ok_or(SessionError::SessionIdNotFound)?;
+
+        let SessionItem::LoginUserId(user_id) = state.session_service().item(session_id.clone(), &key).await? else {
+            return Err(SessionError::ItemNotFound.into());
+        };
 
         Ok(user_id)
     }

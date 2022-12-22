@@ -63,9 +63,9 @@ impl OICDClient {
 
         OICDData {
             auth_url: auth_url.to_string(),
-            pkce_verifier,
-            csrf_token,
-            nonce,
+            pkce_verifier: pkce_verifier,
+            csrf_token: csrf_token,
+            nonce: nonce,
         }
     }
 

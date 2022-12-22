@@ -8,6 +8,8 @@ pub enum OICDError {
     NotRegisterdEmail,
     #[error("authentication failed")]
     VerifyError,
+    #[error("item not found")]
+    ItemNotFound,
 }
 
 pub type OICDResult<T> = Result<T, OICDError>;

@@ -1,11 +1,9 @@
 use std::time::Duration;
 
-use anyhow::anyhow;
 use async_session::chrono::{DateTime, Utc};
 use async_session::Session;
-use serde::Serialize;
 
-use crate::session::{SessionError, SessionId, SessionItemKey, SessionResult, SessionStatus};
+use crate::session::{SessionError, SessionId, SessionItem, SessionResult};
 
 #[derive(Debug, PartialEq, Default)]
 pub struct SessionData(Session);
@@ -20,45 +18,45 @@ impl SessionData {
 
     /// Sessionの変更状態を取得する
     pub fn is_changed(&self) -> bool {
-        self.inner.data_changed()
+        self.0.data_changed()
     }
 
     /// Session ID取得
     pub fn into_session_id(self) -> SessionResult<SessionId> {
-        self.0.into_cookie_value().ok_or(SessionError::Disconnect)
+        let id = self.0.into_cookie_value().ok_or(SessionError::Disconnect)?;
+
+        Ok(SessionId::new(id))
     }
 
     /// 値をSessionに追加する
     ///
     /// Sessionへの保存は行われない
-    pub fn insert_item<T: Serialize>(
-        &mut self,
-        key: &SessionItemKey<T>,
-        item: T,
-    ) -> anyhow::Result<()> {
-        self.inner
-            .insert(&key.value, item)
-            .map_err(|err| anyhow!("Serialize failed: {:?}", err))
+    pub fn insert_item(&mut self, item: SessionItem) -> SessionResult<()> {
+        self.0
+            .insert(&item.key(), item)
+            .map_err(|_| SessionError::ItemNotSaved)
     }
 
     /// 値の取得
-    pub fn item<T: serde::de::DeserializeOwned>(&self, key: &SessionItemKey<T>) -> Option<T> {
-        self.inner.get(&key.value)
+    pub fn item(&self, item: &SessionItem) -> Option<SessionItem> {
+        let item = self.0.get(&item.key());
+
+        item
     }
 
     /// 値の削除
-    pub fn remove_item<T>(&mut self, key: &SessionItemKey<T>) {
-        self.inner.remove(&key.value)
+    pub fn remove_item(&mut self, item: &SessionItem) {
+        self.0.remove(&item.key())
     }
 
     /// Session期限取得
     pub fn limit(&self) -> Option<&DateTime<Utc>> {
-        self.inner.expiry()
+        self.0.expiry()
     }
 
     /// Session有効期間設定
     pub fn set_limit(&mut self, expiry: Duration) {
-        self.inner.expire_in(expiry)
+        self.0.expire_in(expiry)
     }
 }
 
@@ -76,7 +74,7 @@ impl From<Session> for SessionData {
 
 #[cfg(test)]
 mod tests {
-    use crate::session::{SessionData, SessionItemKey};
+    use crate::{session::{SessionData, SessionItem}, user::LoginUserId};
 
     #[test]
     fn create_session_with_expiry() {
@@ -88,9 +86,9 @@ mod tests {
     #[test]
     fn item_insert_success() -> anyhow::Result<()> {
         let mut session = SessionData::new();
-        let item = vec![1, 2, 3];
-        let key = SessionItemKey::new("key");
-        session.insert_item(&key, item)?;
+        let item = SessionItem::LoginUserId(LoginUserId::new("key".to_string()));
+
+        assert!(session.insert_item(item).is_ok());
 
         Ok(())
     }
@@ -98,11 +96,14 @@ mod tests {
     #[test]
     fn item_get_success() -> anyhow::Result<()> {
         let mut session = SessionData::new();
-        let item = "sample data".to_string();
-        let key = SessionItemKey::new("key");
-        session.insert_item(&key, item.clone())?;
+        let item = SessionItem::LoginUserId(LoginUserId::new("key".to_string()));
+        let same_item = SessionItem::LoginUserId(LoginUserId::new("key".to_string()));
 
-        assert_eq!(item, session.item(&key).expect("Item was not saved"));
+        session.insert_item(item)?;
+
+        let saved = session.item(&item).unwrap();
+
+        assert!(item == saved);
 
         Ok(())
     }
@@ -110,23 +111,23 @@ mod tests {
     #[test]
     fn item_not_found_return_none() {
         let session = SessionData::new();
-        let key: SessionItemKey<String> = SessionItemKey::new("key");
+        let item = SessionItem::LoginUserId(LoginUserId::new("key".to_string()));
 
-        assert!(session.item(&key).is_none())
+        assert!(session.item(&item).is_none())
     }
 
     #[test]
     fn item_remove_success() -> anyhow::Result<()> {
         let mut session = SessionData::new();
-        let key: SessionItemKey<String> = SessionItemKey::new("key");
-        let item = "item".to_string();
-        session.insert_item(&key, item)?;
+        let item = SessionItem::LoginUserId(LoginUserId::new("key".to_string()));
 
-        assert!(session.item(&key).is_some());
+        session.insert_item(item)?;
 
-        session.remove_item(&key);
+        assert!(session.item(&item).is_some());
 
-        assert!(session.item(&key).is_none());
+        session.remove_item(&item);
+
+        assert!(session.item(&item).is_none());
 
         Ok(())
     }

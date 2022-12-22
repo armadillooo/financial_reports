@@ -8,3 +8,15 @@ pub struct OICDData {
     pub csrf_token: CsrfToken,
     pub nonce: Nonce,
 }
+
+impl OICDData {
+    /// コンストラクタ
+    pub fn new() -> Self {
+        Self {
+            auth_url: String::default(),
+            pkce_verifier: PkceCodeVerifier::new("".to_string()),
+            csrf_token: CsrfToken::new("".to_string()),
+            nonce: Nonce::new("".to_string()),
+        }
+    }
+}
