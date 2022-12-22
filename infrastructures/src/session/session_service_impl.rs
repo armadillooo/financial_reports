@@ -2,8 +2,8 @@ use std::clone::Clone;
 use std::sync::Arc;
 
 use presentation::session::{
-    SessionData, SessionError, SessionFromRequest, SessionId, SessionRepository, SessionResult,
-    SessionService, SessionWithId,
+    SessionData, SessionError, SessionId, SessionRepository, SessionResult, SessionService,
+    SessionStatus, SessionWithId,
 };
 
 #[derive(Debug, Clone)]
@@ -32,41 +32,15 @@ where
     T: SessionRepository + Send + Sync + Clone,
 {
     /// Session取得 or 新規作成
-    async fn find_or_create(&self, session_id: SessionId) -> SessionResult<SessionFromRequest> {
-        let session = if let Some(session) = self.find(session_id).await? {
-            SessionFromRequest::Found(session)
+    async fn find_or_create(&self, session_id: SessionId) -> SessionResult<SessionStatus> {
+        let session = if let Some(session) = self.session_repository.find(session_id).await? {
+            SessionStatus::Found(session)
         } else {
             let session = self.create().await?;
-            SessionFromRequest::Created(session)
+            SessionStatus::Created(session)
         };
 
         Ok(session)
-    }
-
-    async fn find(&self, session_id: SessionId) -> SessionResult<Option<SessionWithId>> {
-        Ok(self
-            .session_repository
-            .find(session_id.to_string())
-            .await?
-            .map(|session| SessionWithId {
-                inner: session,
-                id: session_id.clone(),
-            }))
-    }
-
-    /// Session作成
-    async fn create(&self) -> SessionResult<SessionWithId> {
-        let session = SessionData::new();
-        let session_id = self.save(session).await?;
-
-        self.session_repository
-            .find(session_id.to_string())
-            .await?
-            .map(|session| SessionWithId {
-                inner: session,
-                id: session_id,
-            })
-            .ok_or(SessionError::Disconnect)
     }
 
     /// Session保存
@@ -89,7 +63,7 @@ mod tests {
     use async_session::MemoryStore;
 
     use crate::session::{SessionRepositoryImpl, SessionServiceImpl};
-    use presentation::session::{SessionData, SessionFromRequest, SessionService};
+    use presentation::session::{SessionData, SessionService, SessionStatus};
 
     fn setup() -> SessionServiceImpl<SessionRepositoryImpl<MemoryStore>> {
         let store = MemoryStore::new();
@@ -104,7 +78,7 @@ mod tests {
         let session_service = setup();
         let session_id = session_service.create().await?.id;
 
-        assert!(session_service.find(session_id).await?.is_some());
+        assert!(session_service.find_or_create(session_id).await?.is_some());
 
         Ok(())
     }
@@ -115,7 +89,7 @@ mod tests {
         let session = SessionData::new();
         let session_id = session_service.save(session).await?;
 
-        assert!(session_service.find(session_id).await?.is_some());
+        assert!(session_service.find_or_create(session_id).await?.is_some());
 
         Ok(())
     }
@@ -133,7 +107,7 @@ mod tests {
 
         assert!(matches!(
             session_service.find_or_create(session_id).await?,
-            SessionFromRequest::Created(_)
+            SessionStatus::Created(_)
         ));
 
         Ok(())

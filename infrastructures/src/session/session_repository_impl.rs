@@ -10,7 +10,6 @@ pub struct SessionRepositoryImpl<T: SessionStore> {
 
 impl<T: SessionStore> SessionRepositoryImpl<T> {
     /// コンストラクタ
-    #[allow(dead_code)]
     pub fn new(store: T) -> Self {
         Self { store }
     }

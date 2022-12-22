@@ -11,10 +11,9 @@ use axum::{
 
 use crate::{
     common::{ApiResult, AppState},
-    session::{SessionData, SessionFromRequest, SessionId},
+    session::{SessionId, SessionStatus},
 };
 
-pub type SharedSession = Arc<RwLock<SessionData>>;
 const COOKIE_VALUE_KEY: &str = "Cookie Value";
 
 /// Sessionが新規作成された場合にCookiにSession IDを自動で追加する
@@ -28,7 +27,7 @@ pub async fn session_manage_layer<B>(
     let session = if let Some(cookie_value) = cookie_value.get(COOKIE_VALUE_KEY) {
         state
             .session_service()
-            .find_or_create(SessionId::new(cookie_value.to_string()))
+            .find_or_create(Some(SessionId::new(cookie_value.to_string())))
             .await?
     // Cookieが存在しない場合
     } else {
@@ -36,12 +35,12 @@ pub async fn session_manage_layer<B>(
             .session_service()
             .create()
             .await
-            .map(|session| SessionFromRequest::Created(session))?
+            .map(|session| SessionStatus::Created(session))?
     };
 
     let (session, is_created, session_id) = match session {
-        SessionFromRequest::Created(session) => (session.inner, true, session.id),
-        SessionFromRequest::Found(session) => (session.inner, false, session.id),
+        SessionStatus::Created(session) => (session.inner, true, session.id),
+        SessionStatus::Found(session) => (session.inner, false, session.id),
     };
 
     // HandlerにSessionを受け渡す

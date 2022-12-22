@@ -12,9 +12,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     auth::{OICDData, OICDResult},
-    common::{AppState, ErrorResponse, JsonBuilder},
-    session::{SessionItemKey, SharedSession},
-    user::{LoginedUserId, USER_ID},
+    common::{ApiResult, AppState},
+    session::{SessionItemKey},
+    user::{LoginUserId, USER_ID},
 };
 use applications::users::UserData;
 
@@ -32,35 +32,31 @@ pub fn auth_controller(utility: AppState) -> Router {
 
 /// ユーザー新規作成
 async fn signin_redirect_google(
-    session: Extension<SharedSession>,
     utility: State<AppState>,
-) -> impl IntoResponse {
+) -> ApiResult<Response> {
     session
         .write()
         .unwrap()
         .insert_item(&AUTH_TYPE, AuthenticationType::Singin)
         .unwrap();
 
-    oicd_redirect(&utility, &session).await
+    Ok(oicd_redirect(&utility, &session).await)
 }
 
 /// ログイン
 async fn login_redirect_google(
-    session: Extension<SharedSession>,
     utility: State<AppState>,
-) -> impl IntoResponse {
+) -> ApiResult<Response> {
     session
         .write()
         .unwrap()
-        .insert_item(&AUTH_TYPE, AuthenticationType::Login)
-        .unwrap();
+        .insert_item(&AUTH_TYPE, AuthenticationType::Login)?;
 
-    oicd_redirect(&utility, &session).await
+    Ok(oicd_redirect(&utility, &session).await)
 }
 
 /// 認証結果検証
 async fn auth_verify_google(
-    session: Extension<SharedSession>,
     utility: State<AppState>,
     params: Query<HashMap<String, String>>,
 ) -> Response {
@@ -153,8 +149,8 @@ async fn logout() -> impl IntoResponse {
     unimplemented!()
 }
 
-async fn oicd_redirect(utility: &AppState, session: &SharedSession) -> impl IntoResponse {
-    let verify_info = utility.oicd_service().redirect().await;
+async fn oicd_redirect(state: &AppState) -> Response {
+    let verify_info = state.oicd_service().redirect().await;
     let redirect_url = verify_info.auth_url.clone();
     session
         .write()
@@ -168,12 +164,11 @@ async fn oicd_redirect(utility: &AppState, session: &SharedSession) -> impl Into
         HeaderValue::from_str(&redirect_url.to_string()).unwrap(),
     );
 
-    (http::StatusCode::FOUND, header)
+    (http::StatusCode::FOUND, header).into_response()
 }
 
 async fn oicd_verify(
-    utility: &AppState,
-    session: &SharedSession,
+    state: &AppState,
     params: Query<HashMap<String, String>>,
 ) -> OICDResult<UserData> {
     let oicd_info = session
@@ -185,7 +180,7 @@ async fn oicd_verify(
     let code = params.get("code").expect("query param 'code' is not set");
     let state = params.get("state").expect("query param 'state' is not set");
 
-    utility
+    state
         .oicd_service()
         .verify(oicd_info, code.to_owned(), state.to_owned())
         .await
@@ -195,7 +190,7 @@ async fn oicd_verify(
             session
                 .write()
                 .unwrap()
-                .insert_item(&USER_ID, LoginedUserId::new(user.id.clone()))
+                .insert_item(&USER_ID, LoginUserId::new(user.id.clone()))
                 .unwrap();
 
             user

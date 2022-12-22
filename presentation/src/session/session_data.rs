@@ -5,31 +5,27 @@ use async_session::chrono::{DateTime, Utc};
 use async_session::Session;
 use serde::Serialize;
 
-use crate::session::{SessionFromRequest, SessionItemKey};
+use crate::session::{SessionError, SessionId, SessionItemKey, SessionResult, SessionStatus};
 
-use super::SessionId;
-
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct SessionData {
-    inner: Session,
-}
+#[derive(Debug, PartialEq, Default)]
+pub struct SessionData(Session);
 
 impl SessionData {
     pub fn new() -> Self {
         let mut session = Session::new();
         // Default expiry = 1.0h
         session.expire_in(Duration::from_secs(60 * 60));
-        Self { inner: session }
-    }
-
-    /// Session Idをセットする
-    pub fn set_id(&mut self, id: SessionId) {
-        self.inner.set_cookie_value(id.into());
+        Self(session)
     }
 
     /// Sessionの変更状態を取得する
     pub fn is_changed(&self) -> bool {
         self.inner.data_changed()
+    }
+
+    /// Session ID取得
+    pub fn into_session_id(self) -> SessionResult<SessionId> {
+        self.0.into_cookie_value().ok_or(SessionError::Disconnect)
     }
 
     /// 値をSessionに追加する
@@ -68,22 +64,13 @@ impl SessionData {
 
 impl Into<Session> for SessionData {
     fn into(self) -> Session {
-        self.inner
+        self.0
     }
 }
 
 impl From<Session> for SessionData {
     fn from(session: Session) -> Self {
-        Self { inner: session }
-    }
-}
-
-impl From<SessionFromRequest> for SessionData {
-    fn from(from_request: SessionFromRequest) -> Self {
-        match from_request {
-            SessionFromRequest::Found(session) => session.inner,
-            SessionFromRequest::Created(session) => session.inner,
-        }
+        Self(session)
     }
 }
 
