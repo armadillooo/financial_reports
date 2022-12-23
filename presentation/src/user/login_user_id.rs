@@ -1,9 +1,6 @@
 use std::ops::Deref;
 
-use axum::{
-    extract::{FromRequest},
-    http::Request,
-};
+use axum::{extract::FromRequest, http::Request};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -52,7 +49,7 @@ where
         let session_id = req
             .extensions()
             .get::<SessionId>()
-            .ok_or(SessionError::SessionIdNotFound)?;
+            .ok_or(SessionError::SessionIdNotSend)?;
 
         let SessionItem::LoginUserId(user_id) = state.session_service().item(session_id.clone(), &key).await? else {
             return Err(SessionError::ItemNotFound.into());

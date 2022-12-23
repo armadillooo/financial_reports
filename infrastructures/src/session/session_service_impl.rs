@@ -65,7 +65,7 @@ where
         session_id: SessionId,
         key: &SessionItem,
     ) -> SessionResult<SessionItem> {
-        let session = self.session_repository.find(session_id).await?.ok_or(SessionError::Disconnect)?;
+        let session = self.session_repository.find(session_id).await?.ok_or(SessionError::SessionNotFound)?;
 
         let item = session.item(key).ok_or(SessionError::ItemNotFound)?;
         Ok(item)
@@ -76,23 +76,24 @@ where
         session_id: SessionId,
         item: SessionItem,
     ) -> SessionResult<()> {
-        let session = self.session_repository.find(session_id).await?;
+        let mut session = self.session_repository.find(session_id).await?.ok_or(SessionError::SessionNotFound)?;
 
-        Ok(())
+        session.insert_item(item)
     }
 
-    async fn remove_item(&self, session_id: SessionId, Key: &SessionItem) -> SessionResult<()> {
-        let session = self.session_repository.find(session_id).await?;
+    async fn remove_item(&self, session_id: SessionId, key: &SessionItem) -> SessionResult<()> {
+        let mut session = self.session_repository.find(session_id).await?.ok_or(SessionError::SessionNotFound)?;
 
+        session.remove_item(key);
         Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::matches;
     use std::sync::Arc;
 
+    use anyhow::anyhow;
     use async_session::MemoryStore;
 
     use crate::session::{SessionRepositoryImpl, SessionServiceImpl};
@@ -109,20 +110,11 @@ mod tests {
     #[tokio::test]
     async fn create_new_session_saved() -> anyhow::Result<()> {
         let session_service = setup();
-        let session_id = session_service.create().await?.id;
+        let session_status = session_service.find_or_create(None).await?;
 
-        assert!(session_service.find_or_create(session_id).await?.is_some());
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn save_session_success() -> anyhow::Result<()> {
-        let session_service = setup();
-        let session = SessionData::new();
-        let session_id = session_service.save(session).await?;
-
-        assert!(session_service.find_or_create(session_id).await?.is_some());
+        let SessionStatus::Found(_) = session_status else {
+            return Err(anyhow!("session not found"))
+        };
 
         Ok(())
     }
@@ -130,18 +122,19 @@ mod tests {
     #[tokio::test]
     async fn delete_session_success() -> anyhow::Result<()> {
         let session_service = setup();
-        let session = SessionData::new();
-        let session_id = session_service.save(session).await?;
-        let session = session_service
-            .find_or_create(session_id.clone())
-            .await?
-            .into();
-        session_service.delete(session).await?;
+        let session_id = session_service.find_or_create(None).await?.into();
+        
+        // セッションが保存されていることの確認
+        let SessionStatus::Found(session_id) = session_service.find_or_create(Some(session_id)).await? else {
+            return Err(anyhow!("session is not saved"));
+        };
 
-        assert!(matches!(
-            session_service.find_or_create(session_id).await?,
-            SessionStatus::Created(_)
-        ));
+
+        session_service.delete(session_id.clone()).await?;
+// セッションが削除されていることの確認
+        let SessionStatus::Created(_) = session_service.find_or_create(Some(session_id)).await? else {
+            return Err(anyhow!("session is not removed"));
+        };
 
         Ok(())
     }
@@ -149,9 +142,9 @@ mod tests {
     #[tokio::test]
     async fn delete_not_exist_session_return_ok() -> anyhow::Result<()> {
         let session_service = setup();
-        let session = SessionData::new();
+        let session_id = SessionData::new().into_session_id()?;
 
-        assert!(session_service.delete(session).await.is_ok());
+        assert!(session_service.delete(session_id).await.is_ok());
 
         Ok(())
     }

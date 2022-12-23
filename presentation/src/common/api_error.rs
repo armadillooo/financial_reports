@@ -69,7 +69,8 @@ impl IntoResponse for ApiError {
                 SessionError::Disconnect => StatusCode::INTERNAL_SERVER_ERROR,
                 SessionError::ItemNotFound => StatusCode::INTERNAL_SERVER_ERROR,
                 SessionError::ItemNotSaved => StatusCode::INTERNAL_SERVER_ERROR,
-                SessionError::SessionIdNotFound => StatusCode::BAD_REQUEST,
+                SessionError::SessionIdNotSend => StatusCode::BAD_REQUEST,
+                SessionError::SessionNotFound => StatusCode::INTERNAL_SERVER_ERROR,
             },
             ApiError::OICDError(e) => match e {
                 OICDError::InitializationError => StatusCode::INTERNAL_SERVER_ERROR,

@@ -34,7 +34,7 @@ pub fn user_controller(state: AppStateImpl) -> Router {
 }
 
 async fn get_user(state: State<AppStateImpl>, Path(user_id): Path<String>) -> impl IntoResponse {
-    let user = state
+    let _user = state
         .user_application_service()
         .get(&user_id)
         .await
@@ -47,7 +47,7 @@ async fn get_favorites(
     state: State<AppStateImpl>,
     Path(user_id): Path<String>,
 ) -> impl IntoResponse {
-    let favorites = state.favorite_service().get_all(&user_id).await.unwrap();
+    let _favorites = state.favorite_service().get_all(&user_id).await.unwrap();
 
     "Ok"
 }
@@ -78,7 +78,7 @@ async fn get_portfolio(
     state: State<AppStateImpl>,
     Path(user_id): Path<String>,
 ) -> impl IntoResponse {
-    let portfolio = state.portfolio_service().get_all(&user_id).await.unwrap();
+    let _portfolio = state.portfolio_service().get_all(&user_id).await.unwrap();
 
     "Ok"
 }

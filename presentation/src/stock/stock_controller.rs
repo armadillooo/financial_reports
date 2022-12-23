@@ -50,7 +50,7 @@ async fn get_stocks(
         None
     };
 
-    let result = state.stock_query_service().find(params).await.unwrap();
+    let _result = state.stock_query_service().find(params).await.unwrap();
 
     "Ok"
 }

@@ -74,7 +74,12 @@ impl From<Session> for SessionData {
 
 #[cfg(test)]
 mod tests {
-    use crate::{session::{SessionData, SessionItem}, user::LoginUserId};
+    use anyhow::anyhow;
+
+    use crate::{
+        session::{SessionData, SessionItem},
+        user::LoginUserId,
+    };
 
     #[test]
     fn create_session_with_expiry() {
@@ -101,9 +106,13 @@ mod tests {
 
         session.insert_item(item)?;
 
-        let saved = session.item(&item).unwrap();
+        let saved = session.item(&same_item).unwrap();
 
-        assert!(item == saved);
+        if let (SessionItem::LoginUserId(item), SessionItem::LoginUserId(saved)) = (same_item, saved) {
+            assert!(item == saved);
+        } else {
+            return Err(anyhow!("failed to save item"));
+        }
 
         Ok(())
     }
@@ -120,14 +129,15 @@ mod tests {
     fn item_remove_success() -> anyhow::Result<()> {
         let mut session = SessionData::new();
         let item = SessionItem::LoginUserId(LoginUserId::new("key".to_string()));
+        let key = SessionItem::LoginUserId(LoginUserId::new("key".to_string()));
 
         session.insert_item(item)?;
 
-        assert!(session.item(&item).is_some());
+        assert!(session.item(&key).is_some());
 
-        session.remove_item(&item);
+        session.remove_item(&key);
 
-        assert!(session.item(&item).is_none());
+        assert!(session.item(&key).is_none());
 
         Ok(())
     }

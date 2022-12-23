@@ -16,3 +16,12 @@ pub enum SessionStatus {
     /// 新規作成
     Created(SessionId),
 }
+
+impl Into<SessionId> for SessionStatus {
+    fn into(self) -> SessionId {
+        match self {
+            Self::Found(session_id) => session_id,
+            Self::Created(session_id) => session_id,
+        }
+    }
+}

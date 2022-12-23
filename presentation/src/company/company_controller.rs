@@ -39,7 +39,7 @@ async fn get_companies(
         None
     };
 
-    let result = state.company_query_service().find(params).await.unwrap();
+    let _result = state.company_query_service().find(params).await.unwrap();
 
     "Ok"
 }
