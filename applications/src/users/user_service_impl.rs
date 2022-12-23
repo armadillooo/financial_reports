@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::users::{UserApplicationResult, UserData, UserService};
+use crate::users::{UserApplicationError, UserApplicationResult, UserData, UserService};
 use domain::users::{UserDomainService, UserId, UserRepository};
 
 /// User application service
@@ -46,7 +46,9 @@ where
     async fn save(&self, user: UserData) -> UserApplicationResult<()> {
         let user_id = UserId::new(user.id.clone());
 
-        self.user_service.exists(&user_id).await?;
+        if let Ok(_) = self.user_service.exists(&user_id).await {
+            return Err(UserApplicationError::UserAlreadyExist);
+        }
 
         self.user_repository.save(user.into()).await?;
         Ok(())
