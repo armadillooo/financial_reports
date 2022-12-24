@@ -1,5 +1,5 @@
 use crate::auth::{OICDData, OICDResult};
-use applications::users::UserData;
+use applications::user::UserData;
 
 #[async_trait::async_trait]
 pub trait OICDService {

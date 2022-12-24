@@ -1,7 +1,7 @@
 use crate::{
     portfolio::{Portfolio, PortfolioDomainResult},
     stock::StockId,
-    users::UserId,
+    user::UserId,
 };
 
 #[async_trait::async_trait]

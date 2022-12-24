@@ -2,7 +2,7 @@ use chrono::NaiveDate;
 use thiserror::Error;
 
 use crate::stock::StockQueryError;
-use domain::{portfolio::PortfolioDomainError, users::UserDomainError};
+use domain::{portfolio::PortfolioDomainError, user::UserDomainError};
 
 #[derive(Error, Debug)]
 pub enum PortfolioApplicationError {

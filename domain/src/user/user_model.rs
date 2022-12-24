@@ -1,4 +1,4 @@
-use crate::users::{UserEmail, UserId, UserName};
+use crate::user::{UserEmail, UserId, UserName};
 
 /// Userドメインモデル
 #[derive(Debug, Clone, PartialEq, Eq, Default)]

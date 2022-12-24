@@ -1,4 +1,4 @@
-use domain::{favorite::Favorite, stock::StockId, users::UserId};
+use domain::{favorite::Favorite, stock::StockId, user::UserId};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct FavoriteData {

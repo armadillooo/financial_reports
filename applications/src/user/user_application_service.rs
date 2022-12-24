@@ -1,4 +1,4 @@
-use crate::users::{UserData, UserApplicationResult};
+use crate::user::{UserData, UserApplicationResult};
 
 /// Userアプリケーションサービスインターフェース
 #[async_trait::async_trait]

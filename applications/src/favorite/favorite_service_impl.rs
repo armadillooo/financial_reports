@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::favorite::{FavoriteData, FavoriteService, FavoriteApplicationResult};
 use domain::{
     favorite::FavoriteRepository,
-    users::{UserDomainService, UserId, UserRepository},
+    user::{UserDomainService, UserId, UserRepository},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]

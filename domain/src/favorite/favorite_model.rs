@@ -1,4 +1,4 @@
-use crate::{stock::StockId, users::UserId};
+use crate::{stock::StockId, user::UserId};
 
 /// お気に入り登録情報
 #[derive(Debug, Clone, PartialEq, Eq, Default)]

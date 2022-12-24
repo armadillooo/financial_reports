@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use domain::{
     favorite::{Favorite, FavoriteRepository, FavoriteDomainResult},
-    users::UserId,
+    user::UserId,
 };
 
 #[derive(Debug, Clone, Default)]

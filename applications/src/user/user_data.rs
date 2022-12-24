@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use domain::users::{User, UserEmail, UserId, UserName};
+use domain::user::{User, UserEmail, UserId, UserName};
 
 /// User Data Transfer Object
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Default)]

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use crate::users::{UserApplicationError, UserApplicationResult, UserData, UserService};
-use domain::users::{UserDomainService, UserId, UserRepository};
+use crate::user::{UserApplicationError, UserApplicationResult, UserData, UserService};
+use domain::user::{UserDomainService, UserId, UserRepository};
 
 /// User application service
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -73,8 +73,8 @@ mod tests {
     mod user_usecase_tests {
         use std::sync::Arc;
 
-        use crate::users::inmemory_user_repository_impl::InMemoryUserRepositoryImpl;
-        use crate::users::{UserData, UserService, UserServiceImpl};
+        use crate::user::inmemory_user_repository_impl::InMemoryUserRepositoryImpl;
+        use crate::user::{UserData, UserService, UserServiceImpl};
 
         // テストに必要なオブジェクトの初期化
         fn setup() -> UserServiceImpl<InMemoryUserRepositoryImpl> {
@@ -122,11 +122,11 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn get_not_exist_user_return_none() -> anyhow::Result<()> {
+        async fn get_not_exist_user_return_error() -> anyhow::Result<()> {
             let app_service = setup();
             let id = "234";
 
-            assert!(app_service.get(id).await?.is_none());
+            assert!(app_service.get(id).await.is_err());
 
             Ok(())
         }

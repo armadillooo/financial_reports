@@ -1,6 +1,6 @@
 use crate::{
     favorite::{Favorite, FavoriteDomainResult},
-    users::UserId,
+    user::UserId,
 };
 
 #[async_trait::async_trait]

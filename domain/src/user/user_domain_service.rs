@@ -1,7 +1,7 @@
 //! Userドメインサービス
 use std::sync::Arc;
 
-use crate::users::{UserDomainError, UserDomainResult, UserId, UserRepository};
+use crate::user::{UserDomainError, UserDomainResult, UserId, UserRepository};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct UserDomainService<T>

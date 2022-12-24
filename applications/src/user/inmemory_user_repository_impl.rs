@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use domain::users::{User, UserDomainError, UserDomainResult, UserId, UserName, UserRepository};
+use domain::user::{User, UserDomainError, UserDomainResult, UserId, UserName, UserRepository};
 
 /// テスト用Userレポジトリ
 #[derive(Debug, Clone, Default)]

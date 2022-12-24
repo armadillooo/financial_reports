@@ -6,7 +6,7 @@ use std::sync::Arc;
 use async_session::MemoryStore;
 use axum::middleware;
 use axum_server::tls_rustls::RustlsConfig;
-use domain::users::UserDomainService;
+use domain::user::UserDomainService;
 use dotenvy::{self, dotenv};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -15,7 +15,7 @@ use applications::{
     favorite::{FavoriteServiceImpl, InmemoryFavoriteRepositoryImpl},
     portfolio::{InmemoryPortfolioRepositoryImpl, PortfolioServiceImpl},
     stock::InmemoryStockQueryServiceImpl,
-    users::{InMemoryUserRepositoryImpl, UserServiceImpl},
+    user::{InMemoryUserRepositoryImpl, UserServiceImpl},
 };
 use infrastructures::{
     auth::{OICDClient, OICDserviceImpl},

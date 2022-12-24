@@ -1,5 +1,5 @@
 use crate::auth::OICDClient;
-use applications::users::UserData;
+use applications::user::UserData;
 use presentation::auth::{OICDData, OICDError, OICDResult, OICDService};
 
 #[derive(Debug, Clone)]

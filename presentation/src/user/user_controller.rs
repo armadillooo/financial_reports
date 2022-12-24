@@ -2,16 +2,22 @@ use std::collections::HashMap;
 
 use axum::{
     extract::{Path, Query, State},
-    response::IntoResponse,
+    response::{IntoResponse, Response},
     routing::{get, post},
-    Router,
+    Extension, Router,
 };
 
-use crate::common::{AppStateImpl, AppState};
+use crate::{
+    common::{ApiResponse, ApiResult, AppState, AppStateImpl},
+    user::LoginUserId,
+};
 use applications::{
     favorite::FavoriteData,
     portfolio::{PortfolioData, PortfolioUpdateCommand},
+    user::UserApplicationError,
 };
+
+use super::UserResponse;
 
 pub fn user_controller(state: AppStateImpl) -> Router {
     let user_route = Router::new()
@@ -30,22 +36,26 @@ pub fn user_controller(state: AppStateImpl) -> Router {
         )
         .with_state(state);
 
-    Router::new().nest("/:user_id", user_route)
+    Router::new().nest("/me", user_route)
 }
 
-async fn get_user(state: State<AppStateImpl>, Path(user_id): Path<String>) -> impl IntoResponse {
-    let _user = state
+async fn get_user(
+    state: State<AppStateImpl>,
+    Extension(user_id): Extension<LoginUserId>,
+) -> ApiResult<Response> {
+    let user = state
         .user_application_service()
         .get(&user_id)
-        .await
-        .unwrap();
+        .await?
+        .ok_or(UserApplicationError::UserNotExist)?;
 
-    "Ok"
+    let res = ApiResponse::new(UserResponse::from(user));
+    Ok(res.into_response())
 }
 
 async fn get_favorites(
     state: State<AppStateImpl>,
-    Path(user_id): Path<String>,
+    Extension(user_id): Extension<LoginUserId>,
 ) -> impl IntoResponse {
     let _favorites = state.favorite_service().get_all(&user_id).await.unwrap();
 
@@ -54,10 +64,10 @@ async fn get_favorites(
 
 async fn insert_favorite(
     state: State<AppStateImpl>,
-    Path(user_id): Path<String>,
+    Extension(user_id): Extension<LoginUserId>,
     Path(stock_id): Path<String>,
 ) -> impl IntoResponse {
-    let favorite = FavoriteData::new(user_id, stock_id);
+    let favorite = FavoriteData::new(user_id.to_string(), stock_id);
     state.favorite_service().add(favorite).await.unwrap();
 
     "Ok"
@@ -65,10 +75,10 @@ async fn insert_favorite(
 
 async fn delete_favorite(
     state: State<AppStateImpl>,
-    Path(user_id): Path<String>,
+    Extension(user_id): Extension<LoginUserId>,
     Path(stock_id): Path<String>,
 ) -> impl IntoResponse {
-    let favorite = FavoriteData::new(user_id, stock_id);
+    let favorite = FavoriteData::new(user_id.to_string(), stock_id);
     state.favorite_service().remove(favorite).await.unwrap();
 
     "Ok"
@@ -76,7 +86,7 @@ async fn delete_favorite(
 
 async fn get_portfolio(
     state: State<AppStateImpl>,
-    Path(user_id): Path<String>,
+    Extension(user_id): Extension<LoginUserId>,
 ) -> impl IntoResponse {
     let _portfolio = state.portfolio_service().get_all(&user_id).await.unwrap();
 
@@ -85,10 +95,10 @@ async fn get_portfolio(
 
 async fn insert_portfolio(
     state: State<AppStateImpl>,
-    Path(user_id): Path<String>,
+    Extension(user_id): Extension<LoginUserId>,
     Path(stock_id): Path<String>,
 ) -> impl IntoResponse {
-    let portfolio = PortfolioData::new(user_id, stock_id);
+    let portfolio = PortfolioData::new(user_id.to_string(), stock_id);
     state.portfolio_service().add(portfolio).await.unwrap();
 
     "Ok"
@@ -96,7 +106,7 @@ async fn insert_portfolio(
 
 async fn update_portfolio(
     utility: State<AppStateImpl>,
-    Path(user_id): Path<String>,
+    Extension(user_id): Extension<LoginUserId>,
     Path(stock_id): Path<String>,
     Query(params): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
@@ -112,7 +122,7 @@ async fn update_portfolio(
     } else {
         None
     };
-    let command = PortfolioUpdateCommand::new(user_id, stock_id, purchase, stock_count);
+    let command = PortfolioUpdateCommand::new(user_id.to_string(), stock_id, purchase, stock_count);
 
     utility.portfolio_service().update(command).await.unwrap();
 
@@ -121,7 +131,7 @@ async fn update_portfolio(
 
 async fn delete_portfolio(
     state: State<AppStateImpl>,
-    Path(user_id): Path<String>,
+    Extension(user_id): Extension<LoginUserId>,
     Path(stock_id): Path<String>,
 ) -> impl IntoResponse {
     state

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::{auth::OICDService, session::SessionService};
 use applications::{
     company::CompanyQueryService, favorite::FavoriteService, portfolio::PortfolioService,
-    stock::StockQueryService, users::UserService,
+    stock::StockQueryService, user::UserService,
 };
 
 #[async_trait::async_trait]

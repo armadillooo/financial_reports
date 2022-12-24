@@ -11,7 +11,7 @@ use crate::{
 use domain::{
     portfolio::{Portfolio, PortfolioReposotory},
     stock::StockId,
-    users::{UserDomainService, UserId, UserRepository},
+    user::{UserDomainService, UserId, UserRepository},
 };
 
 #[derive(Debug, Clone, Eq, PartialEq, Default)]

@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use domain::{
     portfolio::{Portfolio, PortfolioDomainError, PortfolioDomainResult, PortfolioReposotory},
     stock::StockId,
-    users::UserId,
+    user::UserId,
 };
 
 #[derive(Debug, Clone, Default)]

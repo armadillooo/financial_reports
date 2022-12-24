@@ -12,11 +12,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     auth::OICDData,
-    common::{ApiResult, AppState, AppStateImpl},
+    common::{ApiResponse, ApiResult, AppState, AppStateImpl},
     session::{SessionId, SessionItem},
-    user::LoginUserId,
+    user::{LoginUserId, UserResponse},
 };
-use applications::users::UserData;
+use applications::user::{UserApplicationError, UserData};
 
 use super::OICDError;
 
@@ -71,25 +71,39 @@ async fn auth_verify_google(
 
     match auth_type {
         AuthType::Login => {
-            // ログイン成功
-            if let Some(_) = state.user_application_service().get(&auth_user.id).await? {
-                return Ok("Ok".into_response());
+            // ユーザー未登録
+            if let None = state.user_application_service().get(&auth_user.id).await? {
+                return Err(UserApplicationError::UserNotExist.into());
             }
         }
         AuthType::Singin => {
             // ユーザーが既に存在するため新規追加不可
-            if let None = state.user_application_service().get(&auth_user.id).await? {
-                return Ok("Ok".into_response());
+            if let Some(_) = state.user_application_service().get(&auth_user.id).await? {
+                return Err(UserApplicationError::UserAlreadyExist.into());
             }
         }
     };
 
-    Ok("Ok".into_response())
+    let res = ApiResponse::new(UserResponse::from(auth_user));
+
+    Ok(res.into_response())
 }
 
 /// ログアウト
-async fn logout() -> impl IntoResponse {
-    unimplemented!()
+async fn logout(
+    Extension(session_id): Extension<SessionId>,
+    Extension(user_id): Extension<LoginUserId>,
+    state: State<AppStateImpl>,
+) -> ApiResult<Response> {
+    let key = SessionItem::LoginUserId(user_id);
+    state
+        .session_service()
+        .remove_item(session_id, &key)
+        .await?;
+
+    let res = serde_json::json!({ "message": "succeed in logout"});
+    let res = ApiResponse::new(res);
+    Ok(res.into_response())
 }
 
 async fn oicd_redirect(session_id: SessionId, state: &AppStateImpl) -> ApiResult<Response> {

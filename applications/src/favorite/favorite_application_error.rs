@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use domain::{favorite::FavoriteDomainError, users::UserDomainError};
+use domain::{favorite::FavoriteDomainError, user::UserDomainError};
 
 #[derive(Error, Debug)]
 pub enum FavoriteApplicationError {

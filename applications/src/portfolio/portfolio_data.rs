@@ -1,5 +1,5 @@
 use chrono::NaiveDate;
-use domain::{portfolio::Portfolio, stock::StockId, users::UserId};
+use domain::{portfolio::Portfolio, stock::StockId, user::UserId};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct PortfolioData {

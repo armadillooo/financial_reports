@@ -7,7 +7,7 @@ use thiserror::Error;
 
 use applications::{
     company::CompanyQueryError, favorite::FavoriteApplicationError,
-    portfolio::PortfolioApplicationError, stock::StockQueryError, users::UserApplicationError,
+    portfolio::PortfolioApplicationError, stock::StockQueryError, user::UserApplicationError,
 };
 
 use crate::{auth::OICDError, session::SessionError};

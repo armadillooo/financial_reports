@@ -1,4 +1,4 @@
-use crate::users::{User, UserId, UserName, UserDomainResult};
+use crate::user::{User, UserId, UserName, UserDomainResult};
 
 /// User永続化インターフェース
 #[async_trait::async_trait]
