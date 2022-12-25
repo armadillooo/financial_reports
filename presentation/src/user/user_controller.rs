@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use axum::{
     extract::{Path, Query, State},
+    middleware,
     response::{IntoResponse, Response},
     routing::{get, post},
     Extension, Router,
@@ -9,6 +10,7 @@ use axum::{
 
 use crate::{
     common::{ApiResponse, ApiResult, AppState, AppStateImpl},
+    session::session_manage_layer,
     user::LoginUserId,
 };
 use applications::{
@@ -34,6 +36,10 @@ pub fn user_controller(state: AppStateImpl) -> Router {
                 .patch(update_portfolio)
                 .delete(delete_portfolio),
         )
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            session_manage_layer,
+        ))
         .with_state(state);
 
     Router::new().nest("/me", user_route)

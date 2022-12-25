@@ -20,7 +20,7 @@ use infrastructures::{
     auth::{OICDClient, OICDserviceImpl},
     session::{SessionRepositoryImpl, SessionServiceImpl},
 };
-use presentation::{common::AppStateImpl, root_controllers};
+use presentation::common::{api_controllers, AppStateImpl};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -88,7 +88,7 @@ async fn main() -> anyhow::Result<()> {
         Arc::new(portfolio_service),
     );
 
-    let app = root_controllers(state.clone());
+    let app = api_controllers(state.clone());
 
     let addr = dotenvy::var("SOCKET_ADDRESS").unwrap();
     let addr = SocketAddr::from_str(&addr).unwrap();

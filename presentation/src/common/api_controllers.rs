@@ -5,7 +5,7 @@ use crate::{
     stock::stock_controller, user::user_controller,
 };
 
-pub fn root_controllers(state: AppStateImpl) -> Router {
+pub fn api_controllers(state: AppStateImpl) -> Router {
     let api_routes = Router::new()
         .nest("/auth", auth_controller(state.clone()))
         .nest("/stocks", stock_controller(state.clone()))
