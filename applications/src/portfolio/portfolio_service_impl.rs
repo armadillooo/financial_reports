@@ -48,10 +48,11 @@ where
 #[async_trait::async_trait]
 impl<T, U, V> PortfolioService for PortfolioServiceImpl<T, U, V>
 where
-    T: PortfolioReposotory + Send + Sync,
-    U: StockQueryService + Send + Sync,
-    V: UserRepository + Send + Sync,
+    T: PortfolioReposotory + std::fmt::Debug + Send + Sync,
+    U: StockQueryService + std::fmt::Debug + Send + Sync,
+    V: UserRepository + std::fmt::Debug + Send + Sync,
 {
+    #[tracing::instrument(skip(self), err, ret)]
     async fn get_all(&self, user_id: &str) -> PortfoliApplicationResult<Vec<PortfolioData>> {
         let user_id = UserId::new(user_id.to_string());
         let all_portfolio = self.portfolio_repository.find_all(&user_id).await?;
@@ -67,6 +68,7 @@ where
         result.into_iter().collect()
     }
 
+    #[tracing::instrument(skip(self), err, ret)]
     async fn remove(&self, user_id: &str, stock_id: &str) -> PortfoliApplicationResult<()> {
         let user_id = UserId::new(user_id.to_string());
         let stock_id = StockId::new(stock_id.to_string());
@@ -77,6 +79,7 @@ where
         Ok(())
     }
 
+    #[tracing::instrument(skip(self), err, ret)]
     async fn update(
         &self,
         update_command: PortfolioUpdateCommand,
@@ -84,10 +87,7 @@ where
         let user_id = UserId::new(update_command.user_id.to_string());
         let stock_id = StockId::new(update_command.stock_id.to_string());
 
-        let mut portfolio = self
-            .portfolio_repository
-            .find(&user_id, &stock_id)
-            .await?;
+        let mut portfolio = self.portfolio_repository.find(&user_id, &stock_id).await?;
 
         if let Some(purchase) = update_command.purchase {
             portfolio.update_purchase(purchase);
@@ -103,9 +103,10 @@ where
         Ok(())
     }
 
+    #[tracing::instrument(skip(self), err, ret)]
     async fn add(&self, portfolio: PortfolioData) -> PortfoliApplicationResult<()> {
         let user_id = UserId::new(portfolio.user_id.to_string());
-        
+
         self.user_service.exists(&user_id).await?;
 
         self.portfolio_repository.save(portfolio.into()).await?;
@@ -119,6 +120,7 @@ where
     U: StockQueryService + Send + Sync,
     V: UserRepository + Send + Sync,
 {
+    #[tracing::instrument(skip(self), err, ret)]
     async fn into_portfolio_data(
         &self,
         portfolio: Portfolio,

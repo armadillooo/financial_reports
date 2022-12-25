@@ -18,6 +18,7 @@ impl InmemoryStockQueryServiceImpl {
 
 #[async_trait::async_trait]
 impl StockQueryService for InmemoryStockQueryServiceImpl {
+    #[tracing::instrument(skip(self), err)]
     async fn find(&self, param: StockQueryCommand) -> StockQueryResult<Vec<StockData>> {
         // パラメータチェック
         if let (Some(start), Some(end)) = (param.start, param.end) {
@@ -78,6 +79,7 @@ impl StockQueryService for InmemoryStockQueryServiceImpl {
         Ok(result)
     }
 
+    #[tracing::instrument(skip(self), err, ret)]
     async fn find_latest(&self, stock_id: &str) -> StockQueryResult<StockData> {
         let mut command = StockQueryCommand::new();
         command.stock_id = Some(stock_id.to_string());

@@ -70,6 +70,7 @@ impl OICDClient {
     }
 
     /// 検証
+    #[tracing::instrument(skip(self), err, ret)]
     pub async fn verify(
         &self,
         oicd_info: OICDData,

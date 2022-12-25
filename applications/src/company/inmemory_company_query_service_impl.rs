@@ -19,6 +19,7 @@ impl InmemoryCompanyQueryServiceImpl {
 
 #[async_trait::async_trait]
 impl CompanyQueryService for InmemoryCompanyQueryServiceImpl {
+    #[tracing::instrument(skip(self), err)]
     async fn find(&self, param: CompanyQueryCommand) -> CompanyQueryResult<Vec<CompanyData>> {
         // 企業名検索
         if let Some(name) = param.name {
@@ -77,6 +78,7 @@ impl CompanyQueryService for InmemoryCompanyQueryServiceImpl {
         Ok(iter.collect::<Vec<CompanyData>>())
     }
 
+    #[tracing::instrument(skip(self), err, ret)]
     async fn find_by_id(&self, stock_id: String) -> CompanyQueryResult<CompanyData> {
         let stock_id = StockId::new(stock_id);
         let result = self
@@ -89,6 +91,7 @@ impl CompanyQueryService for InmemoryCompanyQueryServiceImpl {
         Ok(result)
     }
 
+    #[tracing::instrument(skip(self), err)]
     async fn find_list(&self, stock_id_list: Vec<String>) -> CompanyQueryResult<Vec<CompanyData>> {
         let mut result = vec![];
         for id in stock_id_list {
