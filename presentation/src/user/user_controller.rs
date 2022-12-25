@@ -15,11 +15,11 @@ use crate::{
 };
 use applications::{
     favorite::FavoriteData,
-    portfolio::{PortfolioData, PortfolioUpdateCommand},
+    portfolio::{PortfolioApplicationError, PortfolioData, PortfolioUpdateCommand},
     user::UserApplicationError,
 };
 
-use super::UserResponse;
+use crate::user::{FavoriteResponse, PortfolioResponse, UserResponse};
 
 pub fn user_controller(state: AppStateImpl) -> Router {
     let user_route = Router::new()
@@ -56,58 +56,91 @@ async fn get_user(
         .ok_or(UserApplicationError::UserNotExist)?;
 
     let res = ApiResponse::new(UserResponse::from(user));
+
     Ok(res.into_response())
 }
 
 async fn get_favorites(
     state: State<AppStateImpl>,
     Extension(user_id): Extension<LoginUserId>,
-) -> impl IntoResponse {
-    let _favorites = state.favorite_service().get_all(&user_id).await.unwrap();
+) -> ApiResult<Response> {
+    let stock_id_list = state
+        .favorite_service()
+        .get_all(&user_id)
+        .await?
+        .iter()
+        .map(|favo| favo.stock_id.to_string())
+        .collect();
+    let result = state
+        .company_query_service()
+        .find_list(stock_id_list)
+        .await?;
 
-    "Ok"
+    let res: ApiResponse<Vec<FavoriteResponse>> = ApiResponse::new(
+        result
+            .into_iter()
+            .map(|c| FavoriteResponse::from(c))
+            .collect(),
+    );
+
+    Ok(res.into_response())
 }
 
 async fn insert_favorite(
     state: State<AppStateImpl>,
     Extension(user_id): Extension<LoginUserId>,
     Path(stock_id): Path<String>,
-) -> impl IntoResponse {
+) -> ApiResult<Response> {
     let favorite = FavoriteData::new(user_id.to_string(), stock_id);
-    state.favorite_service().add(favorite).await.unwrap();
+    state.favorite_service().add(favorite).await?;
 
-    "Ok"
+    Ok(ApiResponse::new(serde_json::json!({
+        "message": "succeed in regist favorite"
+    }))
+    .into_response())
 }
 
 async fn delete_favorite(
     state: State<AppStateImpl>,
     Extension(user_id): Extension<LoginUserId>,
     Path(stock_id): Path<String>,
-) -> impl IntoResponse {
+) -> ApiResult<Response> {
     let favorite = FavoriteData::new(user_id.to_string(), stock_id);
     state.favorite_service().remove(favorite).await.unwrap();
 
-    "Ok"
+    Ok(ApiResponse::new(serde_json::json!({
+        "message": "succeed in delete favorite"
+    }))
+    .into_response())
 }
 
 async fn get_portfolio(
     state: State<AppStateImpl>,
     Extension(user_id): Extension<LoginUserId>,
-) -> impl IntoResponse {
-    let _portfolio = state.portfolio_service().get_all(&user_id).await.unwrap();
+) -> ApiResult<Response> {
+    let portfolio = state.portfolio_service().get_all(&user_id).await?;
 
-    "Ok"
+    let res = portfolio
+        .into_iter()
+        .map(|p| PortfolioResponse::from(p))
+        .collect();
+    let res: ApiResponse<Vec<PortfolioResponse>> = ApiResponse::new(res);
+
+    Ok(res.into_response())
 }
 
 async fn insert_portfolio(
     state: State<AppStateImpl>,
     Extension(user_id): Extension<LoginUserId>,
     Path(stock_id): Path<String>,
-) -> impl IntoResponse {
+) -> ApiResult<Response> {
     let portfolio = PortfolioData::new(user_id.to_string(), stock_id);
-    state.portfolio_service().add(portfolio).await.unwrap();
+    state.portfolio_service().add(portfolio).await?;
 
-    "Ok"
+    Ok(ApiResponse::new(serde_json::json!({
+        "message": "succeed in regist portfolio"
+    }))
+    .into_response())
 }
 
 async fn update_portfolio(
@@ -115,36 +148,41 @@ async fn update_portfolio(
     Extension(user_id): Extension<LoginUserId>,
     Path(stock_id): Path<String>,
     Query(params): Query<HashMap<String, String>>,
-) -> impl IntoResponse {
+) -> ApiResult<Response> {
     let purchase = if let Some(purchase) = params.get("purchase") {
-        let Ok(purchase) = purchase.parse() else {return "Err"};
+        let Ok(purchase) = purchase.parse() else {return Err(PortfolioApplicationError::InvalidParameter { name: "purchase".to_string(), value: purchase.clone() }.into()) };
         Some(purchase)
     } else {
         None
     };
     let stock_count = if let Some(stock_count) = params.get("purchase") {
-        let Ok(stock_count) = stock_count.parse() else {return "Err"};
+        let Ok(stock_count) = stock_count.parse() else {return Err(PortfolioApplicationError::InvalidParameter { name: "stock_count".to_string(), value: stock_count.clone() }.into())};
         Some(stock_count)
     } else {
         None
     };
     let command = PortfolioUpdateCommand::new(user_id.to_string(), stock_id, purchase, stock_count);
 
-    utility.portfolio_service().update(command).await.unwrap();
+    utility.portfolio_service().update(command).await?;
 
-    "Ok"
+    Ok(ApiResponse::new(serde_json::json!({
+        "message": "succeed in update portfolio"
+    }))
+    .into_response())
 }
 
 async fn delete_portfolio(
     state: State<AppStateImpl>,
     Extension(user_id): Extension<LoginUserId>,
     Path(stock_id): Path<String>,
-) -> impl IntoResponse {
+) -> ApiResult<Response> {
     state
         .portfolio_service()
         .remove(&user_id, &stock_id)
-        .await
-        .unwrap();
+        .await?;
 
-    "Ok"
+    Ok(ApiResponse::new(serde_json::json!({
+        "message": "succeed in update portfolio"
+    }))
+    .into_response())
 }

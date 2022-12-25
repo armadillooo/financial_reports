@@ -1,10 +1,9 @@
 use std::ops::Deref;
 
-use domain::stock::StockId;
-
 use crate::company::{
     CompanyData, CompanyQueryCommand, CompanyQueryError, CompanyQueryResult, CompanyQueryService,
 };
+use domain::stock::StockId;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct InmemoryCompanyQueryServiceImpl {
@@ -86,6 +85,16 @@ impl CompanyQueryService for InmemoryCompanyQueryServiceImpl {
             .find(|c| c.stock_id == stock_id)
             .ok_or(CompanyQueryError::CompanyNotFound)?
             .clone();
+
+        Ok(result)
+    }
+
+    async fn find_list(&self, stock_id_list: Vec<String>) -> CompanyQueryResult<Vec<CompanyData>> {
+        let mut result = vec![];
+        for id in stock_id_list {
+            let found = self.find_by_id(id).await?;
+            result.push(found);
+        }
 
         Ok(result)
     }

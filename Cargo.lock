@@ -1287,6 +1287,7 @@ dependencies = [
  "axum",
  "base64 0.20.0",
  "chrono",
+ "futures",
  "openidconnect",
  "serde",
  "serde_json",
