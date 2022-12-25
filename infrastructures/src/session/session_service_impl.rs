@@ -40,9 +40,10 @@ where
 #[async_trait::async_trait]
 impl<T> SessionService for SessionServiceImpl<T>
 where
-    T: SessionRepository + Send + Sync + Clone,
+    T: SessionRepository + std::fmt::Debug + Send + Sync + Clone,
 {
     /// Session取得 or 新規作成
+    #[tracing::instrument(err, ret)]
     async fn find_or_create(&self, session_id: Option<SessionId>) -> SessionResult<SessionStatus> {
         let status = if let Some(session_id) = session_id {
             if let Some(session) = self
@@ -71,6 +72,7 @@ where
     }
 
     /// Session削除
+    #[tracing::instrument(err, ret)]
     async fn delete(&self, session_id: SessionId) -> SessionResult<()> {
         self.session_repository
             .delete(session_id)
@@ -81,6 +83,8 @@ where
             })
     }
 
+    /// SessionItem取得
+    #[tracing::instrument(err, ret)]
     async fn item(&self, session_id: SessionId, key: &SessionItem) -> SessionResult<SessionItem> {
         let session = self
             .session_repository
@@ -102,6 +106,8 @@ where
         Ok(item)
     }
 
+    /// SessionItem保存
+    #[tracing::instrument(err, ret)]
     async fn insert_item(&self, session_id: SessionId, item: SessionItem) -> SessionResult<()> {
         let mut session = self
             .session_repository
@@ -116,6 +122,8 @@ where
         session.insert_item(item)
     }
 
+    /// SessionItem削除
+    #[tracing::instrument(err, ret)]
     async fn remove_item(&self, session_id: SessionId, key: &SessionItem) -> SessionResult<()> {
         let mut session = self
             .session_repository

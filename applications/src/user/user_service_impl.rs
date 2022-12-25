@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use tracing::error;
-
 use crate::user::{UserApplicationError, UserApplicationResult, UserData, UserService};
 use domain::user::{UserDomainService, UserId, UserRepository};
 
@@ -31,51 +29,40 @@ where
 #[async_trait::async_trait]
 impl<T> UserService for UserServiceImpl<T>
 where
-    T: UserRepository + Send + Sync,
+    T: UserRepository + std::fmt::Debug + Send + Sync,
 {
     /// User取得
+    #[tracing::instrument(err, ret)]
     async fn get(&self, id: &str) -> UserApplicationResult<Option<UserData>> {
         let user = self
             .user_repository
             .find(&UserId::new(id.to_string()))
-            .await
-            .map_err(|e| {
-                error!("{}", e);
-                e
-            })?
+            .await?
             .map(|found| UserData::from(found));
 
         Ok(user)
     }
 
     /// User新規作成
+    #[tracing::instrument(err, ret)]
     async fn save(&self, user: UserData) -> UserApplicationResult<()> {
         let user_id = UserId::new(user.id.clone());
 
         if let Ok(_) = self.user_service.exists(&user_id).await {
             let e = UserApplicationError::UserAlreadyExist;
-            error!("{}", e);
             return Err(e);
         }
 
-        self.user_repository.save(user.into()).await.map_err(|e| {
-            error!("{}", e);
-            e
-        })?;
+        self.user_repository.save(user.into()).await?;
         Ok(())
     }
 
     /// User削除
+    #[tracing::instrument(err, ret)]
     async fn delete(&self, id: &str) -> UserApplicationResult<()> {
         let id = UserId::new(id.to_string());
-        if let Some(user) = self.user_repository.find(&id).await.map_err(|e| {
-            error!("{}", e);
-            e
-        })? {
-            self.user_repository.delete(user).await.map_err(|e| {
-                error!("{}", e);
-                e
-            })?;
+        if let Some(user) = self.user_repository.find(&id).await? {
+            self.user_repository.delete(user).await?;
         } else {
             // ユーザーが存在しなかった場合は削除成功扱い
             return Ok(());

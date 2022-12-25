@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{auth::OICDService, session::SessionService, common::AppState};
+use crate::{auth::OICDService, common::AppState, session::SessionService};
 use applications::{
     company::CompanyQueryService, favorite::FavoriteService, portfolio::PortfolioService,
     stock::StockQueryService, user::UserService,
