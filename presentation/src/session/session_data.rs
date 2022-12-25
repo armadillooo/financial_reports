@@ -23,7 +23,10 @@ impl SessionData {
 
     /// Session ID取得
     pub fn into_session_id(self) -> SessionResult<SessionId> {
-        let id = self.0.into_cookie_value().ok_or(SessionError::Disconnect)?;
+        let id = self
+            .0
+            .into_cookie_value()
+            .ok_or(SessionError::IntoSessionIdError)?;
 
         Ok(SessionId::new(id))
     }
@@ -108,7 +111,9 @@ mod tests {
 
         let saved = session.item(&same_item).unwrap();
 
-        if let (SessionItem::LoginUserId(item), SessionItem::LoginUserId(saved)) = (same_item, saved) {
+        if let (SessionItem::LoginUserId(item), SessionItem::LoginUserId(saved)) =
+            (same_item, saved)
+        {
             assert!(item == saved);
         } else {
             return Err(anyhow!("failed to save item"));

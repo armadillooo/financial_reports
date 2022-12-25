@@ -66,11 +66,12 @@ impl IntoResponse for ApiError {
                 StockQueryError::InvalidRangeOfDate { .. } => StatusCode::BAD_REQUEST,
             },
             ApiError::SessionError(e) => match e {
-                SessionError::Disconnect => StatusCode::INTERNAL_SERVER_ERROR,
+                SessionError::Disconnect(_) => StatusCode::INTERNAL_SERVER_ERROR,
                 SessionError::ItemNotFound => StatusCode::INTERNAL_SERVER_ERROR,
                 SessionError::ItemNotSaved => StatusCode::INTERNAL_SERVER_ERROR,
                 SessionError::SessionIdNotSend => StatusCode::BAD_REQUEST,
                 SessionError::SessionNotFound => StatusCode::INTERNAL_SERVER_ERROR,
+                SessionError::IntoSessionIdError => StatusCode::INTERNAL_SERVER_ERROR,
             },
             ApiError::OICDError(e) => match e {
                 OICDError::InitializationError => StatusCode::INTERNAL_SERVER_ERROR,

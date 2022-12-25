@@ -30,6 +30,7 @@ dependencies = [
  "serde",
  "thiserror",
  "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -934,6 +935,7 @@ dependencies = [
  "openidconnect",
  "presentation",
  "tokio",
+ "tracing",
 ]
 
 [[package]]

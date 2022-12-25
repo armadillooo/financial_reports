@@ -2,8 +2,8 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum UserDomainError {
-    #[error("internal server error")]
-    Disconnect,
+    #[error(transparent)]
+    Disconnect(#[from] anyhow::Error),
     #[error("user is already exsist")]
     UserAlreadyExist,
     #[error("user not exist")]

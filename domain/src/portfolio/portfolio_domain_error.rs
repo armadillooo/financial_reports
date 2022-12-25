@@ -2,8 +2,8 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum PortfolioDomainError {
-    #[error("internal server error")]
-    Disconnect,
+    #[error(transparent)]
+    Disconnect(#[from] anyhow::Error),
     #[error("portfolio not found")]
     PortfolioNotFound,
 }

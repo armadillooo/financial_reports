@@ -1,5 +1,6 @@
-use std::clone::Clone;
 use std::sync::Arc;
+
+use tracing::error;
 
 use presentation::session::{
     SessionData, SessionError, SessionId, SessionItem, SessionRepository, SessionResult,
@@ -27,7 +28,10 @@ where
 
     async fn create(&self) -> SessionResult<SessionStatus> {
         let session = SessionData::new();
-        let session_id = self.session_repository.save(session).await?;
+        let session_id = self.session_repository.save(session).await.map_err(|e| {
+            error!("{}", e);
+            e
+        })?;
 
         Ok(SessionStatus::Created(session_id))
     }
@@ -41,8 +45,19 @@ where
     /// Session取得 or 新規作成
     async fn find_or_create(&self, session_id: Option<SessionId>) -> SessionResult<SessionStatus> {
         let status = if let Some(session_id) = session_id {
-            if let Some(session) = self.session_repository.find(session_id).await? {
-                let status = SessionStatus::Found(session.into_session_id()?);
+            if let Some(session) = self
+                .session_repository
+                .find(session_id)
+                .await
+                .map_err(|e| {
+                    error!("{}", e);
+                    e
+                })?
+            {
+                let status = SessionStatus::Found(session.into_session_id().map_err(|e| {
+                    error!("{}", e);
+                    e
+                })?);
 
                 status
             } else {
@@ -57,32 +72,64 @@ where
 
     /// Session削除
     async fn delete(&self, session_id: SessionId) -> SessionResult<()> {
-        self.session_repository.delete(session_id).await
+        self.session_repository
+            .delete(session_id)
+            .await
+            .map_err(|e| {
+                error!("{}", e);
+                e
+            })
     }
 
-    async fn item(
-        &self,
-        session_id: SessionId,
-        key: &SessionItem,
-    ) -> SessionResult<SessionItem> {
-        let session = self.session_repository.find(session_id).await?.ok_or(SessionError::SessionNotFound)?;
+    async fn item(&self, session_id: SessionId, key: &SessionItem) -> SessionResult<SessionItem> {
+        let session = self
+            .session_repository
+            .find(session_id)
+            .await?
+            .ok_or(SessionError::SessionNotFound)
+            .map_err(|e| {
+                error!("{}", e);
+                e
+            })?;
 
-        let item = session.item(key).ok_or(SessionError::ItemNotFound)?;
+        let item = session
+            .item(key)
+            .ok_or(SessionError::ItemNotFound)
+            .map_err(|e| {
+                error!("{}", e);
+                e
+            })?;
         Ok(item)
     }
 
-    async fn insert_item(
-        &self,
-        session_id: SessionId,
-        item: SessionItem,
-    ) -> SessionResult<()> {
-        let mut session = self.session_repository.find(session_id).await?.ok_or(SessionError::SessionNotFound)?;
+    async fn insert_item(&self, session_id: SessionId, item: SessionItem) -> SessionResult<()> {
+        let mut session = self
+            .session_repository
+            .find(session_id)
+            .await?
+            .ok_or(SessionError::SessionNotFound)
+            .map_err(|e| {
+                error!("{}", e);
+                e
+            })?;
 
         session.insert_item(item)
     }
 
     async fn remove_item(&self, session_id: SessionId, key: &SessionItem) -> SessionResult<()> {
-        let mut session = self.session_repository.find(session_id).await?.ok_or(SessionError::SessionNotFound)?;
+        let mut session = self
+            .session_repository
+            .find(session_id)
+            .await
+            .map_err(|e| {
+                error!("{}", e);
+                e
+            })?
+            .ok_or(SessionError::SessionNotFound)
+            .map_err(|e| {
+                error!("{}", e);
+                e
+            })?;
 
         session.remove_item(key);
         Ok(())
@@ -123,15 +170,14 @@ mod tests {
     async fn delete_session_success() -> anyhow::Result<()> {
         let session_service = setup();
         let session_id = session_service.find_or_create(None).await?.into();
-        
+
         // セッションが保存されていることの確認
         let SessionStatus::Found(session_id) = session_service.find_or_create(Some(session_id)).await? else {
             return Err(anyhow!("session is not saved"));
         };
 
-
         session_service.delete(session_id.clone()).await?;
-// セッションが削除されていることの確認
+        // セッションが削除されていることの確認
         let SessionStatus::Created(_) = session_service.find_or_create(Some(session_id)).await? else {
             return Err(anyhow!("session is not removed"));
         };

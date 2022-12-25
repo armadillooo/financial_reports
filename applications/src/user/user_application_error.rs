@@ -15,7 +15,7 @@ pub enum UserApplicationError {
 impl From<UserDomainError> for UserApplicationError {
     fn from(value: UserDomainError) -> Self {
         match value {
-            UserDomainError::Disconnect => Self::Disconnect,
+            UserDomainError::Disconnect(_) => Self::Disconnect,
             UserDomainError::UserAlreadyExist => Self::UserAlreadyExist,
             UserDomainError::UserNotFound => Self::UserNotExist,
         }

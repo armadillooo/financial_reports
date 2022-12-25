@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use tracing::error;
+
 use crate::user::{UserApplicationError, UserApplicationResult, UserData, UserService};
 use domain::user::{UserDomainService, UserId, UserRepository};
 
@@ -36,7 +38,11 @@ where
         let user = self
             .user_repository
             .find(&UserId::new(id.to_string()))
-            .await?
+            .await
+            .map_err(|e| {
+                error!("{}", e);
+                e
+            })?
             .map(|found| UserData::from(found));
 
         Ok(user)
@@ -47,18 +53,29 @@ where
         let user_id = UserId::new(user.id.clone());
 
         if let Ok(_) = self.user_service.exists(&user_id).await {
-            return Err(UserApplicationError::UserAlreadyExist);
+            let e = UserApplicationError::UserAlreadyExist;
+            error!("{}", e);
+            return Err(e);
         }
 
-        self.user_repository.save(user.into()).await?;
+        self.user_repository.save(user.into()).await.map_err(|e| {
+            error!("{}", e);
+            e
+        })?;
         Ok(())
     }
 
     /// User削除
     async fn delete(&self, id: &str) -> UserApplicationResult<()> {
         let id = UserId::new(id.to_string());
-        if let Some(user) = self.user_repository.find(&id).await? {
-            self.user_repository.delete(user).await?;
+        if let Some(user) = self.user_repository.find(&id).await.map_err(|e| {
+            error!("{}", e);
+            e
+        })? {
+            self.user_repository.delete(user).await.map_err(|e| {
+                error!("{}", e);
+                e
+            })?;
         } else {
             // ユーザーが存在しなかった場合は削除成功扱い
             return Ok(());

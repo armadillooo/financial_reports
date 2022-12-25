@@ -27,7 +27,7 @@ pub type PortfoliApplicationResult<T> = Result<T, PortfolioApplicationError>;
 impl From<PortfolioDomainError> for PortfolioApplicationError {
     fn from(value: PortfolioDomainError) -> Self {
         match value {
-            PortfolioDomainError::Disconnect => Self::Disconnect,
+            PortfolioDomainError::Disconnect(_) => Self::Disconnect,
             PortfolioDomainError::PortfolioNotFound => Self::PortfolioNotFound,
         }
     }
@@ -36,7 +36,7 @@ impl From<PortfolioDomainError> for PortfolioApplicationError {
 impl From<UserDomainError> for PortfolioApplicationError {
     fn from(value: UserDomainError) -> Self {
         match value {
-            UserDomainError::Disconnect => Self::Disconnect,
+            UserDomainError::Disconnect(_) => Self::Disconnect,
             UserDomainError::UserAlreadyExist => Self::UserAlreadyExist,
             UserDomainError::UserNotFound => Self::UserNotFound,
         }

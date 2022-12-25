@@ -24,12 +24,12 @@ impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
         let session = self
             .find(session_id)
             .await?
-            .ok_or(SessionError::Disconnect)?;
+            .ok_or(SessionError::SessionNotFound)?;
 
         self.store
             .destroy_session(session.into())
             .await
-            .map_err(|_| SessionError::Disconnect)
+            .map_err(|e| SessionError::Disconnect(e))
     }
 
     /// Session取得
@@ -38,7 +38,7 @@ impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
             .store
             .load_session(session_id.to_string())
             .await
-            .map_err(|_| SessionError::Disconnect)?
+            .map_err(|e| SessionError::Disconnect(e))?
         {
             Ok(Some(session.into()))
         } else {
@@ -51,8 +51,8 @@ impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
         self.store
             .store_session(session.into())
             .await
-            .map_err(|_| SessionError::Disconnect)?
-            .ok_or(SessionError::Disconnect)
+            .map_err(|e| SessionError::Disconnect(e))?
+            .ok_or(SessionError::IntoSessionIdError)
             .map(|id| SessionId::new(id))
     }
 }

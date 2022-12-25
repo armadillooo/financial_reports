@@ -17,7 +17,7 @@ pub type FavoriteApplicationResult<T> = Result<T, FavoriteApplicationError>;
 impl From<FavoriteDomainError> for FavoriteApplicationError {
     fn from(value: FavoriteDomainError) -> Self {
         match value {
-            FavoriteDomainError::Disconnect => Self::Disconnect,
+            FavoriteDomainError::Disconnect(_) => Self::Disconnect,
         }
     }
 }
@@ -25,7 +25,7 @@ impl From<FavoriteDomainError> for FavoriteApplicationError {
 impl From<UserDomainError> for FavoriteApplicationError {
     fn from(value: UserDomainError) -> Self {
         match value {
-            UserDomainError::Disconnect => Self::Disconnect,
+            UserDomainError::Disconnect(_) => Self::Disconnect,
             UserDomainError::UserAlreadyExist => Self::UserAlreadyExist,
             UserDomainError::UserNotFound => Self::UserNotFound,
         }
