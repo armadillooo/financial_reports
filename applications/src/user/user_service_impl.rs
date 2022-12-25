@@ -32,7 +32,7 @@ where
     T: UserRepository + std::fmt::Debug + Send + Sync,
 {
     /// User取得
-    #[tracing::instrument(err, ret)]
+    #[tracing::instrument(skip(self), err, ret)]
     async fn get(&self, id: &str) -> UserApplicationResult<Option<UserData>> {
         let user = self
             .user_repository
@@ -44,7 +44,7 @@ where
     }
 
     /// User新規作成
-    #[tracing::instrument(err, ret)]
+    #[tracing::instrument(skip(self), err, ret)]
     async fn save(&self, user: UserData) -> UserApplicationResult<()> {
         let user_id = UserId::new(user.id.clone());
 
@@ -58,7 +58,7 @@ where
     }
 
     /// User削除
-    #[tracing::instrument(err, ret)]
+    #[tracing::instrument(skip(self), err, ret)]
     async fn delete(&self, id: &str) -> UserApplicationResult<()> {
         let id = UserId::new(id.to_string());
         if let Some(user) = self.user_repository.find(&id).await? {

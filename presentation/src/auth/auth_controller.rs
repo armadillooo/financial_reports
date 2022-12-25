@@ -25,12 +25,8 @@ pub fn auth_controller(state: AppStateImpl) -> Router {
         .route("/signin", get(signin_redirect_google))
         .route("/login", get(login_redirect_google))
         .route("/logout", get(logout))
-        .route_layer(middleware::from_fn_with_state(
-            state.clone(),
-            session_manage_layer,
-        ))
         .route("/redirect", get(auth_verify_google))
-        .route_layer(middleware::from_fn_with_state(
+        .layer(middleware::from_fn_with_state(
             state.clone(),
             session_manage_layer,
         ))
@@ -38,6 +34,7 @@ pub fn auth_controller(state: AppStateImpl) -> Router {
 }
 
 /// ユーザー新規作成
+#[tracing::instrument(skip(state), err)]
 async fn signin_redirect_google(
     Extension(session_id): Extension<SessionId>,
     state: State<AppStateImpl>,
@@ -51,6 +48,7 @@ async fn signin_redirect_google(
 }
 
 /// ログイン
+#[tracing::instrument(skip(state), err)]
 async fn login_redirect_google(
     Extension(session_id): Extension<SessionId>,
     state: State<AppStateImpl>,
@@ -64,6 +62,7 @@ async fn login_redirect_google(
 }
 
 /// 認証結果検証
+#[tracing::instrument(skip(state, params), err)]
 async fn auth_verify_google(
     Extension(session_id): Extension<SessionId>,
     state: State<AppStateImpl>,

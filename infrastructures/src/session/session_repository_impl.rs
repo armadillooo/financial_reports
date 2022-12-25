@@ -25,21 +25,23 @@ impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
             .find(session_id)
             .await?
             .ok_or(SessionError::SessionNotFound)?;
+        let session_id = session.into();
 
         self.store
-            .destroy_session(session.into())
+            .destroy_session(session_id)
             .await
             .map_err(|e| SessionError::Disconnect(e))
     }
 
     /// Session取得
     async fn find(&self, session_id: SessionId) -> SessionResult<Option<SessionData>> {
-        if let Some(session) = self
+        if let Some(mut session) = self
             .store
             .load_session(session_id.to_string())
             .await
             .map_err(|e| SessionError::Disconnect(e))?
         {
+            session.set_cookie_value(session_id.to_string());
             Ok(Some(session.into()))
         } else {
             Ok(None)
@@ -47,12 +49,13 @@ impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
     }
 
     /// Session保存
-    async fn save(&self, session: SessionData) -> SessionResult<SessionId> {
-        self.store
+    async fn save(&self, session: SessionData) -> SessionResult<Option<SessionId>> {
+        let session_id = self
+            .store
             .store_session(session.into())
             .await
-            .map_err(|e| SessionError::Disconnect(e))?
-            .ok_or(SessionError::IntoSessionIdError)
-            .map(|id| SessionId::new(id))
+            .map_err(|e| SessionError::Disconnect(e))?;
+
+        Ok(session_id.map(|id| SessionId::new(id)))
     }
 }

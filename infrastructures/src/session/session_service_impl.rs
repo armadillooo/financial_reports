@@ -15,7 +15,7 @@ where
 
 impl<T> SessionServiceImpl<T>
 where
-    T: SessionRepository,
+    T: SessionRepository + std::fmt::Debug,
 {
     /// コンストラクタ
     pub fn new(session_repository: &Arc<T>) -> Self {
@@ -24,9 +24,14 @@ where
         }
     }
 
+    #[tracing::instrument(skip(self), err, ret)]
     async fn create(&self) -> SessionResult<SessionStatus> {
         let session = SessionData::new();
-        let session_id = self.session_repository.save(session).await?;
+        let session_id = self
+            .session_repository
+            .save(session)
+            .await?
+            .ok_or(SessionError::IntoSessionIdError)?;
 
         Ok(SessionStatus::Created(session_id))
     }
@@ -38,7 +43,7 @@ where
     T: SessionRepository + std::fmt::Debug + Send + Sync + Clone,
 {
     /// Session取得 or 新規作成
-    #[tracing::instrument(skep(self), err, ret)]
+    #[tracing::instrument(skip(self), err, ret)]
     async fn find_or_create(&self, session_id: Option<SessionId>) -> SessionResult<SessionStatus> {
         let status = if let Some(session_id) = session_id {
             if let Some(session) = self.session_repository.find(session_id).await? {
@@ -56,13 +61,13 @@ where
     }
 
     /// Session削除
-    #[tracing::instrument(skep(self), err)]
+    #[tracing::instrument(skip(self), err)]
     async fn delete(&self, session_id: SessionId) -> SessionResult<()> {
         self.session_repository.delete(session_id).await
     }
 
     /// SessionItem取得
-    #[tracing::instrument(skep(self), err, ret)]
+    #[tracing::instrument(skip(self), err, ret)]
 
     async fn item(&self, session_id: SessionId, key: &SessionItem) -> SessionResult<SessionItem> {
         let session = self
@@ -76,7 +81,7 @@ where
     }
 
     /// SessionItem保存
-    #[tracing::instrument(skep(self), err)]
+    #[tracing::instrument(skip(self), err)]
     async fn insert_item(&self, session_id: SessionId, item: SessionItem) -> SessionResult<()> {
         let mut session = self
             .session_repository
@@ -84,11 +89,13 @@ where
             .await?
             .ok_or(SessionError::SessionNotFound)?;
 
-        session.insert_item(item)
+        session.insert_item(item)?;
+        self.session_repository.save(session).await?;
+        Ok(())
     }
 
     /// SessionItem削除
-    #[tracing::instrument(skep(self), err)]
+    #[tracing::instrument(skip(self), err)]
     async fn remove_item(&self, session_id: SessionId, key: &SessionItem) -> SessionResult<()> {
         let mut session = self
             .session_repository
@@ -97,6 +104,7 @@ where
             .ok_or(SessionError::SessionNotFound)?;
 
         session.remove_item(key);
+        self.session_repository.save(session).await?;
         Ok(())
     }
 }
