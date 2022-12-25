@@ -45,6 +45,7 @@ pub fn user_controller(state: AppStateImpl) -> Router {
     Router::new().nest("/me", user_route)
 }
 
+#[tracing::instrument(skip(state), err)]
 async fn get_user(
     state: State<AppStateImpl>,
     Extension(user_id): Extension<LoginUserId>,
@@ -60,6 +61,7 @@ async fn get_user(
     Ok(res.into_response())
 }
 
+#[tracing::instrument(skip(state), err)]
 async fn get_favorites(
     state: State<AppStateImpl>,
     Extension(user_id): Extension<LoginUserId>,
@@ -86,6 +88,7 @@ async fn get_favorites(
     Ok(res.into_response())
 }
 
+#[tracing::instrument(skip(state), err)]
 async fn insert_favorite(
     state: State<AppStateImpl>,
     Extension(user_id): Extension<LoginUserId>,
@@ -100,6 +103,7 @@ async fn insert_favorite(
     .into_response())
 }
 
+#[tracing::instrument(skip(state), err)]
 async fn delete_favorite(
     state: State<AppStateImpl>,
     Extension(user_id): Extension<LoginUserId>,
@@ -114,6 +118,7 @@ async fn delete_favorite(
     .into_response())
 }
 
+#[tracing::instrument(skip(state), err)]
 async fn get_portfolio(
     state: State<AppStateImpl>,
     Extension(user_id): Extension<LoginUserId>,
@@ -129,6 +134,7 @@ async fn get_portfolio(
     Ok(res.into_response())
 }
 
+#[tracing::instrument(skip(state), err)]
 async fn insert_portfolio(
     state: State<AppStateImpl>,
     Extension(user_id): Extension<LoginUserId>,
@@ -143,8 +149,9 @@ async fn insert_portfolio(
     .into_response())
 }
 
+#[tracing::instrument(skip(state), err)]
 async fn update_portfolio(
-    utility: State<AppStateImpl>,
+    state: State<AppStateImpl>,
     Extension(user_id): Extension<LoginUserId>,
     Path(stock_id): Path<String>,
     Query(params): Query<HashMap<String, String>>,
@@ -163,7 +170,7 @@ async fn update_portfolio(
     };
     let command = PortfolioUpdateCommand::new(user_id.to_string(), stock_id, purchase, stock_count);
 
-    utility.portfolio_service().update(command).await?;
+    state.portfolio_service().update(command).await?;
 
     Ok(ApiResponse::new(serde_json::json!({
         "message": "succeed in update portfolio"
@@ -171,6 +178,7 @@ async fn update_portfolio(
     .into_response())
 }
 
+#[tracing::instrument(skip(state), err)]
 async fn delete_portfolio(
     state: State<AppStateImpl>,
     Extension(user_id): Extension<LoginUserId>,

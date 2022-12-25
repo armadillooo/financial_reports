@@ -19,6 +19,7 @@ pub fn company_controller(state: AppStateImpl) -> Router {
         .with_state(state)
 }
 
+#[tracing::instrument(skip(state, queries), err)]
 async fn get_companies(
     state: State<AppStateImpl>,
     Query(queries): Query<HashMap<String, String>>,

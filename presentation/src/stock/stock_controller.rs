@@ -19,12 +19,14 @@ pub fn stock_controller(state: AppStateImpl) -> Router {
         .with_state(state)
 }
 
+#[tracing::instrument(skip(state, queries), err)]
 async fn get_stocks(
     state: State<AppStateImpl>,
     queries: Query<HashMap<String, String>>,
     Path(stock_id): Path<String>,
 ) -> ApiResult<Response> {
     let mut params = StockQueryCommand::new();
+
     params.stock_id = Some(stock_id);
     // クエリパラメータ取得
     params.start = if let Some(date) = queries.get("start") {
