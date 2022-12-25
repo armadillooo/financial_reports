@@ -4,7 +4,6 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use async_session::MemoryStore;
-use axum::middleware;
 use axum_server::tls_rustls::RustlsConfig;
 use domain::user::UserDomainService;
 use dotenvy::{self, dotenv};
@@ -21,7 +20,7 @@ use infrastructures::{
     auth::{OICDClient, OICDserviceImpl},
     session::{SessionRepositoryImpl, SessionServiceImpl},
 };
-use presentation::{common::AppStateImpl, root_controllers, session::session_manage_layer};
+use presentation::{common::AppStateImpl, root_controllers};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -89,8 +88,7 @@ async fn main() -> anyhow::Result<()> {
         Arc::new(portfolio_service),
     );
 
-    let app = root_controllers(state.clone())
-        .layer(middleware::from_fn_with_state(state, session_manage_layer));
+    let app = root_controllers(state.clone());
 
     let addr = dotenvy::var("SOCKET_ADDRESS").unwrap();
     let addr = SocketAddr::from_str(&addr).unwrap();

@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use tracing::error;
-
 use presentation::session::{
     SessionData, SessionError, SessionId, SessionItem, SessionRepository, SessionResult,
     SessionService, SessionStatus,
@@ -28,10 +26,7 @@ where
 
     async fn create(&self) -> SessionResult<SessionStatus> {
         let session = SessionData::new();
-        let session_id = self.session_repository.save(session).await.map_err(|e| {
-            error!("{}", e);
-            e
-        })?;
+        let session_id = self.session_repository.save(session).await?;
 
         Ok(SessionStatus::Created(session_id))
     }
@@ -43,22 +38,11 @@ where
     T: SessionRepository + std::fmt::Debug + Send + Sync + Clone,
 {
     /// Session取得 or 新規作成
-    #[tracing::instrument(err, ret)]
+    #[tracing::instrument(skep(self), err, ret)]
     async fn find_or_create(&self, session_id: Option<SessionId>) -> SessionResult<SessionStatus> {
         let status = if let Some(session_id) = session_id {
-            if let Some(session) = self
-                .session_repository
-                .find(session_id)
-                .await
-                .map_err(|e| {
-                    error!("{}", e);
-                    e
-                })?
-            {
-                let status = SessionStatus::Found(session.into_session_id().map_err(|e| {
-                    error!("{}", e);
-                    e
-                })?);
+            if let Some(session) = self.session_repository.find(session_id).await? {
+                let status = SessionStatus::Found(session.into_session_id()?);
 
                 status
             } else {
@@ -72,72 +56,45 @@ where
     }
 
     /// Session削除
-    #[tracing::instrument(err, ret)]
+    #[tracing::instrument(skep(self), err)]
     async fn delete(&self, session_id: SessionId) -> SessionResult<()> {
-        self.session_repository
-            .delete(session_id)
-            .await
-            .map_err(|e| {
-                error!("{}", e);
-                e
-            })
+        self.session_repository.delete(session_id).await
     }
 
     /// SessionItem取得
-    #[tracing::instrument(err, ret)]
+    #[tracing::instrument(skep(self), err, ret)]
+
     async fn item(&self, session_id: SessionId, key: &SessionItem) -> SessionResult<SessionItem> {
         let session = self
             .session_repository
             .find(session_id)
             .await?
-            .ok_or(SessionError::SessionNotFound)
-            .map_err(|e| {
-                error!("{}", e);
-                e
-            })?;
+            .ok_or(SessionError::SessionNotFound)?;
 
-        let item = session
-            .item(key)
-            .ok_or(SessionError::ItemNotFound)
-            .map_err(|e| {
-                error!("{}", e);
-                e
-            })?;
+        let item = session.item(key).ok_or(SessionError::ItemNotFound)?;
         Ok(item)
     }
 
     /// SessionItem保存
-    #[tracing::instrument(err, ret)]
+    #[tracing::instrument(skep(self), err)]
     async fn insert_item(&self, session_id: SessionId, item: SessionItem) -> SessionResult<()> {
         let mut session = self
             .session_repository
             .find(session_id)
             .await?
-            .ok_or(SessionError::SessionNotFound)
-            .map_err(|e| {
-                error!("{}", e);
-                e
-            })?;
+            .ok_or(SessionError::SessionNotFound)?;
 
         session.insert_item(item)
     }
 
     /// SessionItem削除
-    #[tracing::instrument(err, ret)]
+    #[tracing::instrument(skep(self), err)]
     async fn remove_item(&self, session_id: SessionId, key: &SessionItem) -> SessionResult<()> {
         let mut session = self
             .session_repository
             .find(session_id)
-            .await
-            .map_err(|e| {
-                error!("{}", e);
-                e
-            })?
-            .ok_or(SessionError::SessionNotFound)
-            .map_err(|e| {
-                error!("{}", e);
-                e
-            })?;
+            .await?
+            .ok_or(SessionError::SessionNotFound)?;
 
         session.remove_item(key);
         Ok(())

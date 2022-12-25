@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use axum::{
     extract::{Extension, Query, State},
     headers::{HeaderMap, HeaderValue},
-    http,
+    http, middleware,
     response::{IntoResponse, Response},
     routing::get,
     Router,
@@ -13,20 +13,28 @@ use serde::{Deserialize, Serialize};
 use crate::{
     auth::OICDData,
     common::{ApiResponse, ApiResult, AppState, AppStateImpl},
-    session::{SessionId, SessionItem},
+    session::{session_manage_layer, SessionId, SessionItem},
     user::{LoginUserId, UserResponse},
 };
 use applications::user::{UserApplicationError, UserData};
 
 use super::OICDError;
 
-pub fn auth_controller(utility: AppStateImpl) -> Router {
+pub fn auth_controller(state: AppStateImpl) -> Router {
     Router::new()
         .route("/signin", get(signin_redirect_google))
         .route("/login", get(login_redirect_google))
         .route("/logout", get(logout))
+        .route_layer(middleware::from_fn_with_state(
+            state.clone(),
+            session_manage_layer,
+        ))
         .route("/redirect", get(auth_verify_google))
-        .with_state(utility)
+        .route_layer(middleware::from_fn_with_state(
+            state.clone(),
+            session_manage_layer,
+        ))
+        .with_state(state)
 }
 
 /// ユーザー新規作成
