@@ -36,7 +36,7 @@ impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         let status_code = match &self {
             ApiError::UserApplicationError(e) => match e {
-                UserApplicationError::Disconnect => StatusCode::INTERNAL_SERVER_ERROR,
+                UserApplicationError::Disconnect(_) => StatusCode::INTERNAL_SERVER_ERROR,
                 UserApplicationError::UserAlreadyExist => StatusCode::BAD_REQUEST,
                 UserApplicationError::UserNotExist => StatusCode::NOT_FOUND,
             },
@@ -47,7 +47,7 @@ impl IntoResponse for ApiError {
             },
             ApiError::PortfolioApplicationError(e) => match e {
                 PortfolioApplicationError::PortfolioNotFound => StatusCode::NOT_FOUND,
-                PortfolioApplicationError::Disconnect => StatusCode::INTERNAL_SERVER_ERROR,
+                PortfolioApplicationError::Disconnect(_) => StatusCode::INTERNAL_SERVER_ERROR,
                 PortfolioApplicationError::UserNotFound => StatusCode::NOT_FOUND,
                 PortfolioApplicationError::UserAlreadyExist => StatusCode::BAD_REQUEST,
                 PortfolioApplicationError::InvalidRangeOfDate { .. } => StatusCode::BAD_REQUEST,
@@ -60,7 +60,7 @@ impl IntoResponse for ApiError {
                 CompanyQueryError::CompanyNotFound => StatusCode::NOT_FOUND,
             },
             ApiError::StockQueryError(e) => match e {
-                StockQueryError::Disconnect => StatusCode::INTERNAL_SERVER_ERROR,
+                StockQueryError::Disconnect(_) => StatusCode::INTERNAL_SERVER_ERROR,
                 StockQueryError::InvalidParameter { .. } => StatusCode::BAD_REQUEST,
                 StockQueryError::StockDataNotFound => StatusCode::NOT_FOUND,
                 StockQueryError::InvalidRangeOfDate { .. } => StatusCode::BAD_REQUEST,

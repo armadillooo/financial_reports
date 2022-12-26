@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use domain::{
-    portfolio::{Portfolio, PortfolioDomainError, PortfolioDomainResult, PortfolioReposotory},
+    portfolio::{Portfolio, PortfolioDomainResult, PortfolioReposotory},
     stock::StockId,
     user::UserId,
 };
@@ -47,15 +47,18 @@ impl PortfolioReposotory for InmemoryPortfolioRepositoryImpl {
         Ok(result)
     }
 
-    async fn find(&self, user_id: &UserId, stock_id: &StockId) -> PortfolioDomainResult<Portfolio> {
+    async fn find(
+        &self,
+        user_id: &UserId,
+        stock_id: &StockId,
+    ) -> PortfolioDomainResult<Option<Portfolio>> {
         let result = self
             .store
             .lock()
             .unwrap()
             .iter()
             .find(|favorite| favorite.user_id == *user_id && favorite.stock_id == *stock_id)
-            .map(|found| found.clone())
-            .ok_or(PortfolioDomainError::PortfolioNotFound)?;
+            .map(|found| found.clone());
 
         Ok(result)
     }

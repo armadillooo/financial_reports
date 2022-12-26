@@ -4,7 +4,8 @@ use futures::future::join_all;
 
 use crate::{
     portfolio::{
-        PortfoliApplicationResult, PortfolioData, PortfolioService, PortfolioUpdateCommand,
+        PortfoliApplicationResult, PortfolioApplicationError, PortfolioData, PortfolioService,
+        PortfolioUpdateCommand,
     },
     stock::StockQueryService,
 };
@@ -87,7 +88,11 @@ where
         let user_id = UserId::new(update_command.user_id.to_string());
         let stock_id = StockId::new(update_command.stock_id.to_string());
 
-        let mut portfolio = self.portfolio_repository.find(&user_id, &stock_id).await?;
+        let mut portfolio = self
+            .portfolio_repository
+            .find(&user_id, &stock_id)
+            .await?
+            .ok_or(PortfolioApplicationError::PortfolioNotFound)?;
 
         if let Some(purchase) = update_command.purchase {
             portfolio.update_purchase(purchase);

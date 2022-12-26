@@ -110,7 +110,7 @@ async fn delete_favorite(
     Path(stock_id): Path<String>,
 ) -> ApiResult<Response> {
     let favorite = FavoriteData::new(user_id.to_string(), stock_id);
-    state.favorite_service().remove(favorite).await.unwrap();
+    state.favorite_service().remove(favorite).await?;
 
     Ok(ApiResponse::new(serde_json::json!({
         "message": "succeed in delete favorite"

@@ -13,5 +13,5 @@ pub trait PortfolioReposotory {
         &self,
         user_id: &UserId,
         stock_id: &StockId,
-    ) -> PortfolioDomainResult<Portfolio>;
+    ) -> PortfolioDomainResult<Option<Portfolio>>;
 }

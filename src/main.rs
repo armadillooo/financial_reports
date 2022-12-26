@@ -90,8 +90,8 @@ async fn main() -> anyhow::Result<()> {
 
     let app = api_controllers(state.clone());
 
-    let addr = dotenvy::var("SOCKET_ADDRESS").unwrap();
-    let addr = SocketAddr::from_str(&addr).unwrap();
+    let addr = dotenvy::var("SOCKET_ADDRESS")?;
+    let addr = SocketAddr::from_str(&addr)?;
 
     axum_server::bind_rustls(addr, tls_config)
         .serve(app.into_make_service())

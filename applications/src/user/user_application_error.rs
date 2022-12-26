@@ -4,8 +4,8 @@ use domain::user::UserDomainError;
 
 #[derive(Error, Debug)]
 pub enum UserApplicationError {
-    #[error("internal server error")]
-    Disconnect,
+    #[error(transparent)]
+    Disconnect(#[from] anyhow::Error),
     #[error("user is already exsist")]
     UserAlreadyExist,
     #[error("user not exist")]
@@ -15,7 +15,7 @@ pub enum UserApplicationError {
 impl From<UserDomainError> for UserApplicationError {
     fn from(value: UserDomainError) -> Self {
         match value {
-            UserDomainError::Disconnect(_) => Self::Disconnect,
+            UserDomainError::Disconnect(e) => Self::Disconnect(e),
             UserDomainError::UserAlreadyExist => Self::UserAlreadyExist,
             UserDomainError::UserNotFound => Self::UserNotExist,
         }

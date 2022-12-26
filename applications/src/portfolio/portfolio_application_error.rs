@@ -6,8 +6,8 @@ use domain::{portfolio::PortfolioDomainError, user::UserDomainError};
 
 #[derive(Error, Debug)]
 pub enum PortfolioApplicationError {
-    #[error("internal server error")]
-    Disconnect,
+    #[error(transparent)]
+    Disconnect(#[from] anyhow::Error),
     #[error("portfolio not found")]
     PortfolioNotFound,
     #[error("user is already exsist")]
@@ -27,7 +27,7 @@ pub type PortfoliApplicationResult<T> = Result<T, PortfolioApplicationError>;
 impl From<PortfolioDomainError> for PortfolioApplicationError {
     fn from(value: PortfolioDomainError) -> Self {
         match value {
-            PortfolioDomainError::Disconnect(_) => Self::Disconnect,
+            PortfolioDomainError::Disconnect(e) => Self::Disconnect(e),
             PortfolioDomainError::PortfolioNotFound => Self::PortfolioNotFound,
         }
     }
@@ -36,7 +36,7 @@ impl From<PortfolioDomainError> for PortfolioApplicationError {
 impl From<UserDomainError> for PortfolioApplicationError {
     fn from(value: UserDomainError) -> Self {
         match value {
-            UserDomainError::Disconnect(_) => Self::Disconnect,
+            UserDomainError::Disconnect(e) => Self::Disconnect(e),
             UserDomainError::UserAlreadyExist => Self::UserAlreadyExist,
             UserDomainError::UserNotFound => Self::UserNotFound,
         }
@@ -46,7 +46,7 @@ impl From<UserDomainError> for PortfolioApplicationError {
 impl From<StockQueryError> for PortfolioApplicationError {
     fn from(value: StockQueryError) -> Self {
         match value {
-            StockQueryError::Disconnect => Self::Disconnect,
+            StockQueryError::Disconnect(e) => Self::Disconnect(e),
             StockQueryError::InvalidParameter { name, value } => {
                 Self::InvalidParameter { name, value }
             }
