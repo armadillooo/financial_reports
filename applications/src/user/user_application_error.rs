@@ -17,9 +17,9 @@ impl From<UserDomainError> for UserApplicationError {
         match value {
             UserDomainError::Disconnect(e) => Self::Disconnect(e),
             UserDomainError::UserAlreadyExist(user_id) => {
-                Self::UserAlreadyExist(user_id.to_string())
+                Self::UserAlreadyExist(user_id.into())
             }
-            UserDomainError::UserNotFound(user_id) => Self::UserNotExist(user_id.to_string()),
+            UserDomainError::UserNotFound(user_id) => Self::UserNotExist(user_id.into()),
         }
     }
 }

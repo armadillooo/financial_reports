@@ -23,9 +23,3 @@ impl Deref for SessionId {
         &self.0
     }
 }
-
-impl ToString for SessionId {
-    fn to_string(&self) -> String {
-        self.0.clone()
-    }
-}

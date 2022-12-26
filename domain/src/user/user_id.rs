@@ -17,3 +17,9 @@ impl Deref for UserId {
         &self.0
     }
 }
+
+impl Into<String> for UserId {
+    fn into(self) -> String {
+        self.0
+    }
+}

@@ -5,7 +5,7 @@ pub enum CompanyQueryError {
     #[error("internal server error")]
     Disconnect,
     #[error("invalid parameter: {name}={value}")]
-    InvalidParameter { name: String, value: String },
+    InvalidParameter { name: &'static str, value: String },
     #[error("company data not found")]
     CompanyNotFound,
 }

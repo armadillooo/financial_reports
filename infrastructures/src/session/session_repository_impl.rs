@@ -37,11 +37,11 @@ impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
     async fn find(&self, session_id: SessionId) -> SessionResult<Option<SessionData>> {
         if let Some(mut session) = self
             .store
-            .load_session(session_id.to_string())
+            .load_session(session_id.clone().into())
             .await
             .map_err(|e| SessionError::Disconnect(e))?
         {
-            session.set_cookie_value(session_id.to_string());
+            session.set_cookie_value(session_id.into());
             Ok(Some(session.into()))
         } else {
             Ok(None)

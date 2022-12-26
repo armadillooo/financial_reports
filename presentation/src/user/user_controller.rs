@@ -157,13 +157,13 @@ async fn update_portfolio(
     Query(params): Query<HashMap<String, String>>,
 ) -> ApiResult<Response> {
     let purchase = if let Some(purchase) = params.get("purchase") {
-        let Ok(purchase) = purchase.parse() else {return Err(PortfolioApplicationError::InvalidParameter { name: "purchase".to_string(), value: purchase.clone() }.into()) };
+        let Ok(purchase) = purchase.parse() else {return Err(PortfolioApplicationError::InvalidParameter { name: "purchase", value: purchase.clone() }.into()) };
         Some(purchase)
     } else {
         None
     };
     let stock_count = if let Some(stock_count) = params.get("purchase") {
-        let Ok(stock_count) = stock_count.parse() else {return Err(PortfolioApplicationError::InvalidParameter { name: "stock_count".to_string(), value: stock_count.clone() }.into())};
+        let Ok(stock_count) = stock_count.parse() else {return Err(PortfolioApplicationError::InvalidParameter { name: "stock_count", value: stock_count.clone() }.into())};
         Some(stock_count)
     } else {
         None

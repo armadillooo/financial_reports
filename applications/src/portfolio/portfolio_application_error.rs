@@ -15,7 +15,7 @@ pub enum PortfolioApplicationError {
     #[error("user not found: id={0}")]
     UserNotFound(String),
     #[error("invalid parameter: {name}={value}")]
-    InvalidParameter { name: String, value: String },
+    InvalidParameter { name: &'static str, value: String },
     #[error("start date exceeds end date")]
     InvalidRangeOfDate { start: NaiveDate, end: NaiveDate },
     #[error("stock data not found")]
@@ -28,7 +28,6 @@ impl From<PortfolioDomainError> for PortfolioApplicationError {
     fn from(value: PortfolioDomainError) -> Self {
         match value {
             PortfolioDomainError::Disconnect(e) => Self::Disconnect(e),
-            PortfolioDomainError::PortfolioNotFound => Self::PortfolioNotFound,
         }
     }
 }
@@ -37,8 +36,8 @@ impl From<UserDomainError> for PortfolioApplicationError {
     fn from(value: UserDomainError) -> Self {
         match value {
             UserDomainError::Disconnect(e) => Self::Disconnect(e),
-            UserDomainError::UserAlreadyExist(user_id) => Self::UserAlreadyExist(user_id.to_string()),
-            UserDomainError::UserNotFound(user_id) => Self::UserNotFound(user_id.to_string()),
+            UserDomainError::UserAlreadyExist(user_id) => Self::UserAlreadyExist(user_id.into()),
+            UserDomainError::UserNotFound(user_id) => Self::UserNotFound(user_id.into()),
         }
     }
 }

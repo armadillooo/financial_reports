@@ -37,7 +37,7 @@ where
     U: UserRepository + Send + Sync,
 {
     async fn get_all(&self, user_id: &str) -> FavoriteApplicationResult<Vec<FavoriteData>> {
-        let user_id = UserId::new(user_id.to_string());
+        let user_id = UserId::new(user_id.into());
 
         let result = self
             .favorite_repository

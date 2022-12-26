@@ -16,3 +16,9 @@ impl Deref for StockId {
         &self.0
     }
 }
+
+impl Into<String> for StockId {
+    fn into(self) -> String {
+        self.0
+    }
+}

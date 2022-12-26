@@ -55,7 +55,7 @@ where
 {
     #[tracing::instrument(skip(self), err, ret)]
     async fn get_all(&self, user_id: &str) -> PortfoliApplicationResult<Vec<PortfolioData>> {
-        let user_id = UserId::new(user_id.to_string());
+        let user_id = UserId::new(user_id.into());
         let all_portfolio = self.portfolio_repository.find_all(&user_id).await?;
 
         // ポートフォリオを外部向けデータに変換
@@ -71,7 +71,7 @@ where
 
     #[tracing::instrument(skip(self), err, ret)]
     async fn remove(&self, user_id: &str, stock_id: &str) -> PortfoliApplicationResult<()> {
-        let user_id = UserId::new(user_id.to_string());
+        let user_id = UserId::new(user_id.into());
         let stock_id = StockId::new(stock_id.to_string());
 
         self.portfolio_repository
@@ -85,8 +85,8 @@ where
         &self,
         update_command: PortfolioUpdateCommand,
     ) -> PortfoliApplicationResult<()> {
-        let user_id = UserId::new(update_command.user_id.to_string());
-        let stock_id = StockId::new(update_command.stock_id.to_string());
+        let user_id = UserId::new(update_command.user_id.into());
+        let stock_id = StockId::new(update_command.stock_id.into());
 
         let mut portfolio = self
             .portfolio_repository
@@ -110,7 +110,7 @@ where
 
     #[tracing::instrument(skip(self), err, ret)]
     async fn add(&self, portfolio: PortfolioData) -> PortfoliApplicationResult<()> {
-        let user_id = UserId::new(portfolio.user_id.to_string());
+        let user_id = UserId::new(portfolio.clone().user_id.into());
 
         self.user_service.exists(&user_id).await?;
 

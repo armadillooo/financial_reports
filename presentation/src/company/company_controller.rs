@@ -31,13 +31,13 @@ async fn get_companies(
     params.sector = queries.get("sector").map(|s| s.to_string());
     params.industry = queries.get("industry").map(|s| s.to_string());
     params.page = if let Some(page) = queries.get("page") {
-        let Ok(page) = page.parse() else { return Err(CompanyQueryError::InvalidParameter { name: "page".to_string(), value: page.clone() }.into())};
+        let Ok(page) = page.parse() else { return Err(CompanyQueryError::InvalidParameter { name: "page", value: page.clone() }.into())};
         Some(page)
     } else {
         None
     };
     params.size = if let Some(size) = queries.get("size") {
-        let Ok(page) = size.parse() else { return Err(CompanyQueryError::InvalidParameter { name: "size".to_string(), value: size.clone() }.into())};
+        let Ok(page) = size.parse() else { return Err(CompanyQueryError::InvalidParameter { name: "size", value: size.clone() }.into())};
         Some(page)
     } else {
         None

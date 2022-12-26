@@ -56,7 +56,7 @@ pub async fn session_manage_layer<B: std::fmt::Debug>(
             HeaderValue::from_str(&format!(
                 "{}={}; Secure; SameSite=None; HttpOnly",
                 COOKIE_VALUE_KEY,
-                session_id.to_string()
+                session_id.to_string(),
             ))
             .expect("Cookie format is invalid"),
         );
