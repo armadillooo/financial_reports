@@ -74,10 +74,10 @@ impl IntoResponse for ApiError {
                 SessionError::IntoSessionIdError => StatusCode::INTERNAL_SERVER_ERROR,
             },
             ApiError::OICDError(e) => match e {
-                OICDError::InitializationError => StatusCode::INTERNAL_SERVER_ERROR,
-                OICDError::NotRegisterdEmail => StatusCode::BAD_REQUEST,
-                OICDError::VerifyError => StatusCode::BAD_REQUEST,
+                OICDError::ParameterRequired { .. } => StatusCode::BAD_REQUEST,
+                OICDError::VerifyError(_) => StatusCode::BAD_REQUEST,
                 OICDError::ItemNotFound => StatusCode::INTERNAL_SERVER_ERROR,
+                OICDError::EmailNotRegisterd => StatusCode::BAD_REQUEST,
             },
         };
         let message = self.to_string();

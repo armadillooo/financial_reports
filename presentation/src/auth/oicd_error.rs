@@ -2,12 +2,12 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum OICDError {
-    #[error("internal server error")]
-    InitializationError,
-    #[error("email address was not registerd")]
-    NotRegisterdEmail,
-    #[error("authentication failed")]
-    VerifyError,
+    #[error(transparent)]
+    VerifyError(#[from] anyhow::Error),
+    #[error("speciffic parameter required: {name}")]
+    ParameterRequired { name: &'static str },
+    #[error("email address is not registerd")]
+    EmailNotRegisterd,
     #[error("item not found")]
     ItemNotFound,
 }

@@ -144,10 +144,10 @@ async fn oicd_verify(
     };
 
     let Some(code) = params.get("code") else {
-            return Err(OICDError::VerifyError.into())
+            return Err(OICDError::ParameterRequired { name: "code" }.into());
         };
     let Some(oicd_state) = params.get("state") else {
-        return Err(OICDError::VerifyError.into());
+        return Err(OICDError::ParameterRequired { name: "state" }.into());
     };
 
     let user = state

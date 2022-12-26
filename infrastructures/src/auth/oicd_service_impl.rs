@@ -25,6 +25,7 @@ impl OICDService for OICDserviceImpl {
     }
 
     /// 認証情報の検証
+    #[tracing::instrument(skip(self), err, ret)]
     async fn verify(
         &self,
         verify_info: OICDData,
@@ -35,12 +36,14 @@ impl OICDService for OICDserviceImpl {
             .oicd_client
             .verify(verify_info, code, state)
             .await
-            .map_err(|_| OICDError::VerifyError)?;
+            .map_err(|e| OICDError::VerifyError(e))?;
 
         let mut email = claims
             .email()
-            .ok_or(OICDError::NotRegisterdEmail)?
+            .ok_or(OICDError::EmailNotRegisterd)?
             .to_string();
+
+        // ユーザー名はメールアドレスのドメインとする
         let email_domain_offset = email.find('@').unwrap_or(email.len());
         let name: String = email.drain(..email_domain_offset).collect();
         let id = claims.subject().to_string();
