@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::favorite::{FavoriteData, FavoriteService, FavoriteApplicationResult};
+use crate::favorite::{FavoriteApplicationResult, FavoriteData, FavoriteService};
 use domain::{
     favorite::FavoriteRepository,
     user::{UserDomainService, UserId, UserRepository},
@@ -36,6 +36,7 @@ where
     T: FavoriteRepository + Send + Sync,
     U: UserRepository + Send + Sync,
 {
+    #[tracing::instrument(skip(self), err, ret)]
     async fn get_all(&self, user_id: &str) -> FavoriteApplicationResult<Vec<FavoriteData>> {
         let user_id = UserId::new(user_id.into());
 
@@ -53,6 +54,7 @@ where
         Ok(result)
     }
 
+    #[tracing::instrument(skip(self), err)]
     async fn add(&self, favorite: FavoriteData) -> FavoriteApplicationResult<()> {
         let user_id = UserId::new(favorite.user_id.clone());
         self.user_service.exists(&user_id).await?;
@@ -61,6 +63,7 @@ where
         Ok(())
     }
 
+    #[tracing::instrument(skip(self), err)]
     async fn remove(&self, favorite: FavoriteData) -> FavoriteApplicationResult<()> {
         self.favorite_repository.delete(favorite.into()).await?;
 

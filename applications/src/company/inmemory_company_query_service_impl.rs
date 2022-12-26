@@ -75,7 +75,9 @@ impl CompanyQueryService for InmemoryCompanyQueryServiceImpl {
             .skip(page_index as usize * page_size)
             .take(page_size);
 
-        Ok(iter.collect::<Vec<CompanyData>>())
+        let result: Vec<CompanyData> = iter.collect(); 
+        tracing::info!("company data count = {}", result.len());
+        Ok(result)
     }
 
     #[tracing::instrument(skip(self), err, ret)]
@@ -91,7 +93,7 @@ impl CompanyQueryService for InmemoryCompanyQueryServiceImpl {
         Ok(result)
     }
 
-    #[tracing::instrument(skip(self), err)]
+    #[tracing::instrument(skip(self), err, ret)]
     async fn find_list(&self, stock_id_list: Vec<String>) -> CompanyQueryResult<Vec<CompanyData>> {
         let mut result = vec![];
         for id in stock_id_list {

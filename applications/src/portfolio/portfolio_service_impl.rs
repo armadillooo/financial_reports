@@ -69,7 +69,7 @@ where
         result.into_iter().collect()
     }
 
-    #[tracing::instrument(skip(self), err, ret)]
+    #[tracing::instrument(skip(self), err)]
     async fn remove(&self, user_id: &str, stock_id: &str) -> PortfoliApplicationResult<()> {
         let user_id = UserId::new(user_id.into());
         let stock_id = StockId::new(stock_id.to_string());
@@ -80,7 +80,7 @@ where
         Ok(())
     }
 
-    #[tracing::instrument(skip(self), err, ret)]
+    #[tracing::instrument(skip(self), err)]
     async fn update(
         &self,
         update_command: PortfolioUpdateCommand,
@@ -108,7 +108,7 @@ where
         Ok(())
     }
 
-    #[tracing::instrument(skip(self), err, ret)]
+    #[tracing::instrument(skip(self), err)]
     async fn add(&self, portfolio: PortfolioData) -> PortfoliApplicationResult<()> {
         let user_id = UserId::new(portfolio.clone().user_id.into());
 
@@ -125,7 +125,6 @@ where
     U: StockQueryService + Send + Sync,
     V: UserRepository + Send + Sync,
 {
-    #[tracing::instrument(skip(self), err, ret)]
     async fn into_portfolio_data(
         &self,
         portfolio: Portfolio,

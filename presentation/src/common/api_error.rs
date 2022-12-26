@@ -34,7 +34,7 @@ pub type ApiResult<T> = Result<T, ApiError>;
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
-        let status_code = match &self {
+        let code = match &self {
             ApiError::UserApplicationError(e) => match e {
                 UserApplicationError::Disconnect(_) => StatusCode::INTERNAL_SERVER_ERROR,
                 UserApplicationError::UserAlreadyExist(_) => StatusCode::BAD_REQUEST,
@@ -80,13 +80,20 @@ impl IntoResponse for ApiError {
                 OICDError::EmailNotRegisterd => StatusCode::BAD_REQUEST,
             },
         };
-        let message = self.to_string();
-        let body = serde_json::json!({
-            "error": {
-                "message": message
-            }
-        });
-        let res = (status_code, Json(body)).into_response();
+        let body = if code == StatusCode::INTERNAL_SERVER_ERROR {
+            serde_json::json!({
+                "error": {
+                    "message": "internal server error"
+                }
+            })
+        } else {
+            serde_json::json!({
+                "error": {
+                    "message": self.to_string()
+                }
+            })
+        };
+        let res = (code, Json(body)).into_response();
 
         res
     }
