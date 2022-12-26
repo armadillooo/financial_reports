@@ -37,7 +37,7 @@ impl SessionData {
     pub fn insert_item(&mut self, item: SessionItem) -> SessionResult<()> {
         self.0
             .insert(&item.key(), item)
-            .map_err(|_| SessionError::ItemNotSaved)
+            .map_err(|_| SessionError::SavingItemError)
     }
 
     /// 値の取得

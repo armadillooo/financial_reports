@@ -49,7 +49,7 @@ where
         let session_id = req
             .extensions()
             .get::<SessionId>()
-            .ok_or(SessionError::SessionIdNotSend)?;
+            .ok_or(SessionError::SessionIdRequired)?;
 
         let SessionItem::LoginUserId(user_id) = state.session_service().item(session_id.clone(), &key).await? else {
             return Err(SessionError::ItemNotFound.into());

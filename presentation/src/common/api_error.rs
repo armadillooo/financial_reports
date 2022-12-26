@@ -5,12 +5,11 @@ use axum::{
 };
 use thiserror::Error;
 
+use crate::{auth::OICDError, session::SessionError};
 use applications::{
     company::CompanyQueryError, favorite::FavoriteApplicationError,
     portfolio::PortfolioApplicationError, stock::StockQueryError, user::UserApplicationError,
 };
-
-use crate::{auth::OICDError, session::SessionError};
 
 #[derive(Error, Debug)]
 pub enum ApiError {
@@ -68,8 +67,8 @@ impl IntoResponse for ApiError {
             ApiError::SessionError(e) => match e {
                 SessionError::Disconnect(_) => StatusCode::INTERNAL_SERVER_ERROR,
                 SessionError::ItemNotFound => StatusCode::INTERNAL_SERVER_ERROR,
-                SessionError::ItemNotSaved => StatusCode::INTERNAL_SERVER_ERROR,
-                SessionError::SessionIdNotSend => StatusCode::BAD_REQUEST,
+                SessionError::SavingItemError => StatusCode::INTERNAL_SERVER_ERROR,
+                SessionError::SessionIdRequired => StatusCode::BAD_REQUEST,
                 SessionError::SessionNotFound => StatusCode::INTERNAL_SERVER_ERROR,
                 SessionError::IntoSessionIdError => StatusCode::INTERNAL_SERVER_ERROR,
             },
@@ -80,19 +79,16 @@ impl IntoResponse for ApiError {
                 OICDError::EmailNotRegisterd => StatusCode::BAD_REQUEST,
             },
         };
-        let body = if code == StatusCode::INTERNAL_SERVER_ERROR {
-            serde_json::json!({
-                "error": {
-                    "message": "internal server error"
-                }
-            })
+        let message = if code == StatusCode::INTERNAL_SERVER_ERROR {
+            "internal server error".to_string()
         } else {
-            serde_json::json!({
-                "error": {
-                    "message": self.to_string()
-                }
-            })
+            self.to_string()
         };
+        let body = serde_json::json!({
+            "error": {
+                "message": message
+            }
+        });
         let res = (code, Json(body)).into_response();
 
         res

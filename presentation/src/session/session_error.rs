@@ -7,13 +7,13 @@ pub enum SessionError {
     #[error("item not found")]
     ItemNotFound,
     #[error("item not saved")]
-    ItemNotSaved,
+    SavingItemError,
     #[error("sessin id not send")]
-    SessionIdNotSend,
+    SessionIdRequired,
     #[error("sessin not found")]
     SessionNotFound,
     #[error("cannot get id from the session")]
-    IntoSessionIdError
+    IntoSessionIdError,
 }
 
 pub type SessionResult<T> = Result<T, SessionError>;
