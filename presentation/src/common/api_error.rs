@@ -37,19 +37,19 @@ impl IntoResponse for ApiError {
         let status_code = match &self {
             ApiError::UserApplicationError(e) => match e {
                 UserApplicationError::Disconnect(_) => StatusCode::INTERNAL_SERVER_ERROR,
-                UserApplicationError::UserAlreadyExist => StatusCode::BAD_REQUEST,
-                UserApplicationError::UserNotExist => StatusCode::NOT_FOUND,
+                UserApplicationError::UserAlreadyExist(_) => StatusCode::BAD_REQUEST,
+                UserApplicationError::UserNotExist(_) => StatusCode::NOT_FOUND,
             },
             ApiError::FavoriteApplicationError(e) => match e {
-                FavoriteApplicationError::Disconnect => StatusCode::INTERNAL_SERVER_ERROR,
-                FavoriteApplicationError::UserAlreadyExist => StatusCode::BAD_REQUEST,
-                FavoriteApplicationError::UserNotFound => StatusCode::NOT_FOUND,
+                FavoriteApplicationError::Disconnect(_) => StatusCode::INTERNAL_SERVER_ERROR,
+                FavoriteApplicationError::UserAlreadyExist(_) => StatusCode::BAD_REQUEST,
+                FavoriteApplicationError::UserNotFound(_) => StatusCode::NOT_FOUND,
             },
             ApiError::PortfolioApplicationError(e) => match e {
                 PortfolioApplicationError::PortfolioNotFound => StatusCode::NOT_FOUND,
                 PortfolioApplicationError::Disconnect(_) => StatusCode::INTERNAL_SERVER_ERROR,
-                PortfolioApplicationError::UserNotFound => StatusCode::NOT_FOUND,
-                PortfolioApplicationError::UserAlreadyExist => StatusCode::BAD_REQUEST,
+                PortfolioApplicationError::UserNotFound(_) => StatusCode::NOT_FOUND,
+                PortfolioApplicationError::UserAlreadyExist(_) => StatusCode::BAD_REQUEST,
                 PortfolioApplicationError::InvalidRangeOfDate { .. } => StatusCode::BAD_REQUEST,
                 PortfolioApplicationError::InvalidParameter { .. } => StatusCode::BAD_REQUEST,
                 PortfolioApplicationError::StockDataNotFound => StatusCode::NOT_FOUND,

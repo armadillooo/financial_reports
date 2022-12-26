@@ -54,7 +54,7 @@ async fn get_user(
         .user_application_service()
         .get(&user_id)
         .await?
-        .ok_or(UserApplicationError::UserNotExist)?;
+        .ok_or(UserApplicationError::UserNotExist(user_id.to_string()))?;
 
     let res = ApiResponse::new(UserResponse::from(user));
 

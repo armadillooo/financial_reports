@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use crate::user::{UserApplicationError, UserApplicationResult, UserData, UserService};
-use domain::user::{UserDomainService, UserId, UserRepository};
+use crate::user::{UserApplicationResult, UserData, UserService};
+use domain::user::{UserDomainError, UserDomainService, UserId, UserRepository};
 
 /// User application service
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -49,7 +49,7 @@ where
         let user_id = UserId::new(user.id.clone());
 
         if let Ok(_) = self.user_service.exists(&user_id).await {
-            let e = UserApplicationError::UserAlreadyExist;
+            let e = UserDomainError::UserAlreadyExist(user_id).into();
             return Err(e);
         }
 

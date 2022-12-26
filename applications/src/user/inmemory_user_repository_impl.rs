@@ -53,7 +53,7 @@ impl UserRepository for InMemoryUserRepositoryImpl {
     async fn save(&self, user: User) -> UserDomainResult<()> {
         let key = user.id().to_string();
         if self.store.lock().unwrap().contains_key(&key) {
-            return Err(UserDomainError::UserAlreadyExist);
+            return Err(UserDomainError::UserAlreadyExist(UserId::new(key)));
         };
 
         self.store.lock().unwrap().insert(key, user);

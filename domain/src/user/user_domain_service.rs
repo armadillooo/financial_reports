@@ -26,7 +26,7 @@ where
         if let Some(_user) = self.user_repository.find(user_id).await? {
             Ok(())
         } else {
-            Err(UserDomainError::UserNotFound)
+            Err(UserDomainError::UserNotFound(user_id.clone()))
         }
     }
 }

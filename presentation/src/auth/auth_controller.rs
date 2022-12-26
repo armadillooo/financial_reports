@@ -80,13 +80,13 @@ async fn auth_verify_google(
         AuthType::Login => {
             // ユーザー未登録
             if let None = state.user_application_service().get(&auth_user.id).await? {
-                return Err(UserApplicationError::UserNotExist.into());
+                return Err(UserApplicationError::UserNotExist(auth_user.id).into());
             }
         }
         AuthType::Singin => {
             // ユーザーが既に存在するため新規追加不可
             if let Some(_) = state.user_application_service().get(&auth_user.id).await? {
-                return Err(UserApplicationError::UserAlreadyExist.into());
+                return Err(UserApplicationError::UserAlreadyExist(auth_user.id).into());
             }
         }
     };
