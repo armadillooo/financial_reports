@@ -1,9 +1,10 @@
 use std::ops::Deref;
 
-use axum::{extract::FromRequest, http::Request};
+use axum::{extract::FromRequestParts, http::request::Parts};
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    auth::OICDError,
     common::{ApiError, AppState},
     session::{SessionError, SessionId, SessionItem},
 };
@@ -35,24 +36,24 @@ impl Deref for LoginUserId {
 // 認証が必要なAPIのハンドラに引数で渡すことで
 // 認証のチェックを自動で行う
 #[axum::async_trait]
-impl<S, B> FromRequest<S, B> for LoginUserId
+impl<S> FromRequestParts<S> for LoginUserId
 where
-    B: Send + 'static,
     S: AppState + Send + Sync,
 {
     // エラー時の戻り値の型
     type Rejection = ApiError;
 
-    async fn from_request(req: Request<B>, state: &S) -> Result<Self, Self::Rejection> {
+    #[tracing::instrument(skip(parts, state), err, ret)]
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
         // セッションにユーザーIDが登録されている場合はログイン済み
         let key = SessionItem::LoginUserId(LoginUserId::new("".to_string()));
-        let session_id = req
-            .extensions()
+        let session_id = parts
+            .extensions
             .get::<SessionId>()
             .ok_or(SessionError::SessionIdRequired)?;
 
-        let SessionItem::LoginUserId(user_id) = state.session_service().item(session_id.clone(), &key).await? else {
-            return Err(SessionError::ItemNotFound.into());
+        let Some(SessionItem::LoginUserId(user_id)) = state.session_service().find_item(session_id.clone(), &key).await? else {
+            return Err(OICDError::AuthenticationRequired.into());
         };
 
         Ok(user_id)

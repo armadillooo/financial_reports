@@ -4,7 +4,11 @@ use crate::session::{SessionId, SessionItem, SessionResult};
 pub trait SessionService {
     async fn find_or_create(&self, session_id: Option<SessionId>) -> SessionResult<SessionStatus>;
     async fn delete(&self, session_id: SessionId) -> SessionResult<()>;
-    async fn item(&self, session_id: SessionId, key: &SessionItem) -> SessionResult<SessionItem>;
+    async fn find_item(
+        &self,
+        session_id: SessionId,
+        key: &SessionItem,
+    ) -> SessionResult<Option<SessionItem>>;
     async fn insert_item(&self, session_id: SessionId, item: SessionItem) -> SessionResult<()>;
     async fn remove_item(&self, session_id: SessionId, key: &SessionItem) -> SessionResult<()>;
 }

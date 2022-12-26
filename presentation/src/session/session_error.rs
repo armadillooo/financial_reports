@@ -4,9 +4,9 @@ use thiserror::Error;
 pub enum SessionError {
     #[error(transparent)]
     Disconnect(#[from] anyhow::Error),
-    #[error("item not found")]
-    ItemNotFound,
-    #[error("item not saved")]
+    #[error("item not found: key={0:?}")]
+    ItemNotFound(String),
+    #[error("failed to save item")]
     SavingItemError,
     #[error("sessin id not send")]
     SessionIdRequired,

@@ -5,7 +5,7 @@ use axum::{
     middleware,
     response::{IntoResponse, Response},
     routing::{get, post},
-    Extension, Router,
+    Router,
 };
 
 use crate::{
@@ -48,7 +48,7 @@ pub fn user_controller(state: AppStateImpl) -> Router {
 #[tracing::instrument(skip(state), err)]
 async fn get_user(
     state: State<AppStateImpl>,
-    Extension(user_id): Extension<LoginUserId>,
+    user_id: LoginUserId,
 ) -> ApiResult<Response> {
     let user = state
         .user_application_service()
@@ -64,7 +64,7 @@ async fn get_user(
 #[tracing::instrument(skip(state), err)]
 async fn get_favorites(
     state: State<AppStateImpl>,
-    Extension(user_id): Extension<LoginUserId>,
+    user_id: LoginUserId,
 ) -> ApiResult<Response> {
     let stock_id_list = state
         .favorite_service()
@@ -91,7 +91,7 @@ async fn get_favorites(
 #[tracing::instrument(skip(state), err)]
 async fn insert_favorite(
     state: State<AppStateImpl>,
-    Extension(user_id): Extension<LoginUserId>,
+    user_id: LoginUserId,
     Path(stock_id): Path<String>,
 ) -> ApiResult<Response> {
     let favorite = FavoriteData::new(user_id.to_string(), stock_id);
@@ -106,7 +106,7 @@ async fn insert_favorite(
 #[tracing::instrument(skip(state), err)]
 async fn delete_favorite(
     state: State<AppStateImpl>,
-    Extension(user_id): Extension<LoginUserId>,
+    user_id: LoginUserId,
     Path(stock_id): Path<String>,
 ) -> ApiResult<Response> {
     let favorite = FavoriteData::new(user_id.to_string(), stock_id);
@@ -121,7 +121,7 @@ async fn delete_favorite(
 #[tracing::instrument(skip(state), err)]
 async fn get_portfolio(
     state: State<AppStateImpl>,
-    Extension(user_id): Extension<LoginUserId>,
+    user_id: LoginUserId,
 ) -> ApiResult<Response> {
     let portfolio = state.portfolio_service().get_all(&user_id).await?;
 
@@ -137,7 +137,7 @@ async fn get_portfolio(
 #[tracing::instrument(skip(state), err)]
 async fn insert_portfolio(
     state: State<AppStateImpl>,
-    Extension(user_id): Extension<LoginUserId>,
+    user_id: LoginUserId,
     Path(stock_id): Path<String>,
 ) -> ApiResult<Response> {
     let portfolio = PortfolioData::new(user_id.to_string(), stock_id);
@@ -152,7 +152,7 @@ async fn insert_portfolio(
 #[tracing::instrument(skip(state), err)]
 async fn update_portfolio(
     state: State<AppStateImpl>,
-    Extension(user_id): Extension<LoginUserId>,
+    user_id: LoginUserId,
     Path(stock_id): Path<String>,
     Query(params): Query<HashMap<String, String>>,
 ) -> ApiResult<Response> {
@@ -181,7 +181,7 @@ async fn update_portfolio(
 #[tracing::instrument(skip(state), err)]
 async fn delete_portfolio(
     state: State<AppStateImpl>,
-    Extension(user_id): Extension<LoginUserId>,
+    user_id: LoginUserId,
     Path(stock_id): Path<String>,
 ) -> ApiResult<Response> {
     state
