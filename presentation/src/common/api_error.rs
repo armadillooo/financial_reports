@@ -46,23 +46,23 @@ impl IntoResponse for ApiError {
                 FavoriteApplicationError::UserNotFound(_) => StatusCode::NOT_FOUND,
             },
             ApiError::PortfolioApplicationError(e) => match e {
-                PortfolioApplicationError::PortfolioNotFound => StatusCode::NOT_FOUND,
+                PortfolioApplicationError::PortfolioNotFound(_) => StatusCode::NOT_FOUND,
                 PortfolioApplicationError::Disconnect(_) => StatusCode::INTERNAL_SERVER_ERROR,
                 PortfolioApplicationError::UserNotFound(_) => StatusCode::NOT_FOUND,
                 PortfolioApplicationError::UserAlreadyExist(_) => StatusCode::BAD_REQUEST,
                 PortfolioApplicationError::InvalidRangeOfDate { .. } => StatusCode::BAD_REQUEST,
                 PortfolioApplicationError::InvalidParameter { .. } => StatusCode::BAD_REQUEST,
-                PortfolioApplicationError::StockDataNotFound => StatusCode::NOT_FOUND,
+                PortfolioApplicationError::StockDataNotFound(_) => StatusCode::NOT_FOUND,
             },
             ApiError::CompanyQueryError(e) => match e {
                 CompanyQueryError::Disconnect => StatusCode::INTERNAL_SERVER_ERROR,
                 CompanyQueryError::InvalidParameter { .. } => StatusCode::BAD_REQUEST,
-                CompanyQueryError::CompanyNotFound => StatusCode::NOT_FOUND,
+                CompanyQueryError::CompanyNotFound(_) => StatusCode::NOT_FOUND,
             },
             ApiError::StockQueryError(e) => match e {
                 StockQueryError::Disconnect(_) => StatusCode::INTERNAL_SERVER_ERROR,
                 StockQueryError::InvalidParameter { .. } => StatusCode::BAD_REQUEST,
-                StockQueryError::StockDataNotFound => StatusCode::NOT_FOUND,
+                StockQueryError::StockDataNotFound(_) => StatusCode::NOT_FOUND,
                 StockQueryError::InvalidRangeOfDate { .. } => StatusCode::BAD_REQUEST,
             },
             ApiError::SessionError(e) => match e {

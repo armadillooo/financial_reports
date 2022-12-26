@@ -8,8 +8,8 @@ use domain::{portfolio::PortfolioDomainError, user::UserDomainError};
 pub enum PortfolioApplicationError {
     #[error(transparent)]
     Disconnect(#[from] anyhow::Error),
-    #[error("portfolio not found")]
-    PortfolioNotFound,
+    #[error("portfolio not found: id={0}")]
+    PortfolioNotFound(String),
     #[error("user is already exsist: id={0}")]
     UserAlreadyExist(String),
     #[error("user not found: id={0}")]
@@ -18,8 +18,8 @@ pub enum PortfolioApplicationError {
     InvalidParameter { name: &'static str, value: String },
     #[error("start date exceeds end date")]
     InvalidRangeOfDate { start: NaiveDate, end: NaiveDate },
-    #[error("stock data not found")]
-    StockDataNotFound,
+    #[error("stock data not found: id={0}")]
+    StockDataNotFound(String),
 }
 
 pub type PortfoliApplicationResult<T> = Result<T, PortfolioApplicationError>;
@@ -52,7 +52,7 @@ impl From<StockQueryError> for PortfolioApplicationError {
             StockQueryError::InvalidRangeOfDate { start, end } => {
                 Self::InvalidRangeOfDate { start, end }
             }
-            StockQueryError::StockDataNotFound => Self::StockDataNotFound,
+            StockQueryError::StockDataNotFound(stock_id) => Self::StockDataNotFound(stock_id),
         }
     }
 }

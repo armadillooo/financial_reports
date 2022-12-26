@@ -85,7 +85,7 @@ impl CompanyQueryService for InmemoryCompanyQueryServiceImpl {
             .companies
             .iter()
             .find(|c| c.stock_id == stock_id)
-            .ok_or(CompanyQueryError::CompanyNotFound)?
+            .ok_or(CompanyQueryError::CompanyNotFound(stock_id.into()))?
             .clone();
 
         Ok(result)

@@ -9,8 +9,8 @@ pub enum StockQueryError {
     InvalidParameter { name: &'static str, value: String },
     #[error("start date exceeds end date")]
     InvalidRangeOfDate { start: NaiveDate, end: NaiveDate },
-    #[error("stock data not found")]
-    StockDataNotFound,
+    #[error("stock data not found: id={0}")]
+    StockDataNotFound(String),
 }
 
 pub type StockQueryResult<T> = Result<T, StockQueryError>;

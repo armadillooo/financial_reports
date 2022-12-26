@@ -92,7 +92,7 @@ where
             .portfolio_repository
             .find(&user_id, &stock_id)
             .await?
-            .ok_or(PortfolioApplicationError::PortfolioNotFound)?;
+            .ok_or(PortfolioApplicationError::PortfolioNotFound(stock_id.into()))?;
 
         if let Some(purchase) = update_command.purchase {
             portfolio.update_purchase(purchase);
