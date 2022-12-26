@@ -24,7 +24,7 @@ where
 {
     portfolio_repository: Arc<T>,
     stock_query_service: U,
-    user_service: UserDomainService<V>,
+    user_domain_service: UserDomainService<V>,
 }
 
 impl<T, U, V> PortfolioServiceImpl<T, U, V>
@@ -37,12 +37,12 @@ where
     pub fn new(
         portfolio_repository: &Arc<T>,
         stock_query_service: U,
-        user_service: UserDomainService<V>,
+        user_domain_service: UserDomainService<V>,
     ) -> Self {
         Self {
             portfolio_repository: Arc::clone(portfolio_repository),
             stock_query_service,
-            user_service,
+            user_domain_service,
         }
     }
 }
@@ -56,6 +56,8 @@ where
     #[tracing::instrument(skip(self), err, ret)]
     async fn get_all(&self, user_id: &str) -> PortfoliApplicationResult<Vec<PortfolioData>> {
         let user_id = UserId::new(user_id.into());
+        self.user_domain_service.exists(&user_id).await?;
+
         let all_portfolio = self.portfolio_repository.find_all(&user_id).await?;
 
         // ポートフォリオを外部向けデータに変換
@@ -72,6 +74,8 @@ where
     #[tracing::instrument(skip(self), err)]
     async fn remove(&self, user_id: &str, stock_id: &str) -> PortfoliApplicationResult<()> {
         let user_id = UserId::new(user_id.into());
+        self.user_domain_service.exists(&user_id).await?;
+
         let stock_id = StockId::new(stock_id.to_string());
 
         self.portfolio_repository
@@ -86,13 +90,17 @@ where
         update_command: PortfolioUpdateCommand,
     ) -> PortfoliApplicationResult<()> {
         let user_id = UserId::new(update_command.user_id.into());
+        self.user_domain_service.exists(&user_id).await?;
+
         let stock_id = StockId::new(update_command.stock_id.into());
 
         let mut portfolio = self
             .portfolio_repository
             .find(&user_id, &stock_id)
             .await?
-            .ok_or(PortfolioApplicationError::PortfolioNotFound(stock_id.into()))?;
+            .ok_or(PortfolioApplicationError::PortfolioNotFound(
+                stock_id.into(),
+            ))?;
 
         if let Some(purchase) = update_command.purchase {
             portfolio.update_purchase(purchase);
@@ -111,8 +119,7 @@ where
     #[tracing::instrument(skip(self), err)]
     async fn add(&self, portfolio: PortfolioData) -> PortfoliApplicationResult<()> {
         let user_id = UserId::new(portfolio.clone().user_id.into());
-
-        self.user_service.exists(&user_id).await?;
+        self.user_domain_service.exists(&user_id).await?;
 
         self.portfolio_repository.save(portfolio.into()).await?;
         Ok(())

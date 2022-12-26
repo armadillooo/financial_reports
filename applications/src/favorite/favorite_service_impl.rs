@@ -13,7 +13,7 @@ where
     U: UserRepository,
 {
     favorite_repository: Arc<T>,
-    user_service: UserDomainService<U>,
+    user_domain_service: UserDomainService<U>,
 }
 
 impl<T, U> FavoriteServiceImpl<T, U>
@@ -25,7 +25,7 @@ where
     pub fn new(favorite_repository: &Arc<T>, user_service: UserDomainService<U>) -> Self {
         Self {
             favorite_repository: Arc::clone(favorite_repository),
-            user_service,
+            user_domain_service: user_service,
         }
     }
 }
@@ -39,6 +39,7 @@ where
     #[tracing::instrument(skip(self), err, ret)]
     async fn get_all(&self, user_id: &str) -> FavoriteApplicationResult<Vec<FavoriteData>> {
         let user_id = UserId::new(user_id.into());
+        self.user_domain_service.exists(&user_id).await?;
 
         let result = self
             .favorite_repository
@@ -57,7 +58,8 @@ where
     #[tracing::instrument(skip(self), err)]
     async fn add(&self, favorite: FavoriteData) -> FavoriteApplicationResult<()> {
         let user_id = UserId::new(favorite.user_id.clone());
-        self.user_service.exists(&user_id).await?;
+        self.user_domain_service.exists(&user_id).await?;
+
         self.favorite_repository.save(favorite.into()).await?;
 
         Ok(())
@@ -65,6 +67,9 @@ where
 
     #[tracing::instrument(skip(self), err)]
     async fn remove(&self, favorite: FavoriteData) -> FavoriteApplicationResult<()> {
+        let user_id = UserId::new(favorite.user_id.clone());
+        self.user_domain_service.exists(&user_id).await?;
+
         self.favorite_repository.delete(favorite.into()).await?;
 
         Ok(())
