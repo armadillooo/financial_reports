@@ -68,7 +68,6 @@ where
 
     /// SessionItem取得
     #[tracing::instrument(skip(self), err, ret)]
-
     async fn find_item(
         &self,
         session_id: SessionId,

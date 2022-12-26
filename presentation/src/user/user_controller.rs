@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use axum::{
     extract::{Path, Query, State},
-    middleware,
     response::{IntoResponse, Response},
     routing::{get, post},
     Router,
@@ -10,7 +9,6 @@ use axum::{
 
 use crate::{
     common::{ApiResponse, ApiResult, AppState, AppStateImpl},
-    session::session_manage_layer,
     user::LoginUserId,
 };
 use applications::{
@@ -36,20 +34,13 @@ pub fn user_controller(state: AppStateImpl) -> Router {
                 .patch(update_portfolio)
                 .delete(delete_portfolio),
         )
-        .layer(middleware::from_fn_with_state(
-            state.clone(),
-            session_manage_layer,
-        ))
         .with_state(state);
 
     Router::new().nest("/me", user_route)
 }
 
 #[tracing::instrument(skip(state), err)]
-async fn get_user(
-    state: State<AppStateImpl>,
-    user_id: LoginUserId,
-) -> ApiResult<Response> {
+async fn get_user(state: State<AppStateImpl>, user_id: LoginUserId) -> ApiResult<Response> {
     let user = state
         .user_application_service()
         .get(&user_id)
@@ -62,10 +53,7 @@ async fn get_user(
 }
 
 #[tracing::instrument(skip(state), err)]
-async fn get_favorites(
-    state: State<AppStateImpl>,
-    user_id: LoginUserId,
-) -> ApiResult<Response> {
+async fn get_favorites(state: State<AppStateImpl>, user_id: LoginUserId) -> ApiResult<Response> {
     let stock_id_list = state
         .favorite_service()
         .get_all(&user_id)
@@ -119,10 +107,7 @@ async fn delete_favorite(
 }
 
 #[tracing::instrument(skip(state), err)]
-async fn get_portfolio(
-    state: State<AppStateImpl>,
-    user_id: LoginUserId,
-) -> ApiResult<Response> {
+async fn get_portfolio(state: State<AppStateImpl>, user_id: LoginUserId) -> ApiResult<Response> {
     let portfolio = state.portfolio_service().get_all(&user_id).await?;
 
     let res = portfolio

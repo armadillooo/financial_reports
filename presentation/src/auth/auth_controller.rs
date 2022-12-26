@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use axum::{
     extract::{Extension, Query, State},
     headers::{HeaderMap, HeaderValue},
-    http, middleware,
+    http,
     response::{IntoResponse, Response},
     routing::get,
     Router,
@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     auth::OICDData,
     common::{ApiResponse, ApiResult, AppState, AppStateImpl},
-    session::{session_manage_layer, SessionError, SessionId, SessionItem},
+    session::{SessionError, SessionId, SessionItem},
     user::{LoginUserId, UserResponse},
 };
 use applications::user::{UserApplicationError, UserData};
@@ -26,10 +26,6 @@ pub fn auth_controller(state: AppStateImpl) -> Router {
         .route("/login", get(login_redirect_google))
         .route("/logout", get(logout))
         .route("/redirect", get(auth_verify_google))
-        .layer(middleware::from_fn_with_state(
-            state.clone(),
-            session_manage_layer,
-        ))
         .with_state(state)
 }
 
@@ -81,12 +77,6 @@ async fn auth_verify_google(
             // ユーザー未登録
             if let None = state.user_application_service().get(&auth_user.id).await? {
                 return Err(UserApplicationError::UserNotExist(auth_user.id.clone()).into());
-            } else {
-                let item = SessionItem::LoginUserId(LoginUserId::new(auth_user.id.clone()));
-                state
-                    .session_service()
-                    .insert_item(session_id, item)
-                    .await?;
             }
         }
         AuthType::Singin => {
@@ -101,6 +91,13 @@ async fn auth_verify_google(
             }
         }
     };
+
+    // セッションにユーザー情報を追加
+    let item = SessionItem::LoginUserId(LoginUserId::new(auth_user.id.clone()));
+    state
+        .session_service()
+        .insert_item(session_id, item)
+        .await?;
 
     let res = ApiResponse::new(UserResponse::from(auth_user));
 

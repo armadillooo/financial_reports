@@ -9,7 +9,7 @@ use axum::{
 
 use crate::{
     common::{ApiResult, AppState, AppStateImpl},
-    session::{SessionId, SessionStatus},
+    session::SessionId,
 };
 
 const COOKIE_VALUE_KEY: &str = "Cookie Value";
@@ -31,33 +31,26 @@ pub async fn session_manage_layer<B: std::fmt::Debug>(
         tracing::info!("cookie header was not sent");
         None
     };
-
     let session_status = state.session_service().find_or_create(session_id).await?;
-    let is_session_created = if let SessionStatus::Created(_) = session_status {
-        tracing::info!("session will bi created");
-        true
-    } else {
-        false
-    };
-    let session_id: SessionId = session_status.into();
+
     // SessionIdをハンドラから参照できるようにする
+    let session_id: SessionId = session_status.into();
     let mut extension = Extensions::new();
     extension.insert(session_id.clone());
     req.extensions_mut().extend(extension);
 
     // 次のLayerを実行
     let mut response = next.run(req).await;
+
+    // レスポンスにSet-Cookieヘッダーを追加
     let session_id: &str = &session_id;
-    // Cookie Headerに新しいSession Idを設定
-    if is_session_created {
-        response.headers_mut().insert(
-            http::header::SET_COOKIE,
-            HeaderValue::from_str(&format!(
-                "{COOKIE_VALUE_KEY}={session_id}; Secure; SameSite=None; HttpOnly"
-            ))
-            .expect("set-cookie format is invalid"),
-        );
-    }
+    response.headers_mut().insert(
+        http::header::SET_COOKIE,
+        HeaderValue::from_str(&format!(
+            "{COOKIE_VALUE_KEY}={session_id}; Secure; SameSite=None; HttpOnly; Path=/;"
+        ))
+        .expect("set-cookie format is invalid"),
+    );
 
     Ok(response)
 }
