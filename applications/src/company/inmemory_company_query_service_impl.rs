@@ -75,7 +75,7 @@ impl CompanyQueryService for InmemoryCompanyQueryServiceImpl {
             .skip(page_index as usize * page_size)
             .take(page_size);
 
-        let result: Vec<CompanyData> = iter.collect(); 
+        let result: Vec<CompanyData> = iter.collect();
         tracing::info!("company data count = {}", result.len());
         Ok(result)
     }
@@ -102,5 +102,48 @@ impl CompanyQueryService for InmemoryCompanyQueryServiceImpl {
         }
 
         Ok(result)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[tokio::test]
+    async fn find_by_name() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn find_by_id_with_param() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn find_by_id() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn find_notexist_id_return_err() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn find_by_sector() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn find_by_industry() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn pagenation() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn find_list() -> anyhow::Result<()> {
+        unimplemented!()
     }
 }

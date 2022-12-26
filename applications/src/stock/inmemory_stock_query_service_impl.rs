@@ -203,4 +203,9 @@ mod test {
 
         Ok(())
     }
+
+    #[tokio::test]
+    async fn find_latest_stock_data() -> anyhow::Result<()> {
+        unimplemented!()
+    }
 }

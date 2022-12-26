@@ -5,11 +5,11 @@ use domain::user::{User, UserDomainError, UserDomainResult, UserId, UserName, Us
 
 /// テスト用Userレポジトリ
 #[derive(Debug, Clone, Default)]
-pub struct InMemoryUserRepositoryImpl {
+pub struct InmemoryUserRepositoryImpl {
     store: Arc<Mutex<HashMap<String, User>>>,
 }
 
-impl InMemoryUserRepositoryImpl {
+impl InmemoryUserRepositoryImpl {
     /// コンストラクタ
     #[allow(dead_code)]
     pub fn new() -> Self {
@@ -20,7 +20,7 @@ impl InMemoryUserRepositoryImpl {
 }
 
 #[async_trait::async_trait]
-impl UserRepository for InMemoryUserRepositoryImpl {
+impl UserRepository for InmemoryUserRepositoryImpl {
     /// ユーザー削除
     async fn delete(&self, user: User) -> UserDomainResult<()> {
         self.store.lock().unwrap().remove(&user.id().to_string());

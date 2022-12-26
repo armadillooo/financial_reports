@@ -153,3 +153,75 @@ where
         Ok(portfolio_data)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use domain::user::UserDomainService;
+
+    use crate::{
+        portfolio::{PortfolioServiceImpl, InmemoryPortfolioRepositoryImpl, PortfolioService},
+        user::InmemoryUserRepositoryImpl, stock::InmemoryStockQueryServiceImpl,
+    };
+
+    fn setup() -> impl PortfolioService {
+        let stock_query_service = InmemoryStockQueryServiceImpl::new();
+        let user_repository = Arc::new(InmemoryUserRepositoryImpl::new());
+        let user_domain_service = UserDomainService::new(&user_repository);
+        let portfolio_repository = Arc::new(InmemoryPortfolioRepositoryImpl::new());
+        
+        let portfolio_service = PortfolioServiceImpl::new(
+            &portfolio_repository,
+            stock_query_service.clone(),
+            user_domain_service,
+        );
+
+        portfolio_service
+    }
+
+    #[tokio::test]
+    async fn get_all_notexist_user_portfolio_return_err() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn get_all_success() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn add_notexist_user_portfolio_return_err() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn add_portfolio_success() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn remove_notexist_user_portfolio_return_err() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn remove_favorite_success() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn update_notexist_user_portfolio_return_err() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn update_portfolio_success() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn update_portfolio_with_noparameter_nochange() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+}

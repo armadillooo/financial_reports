@@ -132,9 +132,15 @@ mod tests {
         let session_service = setup();
         let session_status = session_service.find_or_create(None).await?;
 
-        let SessionStatus::Found(_) = session_status else {
-            return Err(anyhow!("session not found"))
+        let SessionStatus::Created(session_id) = session_status else {
+            return Err(anyhow!("session is not created"))
         };
+
+        let SessionStatus::Found(saved_id) = session_service.find_or_create(Some(session_id.clone())).await? else {
+            return Err(anyhow!("session is not saved"));
+        };
+
+        assert!(session_id == saved_id);
 
         Ok(())
     }
@@ -166,5 +172,25 @@ mod tests {
         assert!(session_service.delete(session_id).await.is_ok());
 
         Ok(())
+    }
+
+    #[tokio::test]
+    async fn save_item_success() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn remove_item_success() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn get_notexist_item_return_err() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn remove_notexist_item_return_ok() -> anyhow::Result<()> {
+        unimplemented!()
     }
 }

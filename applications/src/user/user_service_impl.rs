@@ -49,8 +49,7 @@ where
         let user_id = UserId::new(user.id.clone());
 
         if let Ok(_) = self.user_service.exists(&user_id).await {
-            let e = UserDomainError::UserAlreadyExist(user_id).into();
-            return Err(e);
+            return Err(UserDomainError::UserAlreadyExist(user_id).into());
         }
 
         self.user_repository.save(user.into()).await?;
@@ -64,8 +63,7 @@ where
         if let Some(user) = self.user_repository.find(&id).await? {
             self.user_repository.delete(user).await?;
         } else {
-            // ユーザーが存在しなかった場合は削除成功扱い
-            return Ok(());
+            return Err(UserDomainError::UserNotFound(id).into());
         }
 
         Ok(())
@@ -77,12 +75,12 @@ mod tests {
     mod user_usecase_tests {
         use std::sync::Arc;
 
-        use crate::user::inmemory_user_repository_impl::InMemoryUserRepositoryImpl;
+        use crate::user::inmemory_user_repository_impl::InmemoryUserRepositoryImpl;
         use crate::user::{UserData, UserService, UserServiceImpl};
 
         // テストに必要なオブジェクトの初期化
-        fn setup() -> UserServiceImpl<InMemoryUserRepositoryImpl> {
-            let user_repository = Arc::new(InMemoryUserRepositoryImpl::new());
+        fn setup() -> UserServiceImpl<InmemoryUserRepositoryImpl> {
+            let user_repository = Arc::new(InmemoryUserRepositoryImpl::new());
             let user_application = UserServiceImpl::new(&user_repository);
 
             user_application
@@ -126,11 +124,11 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn get_not_exist_user_return_error() -> anyhow::Result<()> {
+        async fn get_not_exist_user_return_none() -> anyhow::Result<()> {
             let app_service = setup();
             let id = "234";
 
-            assert!(app_service.get(id).await.is_err());
+            assert!(app_service.get(id).await?.is_none());
 
             Ok(())
         }
@@ -153,13 +151,13 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn delete_not_exist_user_return_ok() -> anyhow::Result<()> {
+        async fn delete_not_exist_user_return_err() -> anyhow::Result<()> {
             let app_service = setup();
             let id = "234";
 
             assert!(app_service.get(id).await?.is_none());
 
-            assert!(app_service.delete(id).await.is_ok());
+            assert!(app_service.delete(id).await.is_err());
 
             Ok(())
         }

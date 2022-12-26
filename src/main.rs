@@ -14,7 +14,7 @@ use applications::{
     favorite::{FavoriteServiceImpl, InmemoryFavoriteRepositoryImpl},
     portfolio::{InmemoryPortfolioRepositoryImpl, PortfolioServiceImpl},
     stock::InmemoryStockQueryServiceImpl,
-    user::{InMemoryUserRepositoryImpl, UserServiceImpl},
+    user::{InmemoryUserRepositoryImpl, UserServiceImpl},
 };
 use infrastructures::{
     auth::{OICDClient, OICDserviceImpl},
@@ -47,7 +47,7 @@ async fn main() -> anyhow::Result<()> {
     )
     .await?;
 
-    let user_repository = Arc::new(InMemoryUserRepositoryImpl::new());
+    let user_repository = Arc::new(InmemoryUserRepositoryImpl::new());
     let user_service = UserServiceImpl::new(&user_repository);
 
     let session_repository = Arc::new(SessionRepositoryImpl::new(MemoryStore::new()));

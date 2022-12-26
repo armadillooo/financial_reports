@@ -75,3 +75,54 @@ where
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use crate::{
+        favorite::{FavoriteService, FavoriteServiceImpl, InmemoryFavoriteRepositoryImpl},
+        user::InmemoryUserRepositoryImpl,
+    };
+    use domain::user::UserDomainService;
+
+    fn setup() -> impl FavoriteService {
+        let user_repository = Arc::new(InmemoryUserRepositoryImpl::new());
+        let favorite_repository = Arc::new(InmemoryFavoriteRepositoryImpl::new());
+        let user_domain_service = UserDomainService::new(&user_repository);
+        let favorite_service =
+            FavoriteServiceImpl::new(&favorite_repository, user_domain_service.clone());
+
+        favorite_service
+    }
+
+    #[tokio::test]
+    async fn get_all_notexist_user_favorite_return_err() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn get_all_success() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn add_notexist_user_favorite_return_err() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn add_favorite_success() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn remove_notexist_user_favorite_return_err() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn remove_favorite_success() -> anyhow::Result<()> {
+        unimplemented!()
+    }
+}
