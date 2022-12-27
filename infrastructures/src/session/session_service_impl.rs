@@ -72,11 +72,13 @@ where
     async fn item(&self, session_id: SessionId, key: &SessionItem) -> SessionResult<SessionItem> {
         let session = self
             .session_repository
-            .find(session_id)
+            .find(session_id.clone())
             .await?
-            .ok_or(SessionError::SessionNotFound)?;
+            .ok_or(SessionError::SessionNotFound(session_id))?;
 
-        let item = session.item(key).ok_or(SessionError::ItemNotFound)?;
+        let item = session
+            .item(key)
+            .ok_or(SessionError::ItemNotFound(key.key().to_string()))?;
         Ok(item)
     }
 
@@ -85,9 +87,9 @@ where
     async fn insert_item(&self, session_id: SessionId, item: SessionItem) -> SessionResult<()> {
         let mut session = self
             .session_repository
-            .find(session_id)
+            .find(session_id.clone())
             .await?
-            .ok_or(SessionError::SessionNotFound)?;
+            .ok_or(SessionError::SessionNotFound(session_id))?;
 
         session.insert_item(item)?;
         self.session_repository.save(session).await?;
@@ -99,9 +101,9 @@ where
     async fn remove_item(&self, session_id: SessionId, key: &SessionItem) -> SessionResult<()> {
         let mut session = self
             .session_repository
-            .find(session_id)
+            .find(session_id.clone())
             .await?
-            .ok_or(SessionError::SessionNotFound)?;
+            .ok_or(SessionError::SessionNotFound(session_id))?;
 
         session.remove_item(key);
         self.session_repository.save(session).await?;

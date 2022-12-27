@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     auth::OICDData,
     common::{ApiResponse, ApiResult, AppState, AppStateImpl},
-    session::{session_manage_layer, SessionId, SessionItem},
+    session::{session_manage_layer, SessionId, SessionItem, SessionError},
     user::{LoginUserId, UserResponse},
 };
 use applications::user::{UserApplicationError, UserData};
@@ -70,7 +70,7 @@ async fn auth_verify_google(
 ) -> ApiResult<Response> {
     let key = SessionItem::AuthType(AuthType::Singin);
     let SessionItem::AuthType(auth_type) = state.session_service().item(session_id.clone(), &key).await?  else {
-        return Err(OICDError::ItemNotFound.into());
+        return Err(SessionError::ItemNotFound(key.key().to_string()).into());
     };
 
     // 認証に成功した場合はユーザー情報を取得
@@ -140,7 +140,7 @@ async fn oicd_verify(
 ) -> ApiResult<UserData> {
     let key = SessionItem::AuthInfo(OICDData::new());
     let SessionItem::AuthInfo(oicd_info) = state.session_service().item(session_id.clone(), &key).await? else {
-        return Err(OICDError::ItemNotFound.into());
+        return Err(SessionError::ItemNotFound(key.key().to_string()).into());
     };
 
     let Some(code) = params.get("code") else {

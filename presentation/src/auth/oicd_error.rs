@@ -8,8 +8,6 @@ pub enum OICDError {
     ParameterRequired { name: &'static str },
     #[error("email address is not registerd")]
     EmailNotRegisterd,
-    #[error("item not found")]
-    ItemNotFound,
 }
 
 pub type OICDResult<T> = Result<T, OICDError>;

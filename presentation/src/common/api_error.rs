@@ -66,16 +66,14 @@ impl IntoResponse for ApiError {
             },
             ApiError::SessionError(e) => match e {
                 SessionError::Disconnect(_) => StatusCode::INTERNAL_SERVER_ERROR,
-                SessionError::ItemNotFound => StatusCode::INTERNAL_SERVER_ERROR,
+                SessionError::ItemNotFound(_) => StatusCode::INTERNAL_SERVER_ERROR,
                 SessionError::SavingItemError => StatusCode::INTERNAL_SERVER_ERROR,
-                SessionError::SessionIdRequired => StatusCode::BAD_REQUEST,
-                SessionError::SessionNotFound => StatusCode::INTERNAL_SERVER_ERROR,
+                SessionError::SessionNotFound(_) => StatusCode::INTERNAL_SERVER_ERROR,
                 SessionError::IntoSessionIdError => StatusCode::INTERNAL_SERVER_ERROR,
             },
             ApiError::OICDError(e) => match e {
                 OICDError::ParameterRequired { .. } => StatusCode::BAD_REQUEST,
                 OICDError::VerifyError(_) => StatusCode::BAD_REQUEST,
-                OICDError::ItemNotFound => StatusCode::INTERNAL_SERVER_ERROR,
                 OICDError::EmailNotRegisterd => StatusCode::BAD_REQUEST,
             },
         };

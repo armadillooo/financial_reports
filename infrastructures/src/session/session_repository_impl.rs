@@ -22,9 +22,9 @@ impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
     /// Session削除
     async fn delete(&self, session_id: SessionId) -> SessionResult<()> {
         let session = self
-            .find(session_id)
+            .find(session_id.clone())
             .await?
-            .ok_or(SessionError::SessionNotFound)?;
+            .ok_or(SessionError::SessionNotFound(session_id))?;
         let session_id = session.into();
 
         self.store

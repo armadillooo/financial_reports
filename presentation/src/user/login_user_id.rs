@@ -49,10 +49,10 @@ where
         let session_id = req
             .extensions()
             .get::<SessionId>()
-            .ok_or(SessionError::SessionIdRequired)?;
+            .expect("there is no SessionId extension. please add session manage layer before LoginUserId extractor");
 
         let SessionItem::LoginUserId(user_id) = state.session_service().item(session_id.clone(), &key).await? else {
-            return Err(SessionError::ItemNotFound.into());
+            return Err(SessionError::ItemNotFound(key.key().to_string()).into());
         };
 
         Ok(user_id)
