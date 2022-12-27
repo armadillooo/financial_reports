@@ -68,17 +68,18 @@ where
 
     /// SessionItem取得
     #[tracing::instrument(skip(self), err, ret)]
-
-    async fn item(&self, session_id: SessionId, key: &SessionItem) -> SessionResult<SessionItem> {
+    async fn find_item(
+        &self,
+        session_id: SessionId,
+        key: &SessionItem,
+    ) -> SessionResult<Option<SessionItem>> {
         let session = self
             .session_repository
             .find(session_id.clone())
             .await?
             .ok_or(SessionError::SessionNotFound(session_id))?;
 
-        let item = session
-            .item(key)
-            .ok_or(SessionError::ItemNotFound(key.key().to_string()))?;
+        let item = session.item(key);
         Ok(item)
     }
 

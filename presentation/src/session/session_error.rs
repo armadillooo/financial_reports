@@ -6,9 +6,9 @@ use crate::session::SessionId;
 pub enum SessionError {
     #[error(transparent)]
     Disconnect(#[from] anyhow::Error),
-    #[error("item not found: key={0}")]
+    #[error("item not found: key={0:?}")]
     ItemNotFound(String),
-    #[error("item not saved")]
+    #[error("failed to save item")]
     SavingItemError,
     #[error("session not found: id={0:?}")]
     SessionNotFound(SessionId),

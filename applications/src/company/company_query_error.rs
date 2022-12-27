@@ -2,8 +2,8 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum CompanyQueryError {
-    #[error("internal server error")]
-    Disconnect,
+    #[error(transparent)]
+    Disconnect(#[from] anyhow::Error),
     #[error("invalid parameter: {name}={value}")]
     InvalidParameter { name: &'static str, value: String },
     #[error("company data not found: id={0}")]

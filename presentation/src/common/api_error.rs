@@ -54,7 +54,7 @@ impl IntoResponse for ApiError {
                 PortfolioApplicationError::StockDataNotFound(_) => StatusCode::NOT_FOUND,
             },
             ApiError::CompanyQueryError(e) => match e {
-                CompanyQueryError::Disconnect => StatusCode::INTERNAL_SERVER_ERROR,
+                CompanyQueryError::Disconnect(_) => StatusCode::INTERNAL_SERVER_ERROR,
                 CompanyQueryError::InvalidParameter { .. } => StatusCode::BAD_REQUEST,
                 CompanyQueryError::CompanyNotFound(_) => StatusCode::NOT_FOUND,
             },
@@ -75,6 +75,7 @@ impl IntoResponse for ApiError {
                 OICDError::ParameterRequired { .. } => StatusCode::BAD_REQUEST,
                 OICDError::VerifyError(_) => StatusCode::BAD_REQUEST,
                 OICDError::EmailNotRegisterd => StatusCode::BAD_REQUEST,
+                OICDError::AuthenticationRequired => StatusCode::UNAUTHORIZED,
             },
         };
         let message = if code == StatusCode::INTERNAL_SERVER_ERROR {

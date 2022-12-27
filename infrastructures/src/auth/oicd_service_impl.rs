@@ -25,7 +25,7 @@ impl OICDService for OICDserviceImpl {
     }
 
     /// 認証情報の検証
-    #[tracing::instrument(skip(self), err, ret)]
+    #[tracing::instrument(skip(self, verify_info, code, state), err, ret)]
     async fn verify(
         &self,
         verify_info: OICDData,

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use axum::{
     extract::{Extension, Query, State},
     headers::{HeaderMap, HeaderValue},
-    http, middleware,
+    http,
     response::{IntoResponse, Response},
     routing::get,
     Router,
@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     auth::OICDData,
     common::{ApiResponse, ApiResult, AppState, AppStateImpl},
-    session::{session_manage_layer, SessionId, SessionItem, SessionError},
+    session::{SessionError, SessionId, SessionItem},
     user::{LoginUserId, UserResponse},
 };
 use applications::user::{UserApplicationError, UserData};
@@ -26,10 +26,6 @@ pub fn auth_controller(state: AppStateImpl) -> Router {
         .route("/login", get(login_redirect_google))
         .route("/logout", get(logout))
         .route("/redirect", get(auth_verify_google))
-        .layer(middleware::from_fn_with_state(
-            state.clone(),
-            session_manage_layer,
-        ))
         .with_state(state)
 }
 
@@ -69,27 +65,39 @@ async fn auth_verify_google(
     params: Query<HashMap<String, String>>,
 ) -> ApiResult<Response> {
     let key = SessionItem::AuthType(AuthType::Singin);
-    let SessionItem::AuthType(auth_type) = state.session_service().item(session_id.clone(), &key).await?  else {
+    let Some(SessionItem::AuthType(auth_type)) = state.session_service().find_item(session_id.clone(), &key).await?  else {
         return Err(SessionError::ItemNotFound(key.key().to_string()).into());
     };
 
     // 認証に成功した場合はユーザー情報を取得
-    let auth_user = oicd_verify(session_id, &state, params).await?;
+    let auth_user = oicd_verify(session_id.clone(), &state, params).await?;
 
     match auth_type {
         AuthType::Login => {
             // ユーザー未登録
             if let None = state.user_application_service().get(&auth_user.id).await? {
-                return Err(UserApplicationError::UserNotExist(auth_user.id).into());
+                return Err(UserApplicationError::UserNotExist(auth_user.id.clone()).into());
             }
         }
         AuthType::Singin => {
             // ユーザーが既に存在するため新規追加不可
             if let Some(_) = state.user_application_service().get(&auth_user.id).await? {
-                return Err(UserApplicationError::UserAlreadyExist(auth_user.id).into());
+                return Err(UserApplicationError::UserAlreadyExist(auth_user.id.clone()).into());
+            } else {
+                state
+                    .user_application_service()
+                    .save(auth_user.clone())
+                    .await?;
             }
         }
     };
+
+    // セッションにユーザー情報を追加
+    let item = SessionItem::LoginUserId(LoginUserId::new(auth_user.id.clone()));
+    state
+        .session_service()
+        .insert_item(session_id, item)
+        .await?;
 
     let res = ApiResponse::new(UserResponse::from(auth_user));
 
@@ -99,7 +107,7 @@ async fn auth_verify_google(
 /// ログアウト
 async fn logout(
     Extension(session_id): Extension<SessionId>,
-    Extension(user_id): Extension<LoginUserId>,
+    user_id: LoginUserId,
     state: State<AppStateImpl>,
 ) -> ApiResult<Response> {
     let key = SessionItem::LoginUserId(user_id);
@@ -139,7 +147,7 @@ async fn oicd_verify(
     params: Query<HashMap<String, String>>,
 ) -> ApiResult<UserData> {
     let key = SessionItem::AuthInfo(OICDData::new());
-    let SessionItem::AuthInfo(oicd_info) = state.session_service().item(session_id.clone(), &key).await? else {
+    let Some(SessionItem::AuthInfo(oicd_info)) = state.session_service().find_item(session_id.clone(), &key).await? else {
         return Err(SessionError::ItemNotFound(key.key().to_string()).into());
     };
 
