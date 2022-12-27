@@ -27,7 +27,6 @@ dependencies = [
  "chrono",
  "domain",
  "futures",
- "once_cell",
  "serde",
  "thiserror",
  "tokio",

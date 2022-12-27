@@ -14,6 +14,17 @@ pub struct Portfolio {
 }
 
 impl Portfolio {
+    pub fn new(user_id: UserId, stock_id: StockId, stock_count: i32, purchase: i32) -> Self {
+        Self {
+            user_id,
+            stock_id,
+            stock_count,
+            purchase,
+        }
+    }
+}
+
+impl Portfolio {
     pub fn update_stock_count(&mut self, stock_count: i32) {
         self.stock_count = stock_count;
     }

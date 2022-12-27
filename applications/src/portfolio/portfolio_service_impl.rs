@@ -158,19 +158,41 @@ where
 mod tests {
     use std::sync::Arc;
 
-    use domain::user::UserDomainService;
+    use anyhow::anyhow;
 
     use crate::{
-        portfolio::{PortfolioServiceImpl, InmemoryPortfolioRepositoryImpl, PortfolioService},
-        user::InmemoryUserRepositoryImpl, stock::InmemoryStockQueryServiceImpl,
+        portfolio::{
+            InmemoryPortfolioRepositoryImpl, PortfolioApplicationError, PortfolioData,
+            PortfolioService, PortfolioServiceImpl, PortfolioUpdateCommand,
+        },
+        stock::{InmemoryStockQueryServiceImpl, StockData},
+        user::InmemoryUserRepositoryImpl,
+    };
+    use domain::{
+        stock::StockId,
+        user::{User, UserDomainService, UserEmail, UserId, UserName, UserRepository},
     };
 
-    fn setup() -> impl PortfolioService {
-        let stock_query_service = InmemoryStockQueryServiceImpl::new();
+    const USER_ID: &str = "sample user";
+    const STOCK_ID: &str = "sample stock";
+
+    async fn setup() -> impl PortfolioService {
+        let mut stock_query_service = InmemoryStockQueryServiceImpl::new();
+        let mut sample_stock = StockData::new();
+        sample_stock.stock_id = StockId::new(STOCK_ID.to_string());
+        stock_query_service.stocks.push(sample_stock);
+
         let user_repository = Arc::new(InmemoryUserRepositoryImpl::new());
+        let sample_user = User::new(
+            UserId::new(USER_ID.to_string()),
+            UserName::new("".to_string()),
+            UserEmail::new("".to_string()),
+        );
+        user_repository.save(sample_user).await.unwrap();
+
         let user_domain_service = UserDomainService::new(&user_repository);
+
         let portfolio_repository = Arc::new(InmemoryPortfolioRepositoryImpl::new());
-        
         let portfolio_service = PortfolioServiceImpl::new(
             &portfolio_repository,
             stock_query_service.clone(),
@@ -181,47 +203,148 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn get_all_notexist_user_portfolio_return_err() -> anyhow::Result<()> {
-        unimplemented!()
-    }
+    async fn add_portfolio_success() -> anyhow::Result<()> {
+        let service = setup().await;
+        let portfolio = PortfolioData::new(USER_ID.to_string(), STOCK_ID.to_string());
+        service.add(portfolio).await?;
 
-    #[tokio::test]
-    async fn get_all_success() -> anyhow::Result<()> {
-        unimplemented!()
+        let result = service.get_all(USER_ID).await?;
+        assert!(result[0].user_id == USER_ID);
+        assert!(result.len() == 1);
+
+        Ok(())
     }
 
     #[tokio::test]
     async fn add_notexist_user_portfolio_return_err() -> anyhow::Result<()> {
-        unimplemented!()
+        let service = setup().await;
+        let portfolio = PortfolioData::new("not registed user".to_string(), STOCK_ID.to_string());
+
+        let Err(PortfolioApplicationError::UserNotFound(_)) = service.add(portfolio.clone()).await else {
+            return Err(anyhow!("unexpected add favorite result"));
+        };
+
+        Ok(())
     }
 
     #[tokio::test]
-    async fn add_portfolio_success() -> anyhow::Result<()> {
-        unimplemented!()
+    async fn get_all_notexist_user_portfolio_return_err() -> anyhow::Result<()> {
+        let service = setup().await;
+        let portfolio = PortfolioData::new("not registed user".to_string(), STOCK_ID.to_string());
+
+        let Err(PortfolioApplicationError::UserNotFound(_)) = service.get_all(&portfolio.user_id).await else {
+            return Err(anyhow!("unexpected add favorite result"));
+        };
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn remove_portfolio_success() -> anyhow::Result<()> {
+        let service = setup().await;
+        let portfolio = PortfolioData::new(USER_ID.to_string(), STOCK_ID.to_string());
+        service.add(portfolio.clone()).await?;
+
+        let result = service.get_all(USER_ID).await?;
+        assert!(result[0].user_id == USER_ID);
+        assert!(result.len() == 1);
+
+        service
+            .remove(&portfolio.user_id, &portfolio.stock_id)
+            .await?;
+        let result = service.get_all(USER_ID).await?;
+        assert!(result.len() == 0);
+
+        Ok(())
     }
 
     #[tokio::test]
     async fn remove_notexist_user_portfolio_return_err() -> anyhow::Result<()> {
-        unimplemented!()
-    }
+        let service = setup().await;
+        let portfolio = PortfolioData::new("not registed user".to_string(), STOCK_ID.to_string());
 
-    #[tokio::test]
-    async fn remove_favorite_success() -> anyhow::Result<()> {
-        unimplemented!()
-    }
+        let Err(PortfolioApplicationError::UserNotFound(_)) = service.remove(&portfolio.user_id, &portfolio.stock_id).await else {
+            return Err(anyhow!("unexpected add favorite result"));
+        };
 
-    #[tokio::test]
-    async fn update_notexist_user_portfolio_return_err() -> anyhow::Result<()> {
-        unimplemented!()
+        Ok(())
     }
 
     #[tokio::test]
     async fn update_portfolio_success() -> anyhow::Result<()> {
-        unimplemented!()
+        let service = setup().await;
+        let purchase = 12;
+        let stock_count = 444;
+        let portfolio = PortfolioData {
+            user_id: USER_ID.to_string(),
+            stock_id: STOCK_ID.to_string(),
+            ..Default::default()
+        };
+        let command = PortfolioUpdateCommand::new(
+            USER_ID.to_string(),
+            STOCK_ID.to_string(),
+            Some(purchase),
+            Some(stock_count),
+        );
+
+        service.add(portfolio.clone()).await?;
+        service.update(command).await?;
+        let result = service
+            .get_all(&portfolio.user_id)
+            .await?
+            .pop()
+            .ok_or(anyhow!("portfolio not found"))?;
+
+        assert!(result.stock_count == stock_count);
+        assert!(result.purchase == purchase);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn update_notexist_user_portfolio_return_err() -> anyhow::Result<()> {
+        let service = setup().await;
+        let command = PortfolioUpdateCommand::new(
+            "not registed user".to_string(),
+            STOCK_ID.to_string(),
+            None,
+            None,
+        );
+
+        let Err(PortfolioApplicationError::UserNotFound(_)) = service.update(command).await else {
+            return Err(anyhow!("unexpected add favorite result"));
+        };
+
+        Ok(())
     }
 
     #[tokio::test]
     async fn update_portfolio_with_noparameter_nochange() -> anyhow::Result<()> {
-        unimplemented!()
+        let service = setup().await;
+        let portfolio = PortfolioData {
+            user_id: USER_ID.to_string(),
+            stock_id: STOCK_ID.to_string(),
+            stock_count: 43,
+            purchase: 98,
+            ..Default::default()
+        };
+        let command = PortfolioUpdateCommand::new(
+            USER_ID.to_string(),
+            STOCK_ID.to_string(),
+            None,
+            None,
+        );
+
+        service.add(portfolio.clone()).await?;
+        service.update(command).await?;
+        let result = service
+            .get_all(&portfolio.user_id)
+            .await?
+            .pop()
+            .ok_or(anyhow!("portfolio not found"))?;
+
+        assert!(result == portfolio);
+
+        Ok(())
     }
 }
