@@ -78,51 +78,92 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
+    use std::sync::{Arc};
+
+    use anyhow::anyhow;
 
     use crate::{
-        favorite::{FavoriteService, FavoriteServiceImpl, InmemoryFavoriteRepositoryImpl},
+        favorite::{FavoriteService, FavoriteServiceImpl, InmemoryFavoriteRepositoryImpl, FavoriteData, FavoriteApplicationError},
         user::InmemoryUserRepositoryImpl,
     };
-    use domain::user::UserDomainService;
+    use domain::{user::{UserDomainService, User, UserId, UserEmail, UserName, UserRepository}};
 
-    fn setup() -> impl FavoriteService {
+    const USER_ID: &str = "sample user";
+
+    async fn setup() -> impl FavoriteService {
+        let sample_user = User::new(UserId::new(USER_ID.to_string()), UserName::new("".to_string()), UserEmail::new("".to_string()));
         let user_repository = Arc::new(InmemoryUserRepositoryImpl::new());
+        user_repository.save(sample_user).await.unwrap();
         let favorite_repository = Arc::new(InmemoryFavoriteRepositoryImpl::new());
         let user_domain_service = UserDomainService::new(&user_repository);
         let favorite_service =
-            FavoriteServiceImpl::new(&favorite_repository, user_domain_service.clone());
+        FavoriteServiceImpl::new(&favorite_repository, user_domain_service.clone());
 
         favorite_service
     }
-
+    
     #[tokio::test]
-    async fn get_all_notexist_user_favorite_return_err() -> anyhow::Result<()> {
-        unimplemented!()
-    }
+    async fn add_favorite_success() -> anyhow::Result<()> {
+        let service = setup().await;
+        let favorite = FavoriteData::new(USER_ID.to_string(), "sample".to_string());
+        service.add(favorite).await?;
+        
+        let result = service.get_all(USER_ID).await?;
+        assert!(result[0].user_id == USER_ID);
+        assert!(result.len() == 1);
 
-    #[tokio::test]
-    async fn get_all_success() -> anyhow::Result<()> {
-        unimplemented!()
+        Ok(())
     }
 
     #[tokio::test]
     async fn add_notexist_user_favorite_return_err() -> anyhow::Result<()> {
-        unimplemented!()
+        let service = setup().await;
+        let favorite = FavoriteData::new("not registed user".to_string(), "sample".to_string());
+        
+        let Err(FavoriteApplicationError::UserNotFound(_)) = service.add(favorite.clone()).await else {
+            return Err(anyhow!("unexpected add favorite result"));
+        };
+
+        Ok(())
     }
 
     #[tokio::test]
-    async fn add_favorite_success() -> anyhow::Result<()> {
-        unimplemented!()
-    }
+    async fn get_all_notexist_user_favorite_return_err() -> anyhow::Result<()> {
+        let service = setup().await;
+        let favorite = FavoriteData::new("not registed user".to_string(), "sample".to_string());
+        
+        let Err(FavoriteApplicationError::UserNotFound(_)) = service.get_all(&favorite.user_id).await else {
+            return Err(anyhow!("unexpected add favorite result"));
+        };        
 
-    #[tokio::test]
-    async fn remove_notexist_user_favorite_return_err() -> anyhow::Result<()> {
-        unimplemented!()
+        Ok(())
     }
 
     #[tokio::test]
     async fn remove_favorite_success() -> anyhow::Result<()> {
-        unimplemented!()
+        let service = setup().await;
+        let favorite = FavoriteData::new(USER_ID.to_string(), "sample".to_string());
+        service.add(favorite.clone()).await?;
+        
+        let result = service.get_all(USER_ID).await?;
+        assert!(result.len() == 1);
+
+        service.remove(favorite).await?;
+        let result = service.get_all(USER_ID).await?;
+        assert!(result.len() == 0);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn remove_notexist_user_favorite_return_err() -> anyhow::Result<()> {
+        let service = setup().await;
+        let favorite = FavoriteData::new("not registed user".to_string(), "sample".to_string());
+        
+        let Err(FavoriteApplicationError::UserNotFound(_)) = service.remove(favorite).await else {
+            return Err(anyhow!("unexpected add favorite result"));
+        };        
+
+        Ok(())
     }
 }
