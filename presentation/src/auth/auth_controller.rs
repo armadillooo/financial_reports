@@ -66,7 +66,7 @@ async fn auth_verify_google(
 ) -> ApiResult<Response> {
     let key = SessionItem::AuthType(AuthType::Singin);
     let Some(SessionItem::AuthType(auth_type)) = state.session_service().find_item(session_id.clone(), &key).await?  else {
-        return Err(SessionError::ItemNotFound(key.key().to_string()).into());
+        return Err(SessionError::ItemNotFound(key.key()).into());
     };
 
     // 認証に成功した場合はユーザー情報を取得
@@ -148,7 +148,7 @@ async fn oicd_verify(
 ) -> ApiResult<UserData> {
     let key = SessionItem::AuthInfo(OICDData::new());
     let Some(SessionItem::AuthInfo(oicd_info)) = state.session_service().find_item(session_id.clone(), &key).await? else {
-        return Err(SessionError::ItemNotFound(key.key().to_string()).into());
+        return Err(SessionError::ItemNotFound(key.key()).into());
     };
 
     let Some(code) = params.get("code") else {

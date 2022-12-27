@@ -120,7 +120,10 @@ mod tests {
     use async_session::MemoryStore;
 
     use crate::session::{SessionRepositoryImpl, SessionServiceImpl};
-    use presentation::session::{SessionData, SessionService, SessionStatus};
+    use presentation::{
+        auth::AuthType,
+        session::{SessionError, SessionId, SessionItem, SessionService, SessionStatus},
+    };
 
     fn setup() -> SessionServiceImpl<SessionRepositoryImpl<MemoryStore>> {
         let store = MemoryStore::new();
@@ -168,32 +171,96 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn delete_not_exist_session_return_ok() -> anyhow::Result<()> {
-        let session_service = setup();
-        let session_id = SessionData::new().into_session_id()?;
+    async fn save_item_success() -> anyhow::Result<()> {
+        let service = setup();
+        let session_id: SessionId = service.find_or_create(None).await?.into();
+        let item = SessionItem::AuthType(AuthType::Singin);
+        let key = SessionItem::AuthType(AuthType::Singin);
 
-        assert!(session_service.delete(session_id).await.is_ok());
+        service.insert_item(session_id.clone(), item).await?;
+
+        assert!(service.find_item(session_id, &key).await?.is_some());
 
         Ok(())
     }
 
     #[tokio::test]
-    async fn save_item_success() -> anyhow::Result<()> {
-        unimplemented!()
+    async fn save_item_to_noexist_session_return_err() -> anyhow::Result<()> {
+        let service = setup();
+        let session_id: SessionId = service.find_or_create(None).await?.into();
+        let item = SessionItem::AuthType(AuthType::Singin);
+        service.delete(session_id.clone()).await?;
+
+        let Err(SessionError::SessionNotFound(_)) = service.insert_item(session_id, item).await else {
+            return Err(anyhow!("unexpected save item result"));
+        };
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn get_notexist_item_return_none() -> anyhow::Result<()> {
+        let service = setup();
+        let session_id: SessionId = service.find_or_create(None).await?.into();
+        let key = SessionItem::AuthType(AuthType::Singin);
+
+        assert!(service.find_item(session_id, &key).await?.is_none());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn get_item_from_noexist_session_return_err() -> anyhow::Result<()> {
+        let service = setup();
+        let session_id: SessionId = service.find_or_create(None).await?.into();
+        let key = SessionItem::AuthType(AuthType::Singin);
+        service.delete(session_id.clone()).await?;
+
+        let Err(SessionError::SessionNotFound(_)) = service.find_item(session_id, &key).await else {
+            return Err(anyhow!("unexpected save item result"));
+        };
+
+        Ok(())
     }
 
     #[tokio::test]
     async fn remove_item_success() -> anyhow::Result<()> {
-        unimplemented!()
+        let service = setup();
+        let session_id: SessionId = service.find_or_create(None).await?.into();
+        let item = SessionItem::AuthType(AuthType::Singin);
+        let key = SessionItem::AuthType(AuthType::Singin);
+
+        service.insert_item(session_id.clone(), item).await?;
+        assert!(service.find_item(session_id.clone(), &key).await?.is_some());
+
+        service.remove_item(session_id.clone(), &key).await?;
+        assert!(service.find_item(session_id, &key).await?.is_none());
+
+        Ok(())
     }
 
     #[tokio::test]
-    async fn get_notexist_item_return_err() -> anyhow::Result<()> {
-        unimplemented!()
+    async fn remove_item_from_noexist_session_return_err() -> anyhow::Result<()> {
+        let service = setup();
+        let session_id: SessionId = service.find_or_create(None).await?.into();
+        let key = SessionItem::AuthType(AuthType::Singin);
+        service.delete(session_id.clone()).await?;
+
+        let Err(SessionError::SessionNotFound(_)) = service.remove_item(session_id, &key).await else {
+            return Err(anyhow!("unexpected save item result"));
+        };
+
+        Ok(())
     }
 
     #[tokio::test]
     async fn remove_notexist_item_return_ok() -> anyhow::Result<()> {
-        unimplemented!()
+        let service = setup();
+        let session_id: SessionId = service.find_or_create(None).await?.into();
+        let key = SessionItem::AuthType(AuthType::Singin);
+
+        service.remove_item(session_id, &key).await?;
+
+        Ok(())
     }
 }
