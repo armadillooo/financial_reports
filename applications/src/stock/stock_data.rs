@@ -1,11 +1,8 @@
 use chrono::NaiveDate;
-
-use domain::stock::StockId;
-
 /// 株価情報
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct StockData {
-    pub stock_id: StockId,
+    pub stock_id: String,
     /// 日付
     pub date: NaiveDate,
     /// 出来高

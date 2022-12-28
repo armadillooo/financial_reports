@@ -169,7 +169,6 @@ mod tests {
         user::InmemoryUserRepositoryImpl,
     };
     use domain::{
-        stock::StockId,
         user::{User, UserDomainService, UserEmail, UserId, UserName, UserRepository},
     };
 
@@ -179,7 +178,7 @@ mod tests {
     async fn setup() -> impl PortfolioService {
         let mut stock_query_service = InmemoryStockQueryServiceImpl::new();
         let mut sample_stock = StockData::new();
-        sample_stock.stock_id = StockId::new(STOCK_ID.to_string());
+        sample_stock.stock_id = STOCK_ID.to_string();
         stock_query_service.stocks.push(sample_stock);
 
         let user_repository = Arc::new(InmemoryUserRepositoryImpl::new());
@@ -328,12 +327,8 @@ mod tests {
             purchase: 98,
             ..Default::default()
         };
-        let command = PortfolioUpdateCommand::new(
-            USER_ID.to_string(),
-            STOCK_ID.to_string(),
-            None,
-            None,
-        );
+        let command =
+            PortfolioUpdateCommand::new(USER_ID.to_string(), STOCK_ID.to_string(), None, None);
 
         service.add(portfolio.clone()).await?;
         service.update(command).await?;

@@ -100,7 +100,6 @@ mod test {
     use std::ops::Deref;
 
     use chrono::NaiveDate;
-    use domain::stock::StockId;
 
     use crate::stock::{
         inmemory_stock_query_service_impl::InmemoryStockQueryServiceImpl, stock_data::StockData,
@@ -121,7 +120,7 @@ mod test {
         let mut stocks = Vec::new();
         for i in 0..3 {
             stocks.insert(i, StockData::new());
-            stocks[i].stock_id = StockId::new(i.to_string());
+            stocks[i].stock_id = i.to_string();
         }
         service.stocks = stocks;
 
@@ -193,13 +192,13 @@ mod test {
         let mut stocks = Vec::new();
         for i in 0..3 {
             stocks.insert(i, StockData::new());
-            stocks[i].stock_id = StockId::new(i.to_string());
+            stocks[i].stock_id = i.to_string();
         }
         service.stocks = stocks;
 
         let found = service.find(param).await?;
         assert!(found.len() as i32 == page_size.unwrap());
-        assert!(found[0].stock_id == StockId::new((index.unwrap() - 1).to_string()));
+        assert!(found[0].stock_id == (index.unwrap() - 1).to_string());
 
         Ok(())
     }
@@ -215,13 +214,13 @@ mod test {
             stocks.push(StockData::new());
         }
         stocks[0].date = NaiveDate::from_ymd_opt(2021, 1, 1).unwrap();
-        stocks[0].stock_id = StockId::new(stock_id.to_string());
+        stocks[0].stock_id = stock_id.to_string();
         stocks[1].date = target_date.clone();
-        stocks[1].stock_id = StockId::new(stock_id.to_string());
+        stocks[1].stock_id = stock_id.to_string();
         stocks[2].date = NaiveDate::from_ymd_opt(2022, 8, 30).unwrap();
-        stocks[2].stock_id = StockId::new(stock_id.to_string());
+        stocks[2].stock_id = stock_id.to_string();
         stocks[3].date = NaiveDate::from_ymd_opt(2025, 9, 15).unwrap();
-        stocks[3].stock_id = StockId::new(stock_id.to_string());
+        stocks[3].stock_id = stock_id.to_string();
         service.stocks = stocks;
 
         let found = service.find_latest(stock_id).await?;
