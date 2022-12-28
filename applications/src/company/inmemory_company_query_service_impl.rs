@@ -273,7 +273,7 @@ mod tests {
 
     #[tokio::test]
     async fn pagenation() -> anyhow::Result<()> {
-        let mut service = setup();
+        let service = setup();
         let mut param = CompanyQueryCommand::new();
         let index = Some(2);
         let page_size = Some(1);

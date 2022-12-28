@@ -208,20 +208,20 @@ mod test {
     async fn find_latest_stock_data() -> anyhow::Result<()> {
         let mut service = setup();
         let target_date = NaiveDate::from_ymd_opt(2099, 7, 12).unwrap();
-        let stock_id = "";
+        let stock_id = "1234";
 
         let mut stocks = Vec::new();
         for _ in 0..4 {
             stocks.push(StockData::new());
         }
         stocks[0].date = NaiveDate::from_ymd_opt(2021, 1, 1).unwrap();
-        stocks[0].stock_id == StockId::new(stock_id.to_string());
+        stocks[0].stock_id = StockId::new(stock_id.to_string());
         stocks[1].date = target_date.clone();
-        stocks[1].stock_id == StockId::new(stock_id.to_string());
+        stocks[1].stock_id = StockId::new(stock_id.to_string());
         stocks[2].date = NaiveDate::from_ymd_opt(2022, 8, 30).unwrap();
-        stocks[2].stock_id == StockId::new(stock_id.to_string());
+        stocks[2].stock_id = StockId::new(stock_id.to_string());
         stocks[3].date = NaiveDate::from_ymd_opt(2025, 9, 15).unwrap();
-        stocks[3].stock_id == StockId::new(stock_id.to_string());
+        stocks[3].stock_id = StockId::new(stock_id.to_string());
         service.stocks = stocks;
 
         let found = service.find_latest(stock_id).await?;
