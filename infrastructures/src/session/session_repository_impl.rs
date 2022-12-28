@@ -51,13 +51,69 @@ impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
     }
 
     /// Session保存
-    async fn save(&self, session: SessionData) -> SessionResult<Option<SessionId>> {
+    async fn save(&self, session: SessionData) -> SessionResult<SessionId> {
         let session_id = self
             .store
             .store_session(session.into())
             .await
-            .map_err(|e| SessionError::Disconnect(e))?;
+            .map_err(|e| SessionError::Disconnect(e))?
+            .ok_or(SessionError::IntoSessionIdError)?;
 
-        Ok(session_id.map(|id| SessionId::new(id)))
+        Ok(SessionId::new(session_id))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use anyhow::anyhow;
+    use async_session::MemoryStore;
+
+    use presentation::session::{SessionData, SessionRepository, SessionError, SessionId};
+
+    use super::SessionRepositoryImpl;
+
+    fn setup() -> impl SessionRepository {
+        let repo = SessionRepositoryImpl::new(MemoryStore::new());
+
+        repo
+    }
+
+    #[tokio::test]
+    async fn save_session_success() -> anyhow::Result<()> {
+        let repo = setup();
+        let session = SessionData::new();
+        let id = repo.save(session).await?;
+        let saved = repo
+            .find(id.clone())
+            .await?
+            .ok_or(anyhow!("session is not saved"))?;
+
+        assert!(saved.into_session_id()? == id);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn find_noexist_session_return_err() -> anyhow::Result<()> {
+        let repo = setup();
+        let Err(SessionError::SessionNotFound(_)) = repo.find(SessionId::new("aaaaa".to_string())).await else {
+            return Err(anyhow!("unexpected find session result"));
+        };
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn delete_session_success() -> anyhow::Result<()> {
+        let repo = setup();
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn delete_no_exist_session_return_ok() -> anyhow::Result<()> {
+        let repo = setup();
+
+        Ok(())
     }
 }

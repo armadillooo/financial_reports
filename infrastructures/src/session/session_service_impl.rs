@@ -27,11 +27,7 @@ where
     #[tracing::instrument(skip(self), err, ret)]
     async fn create(&self) -> SessionResult<SessionStatus> {
         let session = SessionData::new();
-        let session_id = self
-            .session_repository
-            .save(session)
-            .await?
-            .ok_or(SessionError::IntoSessionIdError)?;
+        let session_id = self.session_repository.save(session).await?;
 
         Ok(SessionStatus::Created(session_id))
     }
