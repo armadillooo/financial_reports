@@ -67,8 +67,9 @@ impl<T: SessionStore> SessionRepository for SessionRepositoryImpl<T> {
 mod tests {
     use anyhow::anyhow;
     use async_session::MemoryStore;
+    use base64;
 
-    use presentation::session::{SessionData, SessionRepository, SessionError, SessionId};
+    use presentation::session::{SessionData, SessionId, SessionRepository};
 
     use super::SessionRepositoryImpl;
 
@@ -94,11 +95,10 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn find_noexist_session_return_err() -> anyhow::Result<()> {
+    async fn find_noexist_session_return_none() -> anyhow::Result<()> {
         let repo = setup();
-        let Err(SessionError::SessionNotFound(_)) = repo.find(SessionId::new("aaaaa".to_string())).await else {
-            return Err(anyhow!("unexpected find session result"));
-        };
+        let encoded = base64::encode("noexist session id".as_bytes());
+        assert!(repo.find(SessionId::new(encoded)).await?.is_none());
 
         Ok(())
     }
@@ -106,6 +106,13 @@ mod tests {
     #[tokio::test]
     async fn delete_session_success() -> anyhow::Result<()> {
         let repo = setup();
+        let session = SessionData::new();
+
+        let id = repo.save(session).await?;
+        assert!(repo.find(id.clone()).await?.is_some());
+
+        repo.delete(id.clone()).await?;
+        assert!(repo.find(id.clone()).await?.is_none());
 
         Ok(())
     }
@@ -113,6 +120,9 @@ mod tests {
     #[tokio::test]
     async fn delete_no_exist_session_return_ok() -> anyhow::Result<()> {
         let repo = setup();
+        let encoded = base64::encode("noexist session id".as_bytes());
+
+        assert!(repo.delete(SessionId::new(encoded)).await.is_ok());
 
         Ok(())
     }
