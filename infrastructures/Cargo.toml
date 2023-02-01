@@ -15,6 +15,7 @@ anyhow = "1.0.68"
 openidconnect = "2.4.0"
 tokio = { version = "1.23.0", features = ["full"] }
 tracing = "0.1.37"
+sqlx = { version = "0.6.2", features = ["runtime-tokio-rustls", "postgres"] }
 
 [dev-dependencies]
 base64 = "0.20.0"

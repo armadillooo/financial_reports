@@ -4,3 +4,4 @@ client_secret_525690818902-l0urmj6r09omclbguobeq6ef1iqr561k.apps.googleuserconte
 self_signed_certs/
 *.env
 PublicDoc/
+data/
