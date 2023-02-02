@@ -61,7 +61,7 @@ async fn main() -> anyhow::Result<()> {
         "https://accounts.google.com".to_string(),
         dotenvy::var("GOOGLE_CLIENT_ID")?,
         dotenvy::var("GOOGLE_CLIENT_SECRET")?,
-        dotenvy::var("REDIRECT_URL")?,
+        "https://127.0.0.1:3000/api/auth/redirect".to_string(),
     )
     .await?;
     let oicd_service = OICDserviceImpl::new(oicd_client);

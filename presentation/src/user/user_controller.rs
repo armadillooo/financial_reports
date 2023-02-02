@@ -147,7 +147,7 @@ async fn update_portfolio(
     } else {
         None
     };
-    let stock_count = if let Some(stock_count) = params.get("purchase") {
+    let stock_count = if let Some(stock_count) = params.get("stock_count") {
         let Ok(stock_count) = stock_count.parse() else {return Err(PortfolioApplicationError::InvalidParameter { name: "stock_count", value: stock_count.clone() }.into())};
         Some(stock_count)
     } else {
