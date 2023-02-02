@@ -3,10 +3,10 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
 
+use anyhow::Context;
 use async_session::MemoryStore;
 use axum::middleware;
 use axum_server::tls_rustls::RustlsConfig;
-use domain::user::UserDomainService;
 use dotenvy::{self, dotenv};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -17,6 +17,7 @@ use applications::{
     stock::InmemoryStockQueryServiceImpl,
     user::{InmemoryUserRepositoryImpl, UserServiceImpl},
 };
+use domain::user::UserDomainService;
 use infrastructures::{
     auth::{OICDClient, OICDserviceImpl},
     session::{SessionRepositoryImpl, SessionServiceImpl},
@@ -32,9 +33,9 @@ async fn main() -> anyhow::Result<()> {
     dotenv().ok();
     // Default Logger初期化
     tracing_subscriber::registry()
-        .with(tracing_subscriber::EnvFilter::new(std::env::var(
-            "RUST_LOG",
-        )?))
+        .with(tracing_subscriber::EnvFilter::new(
+            dotenvy::var("RUST_LOG").context("enviroment variable RUST_LOG was not found")?,
+        ))
         .with(tracing_subscriber::fmt::layer())
         .init();
 
@@ -59,8 +60,10 @@ async fn main() -> anyhow::Result<()> {
 
     let oicd_client = OICDClient::new(
         "https://accounts.google.com".to_string(),
-        dotenvy::var("GOOGLE_CLIENT_ID")?,
-        dotenvy::var("GOOGLE_CLIENT_SECRET")?,
+        dotenvy::var("GOOGLE_CLIENT_ID")
+            .context("enviroment variable GOOGLE_CLIENT_ID was not found")?,
+        dotenvy::var("GOOGLE_CLIENT_SECRET")
+            .context("enviroment variable GOOGLE_CLIENT_SECRET was not found")?,
         "https://127.0.0.1:3000/api/auth/redirect".to_string(),
     )
     .await?;
@@ -97,7 +100,8 @@ async fn main() -> anyhow::Result<()> {
         session_manage_layer,
     ));
 
-    let addr = dotenvy::var("SOCKET_ADDRESS")?;
+    let addr = dotenvy::var("SOCKET_ADDRESS")
+        .context("enviroment variable SOCKET_ADDRESS was not found")?;
     let addr = SocketAddr::from_str(&addr)?;
 
     axum_server::bind_rustls(addr, tls_config)
