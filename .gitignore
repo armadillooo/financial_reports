@@ -1,6 +1,3 @@
 target/
-*.http
 client_secret_apps.googleusercontent.com.json
-self_signed_certs/
-*.env
-data/
+/.env

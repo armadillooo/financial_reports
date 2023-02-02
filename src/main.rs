@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use axum::middleware;
 use async_session::MemoryStore;
+use axum::middleware;
 use axum_server::tls_rustls::RustlsConfig;
 use domain::user::UserDomainService;
 use dotenvy::{self, dotenv};
@@ -59,9 +59,9 @@ async fn main() -> anyhow::Result<()> {
 
     let oicd_client = OICDClient::new(
         "https://accounts.google.com".to_string(),
-        "525690818902-l0urmj6r09omclbguobeq6ef1iqr561k.apps.googleusercontent.com".to_string(),
-        "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".to_string(),
-        "https://127.0.0.1:3000/api/auth/redirect".to_string(),
+        dotenvy::var("GOOGLE_CLIENT_ID")?,
+        dotenvy::var("GOOGLE_CLIENT_SECRET")?,
+        dotenvy::var("REDIRECT_URL")?,
     )
     .await?;
     let oicd_service = OICDserviceImpl::new(oicd_client);
