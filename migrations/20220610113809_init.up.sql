@@ -1,7 +1,7 @@
 -- Add up migration script here
 create table if not exists users(
     id varchar(50) not null,
-    username varchar(50) not null,
+    name varchar(50) not null,
     email varchar(50) unique not null,
     primary key (id)
 );

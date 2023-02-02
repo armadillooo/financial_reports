@@ -4,3 +4,4 @@ pub mod portfolio;
 pub mod session;
 pub mod stock;
 pub mod user;
+pub mod favorite;
