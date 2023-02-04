@@ -63,13 +63,21 @@
 |/api/stocks/{stock_id}|Get|株価情報取得|start: 開始日付<br>end: 終了日付<br>|
 
 # 使用方法
-## サンプルサーバーの起動方法
-`cargo run`
+## テストサーバーの起動
+`cargo run --bin test_server`
 
-サンプルサーバーを動かすためには以下の環境変数が必要になります。(もしくは.envファイルに記載)
+## 本番用サーバーの起動
+`cargo run --bin product_server`
+
+テストサーバーを動かすためには以下の環境変数の設定が必要になります。(もしくは.envファイルに記載)
 
 ## 設定が必要な環境変数
 * GOOGLE_CLIENT_ID: GoogleのクライアントID
 * GOOGLE_CLIENT_SECRET: Googleのクライアントシークレット
 * RUST_LOG: ログレベル(例 "INFO")
 * SOCKET_ADDRESS: サーバーのアドレス(例 127.0.0.1:3000)
+
+本番用サーバーを動かすためには上記に加えて以下の環境変数の設定が必要になります。
+## 本番用サーバーの環境変数
+* DATABASE_URL: PostgresqlのURL(例 "postgres://user_name:password@localhost:5432/db_name")
+* SESSION_URL: RedisのURL(例 "redis://127.0.0.1")
