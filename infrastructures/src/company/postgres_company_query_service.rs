@@ -4,12 +4,19 @@ use applications::company::{
     CompanyData, CompanyQueryCommand, CompanyQueryResult, CompanyQueryService,
 };
 
-pub struct PostgresCompanyQueryService {
+#[derive(Clone, Debug)]
+pub struct PostgresCompanyQueryServiceImpl {
     connection: PgPool,
 }
 
+impl PostgresCompanyQueryServiceImpl {
+    pub fn new(connection: PgPool) -> Self {
+        Self { connection }
+    }
+}
+
 #[async_trait::async_trait]
-impl CompanyQueryService for PostgresCompanyQueryService {
+impl CompanyQueryService for PostgresCompanyQueryServiceImpl {
     async fn find(&self, param: CompanyQueryCommand) -> CompanyQueryResult<Vec<CompanyData>> {
         let result = sqlx::query_as!(
             CompanyData,

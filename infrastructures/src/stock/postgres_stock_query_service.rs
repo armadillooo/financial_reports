@@ -3,12 +3,19 @@ use sqlx::postgres::PgPool;
 
 use applications::stock::{StockData, StockQueryCommand, StockQueryResult, StockQueryService};
 
-pub struct PostgresStockQueryService {
+#[derive(Clone, Debug)]
+pub struct PostgresStockQueryServiceImpl {
     connection: PgPool,
 }
 
+impl PostgresStockQueryServiceImpl {
+    pub fn new(connection: PgPool) -> Self {
+        Self { connection }
+    }
+}
+
 #[async_trait::async_trait]
-impl StockQueryService for PostgresStockQueryService {
+impl StockQueryService for PostgresStockQueryServiceImpl {
     async fn find(&self, param: StockQueryCommand) -> StockQueryResult<Vec<StockData>> {
         let result = sqlx::query_as!(
             StockModel,

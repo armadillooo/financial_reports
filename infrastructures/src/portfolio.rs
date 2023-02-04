@@ -1,3 +1,3 @@
 mod postgres_portfolio_repository;
 
-pub use postgres_portfolio_repository::PostgresPortfolioRepository;
+pub use postgres_portfolio_repository::PostgresPortfolioRepositoryImpl;

@@ -1,3 +1,3 @@
 mod postgres_company_query_service;
 
-pub use postgres_company_query_service::PostgresCompanyQueryService;
+pub use postgres_company_query_service::PostgresCompanyQueryServiceImpl;

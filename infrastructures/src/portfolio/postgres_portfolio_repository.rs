@@ -6,12 +6,19 @@ use domain::{
     user::UserId,
 };
 
-pub struct PostgresPortfolioRepository {
+#[derive(Clone, Debug)]
+pub struct PostgresPortfolioRepositoryImpl {
     connection: PgPool,
 }
 
+impl PostgresPortfolioRepositoryImpl {
+    pub fn new(connection: PgPool) -> Self {
+        Self { connection }
+    }
+}
+
 #[async_trait::async_trait]
-impl PortfolioReposotory for PostgresPortfolioRepository {
+impl PortfolioReposotory for PostgresPortfolioRepositoryImpl {
     async fn save(&self, portfolio: Portfolio) -> PortfolioDomainResult<()> {
         sqlx::query!(
             r#"

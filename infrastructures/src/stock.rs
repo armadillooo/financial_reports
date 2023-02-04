@@ -1,3 +1,3 @@
 mod postgres_stock_query_service;
 
-pub use postgres_stock_query_service::PostgresStockQueryService;
+pub use postgres_stock_query_service::PostgresStockQueryServiceImpl;

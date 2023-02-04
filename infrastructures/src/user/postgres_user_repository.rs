@@ -2,12 +2,19 @@ use sqlx::postgres::PgPool;
 
 use domain::user::{User, UserDomainResult, UserEmail, UserId, UserName, UserRepository};
 
-pub struct PostgresUserRepository {
+#[derive(Clone, Debug)]
+pub struct PostgresUserRepositoryImpl {
     connection: PgPool,
 }
 
+impl PostgresUserRepositoryImpl {
+    pub fn new(connection: PgPool) -> Self {
+        Self { connection }
+    }
+}
+
 #[async_trait::async_trait]
-impl UserRepository for PostgresUserRepository {
+impl UserRepository for PostgresUserRepositoryImpl {
     async fn find(&self, id: &UserId) -> UserDomainResult<Option<User>> {
         let result = sqlx::query_as!(UserModel, r#"select * from users where id=$1"#, id.as_str())
             .fetch_optional(&self.connection)

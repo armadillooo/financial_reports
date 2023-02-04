@@ -4,28 +4,26 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use anyhow::Context;
-use async_session::MemoryStore;
-use axum::middleware;
+use async_redis_session::RedisSessionStore;
 use axum_server::tls_rustls::RustlsConfig;
 use dotenvy::{self, dotenv};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use applications::{
-    company::InmemoryCompanyQueryServiceImpl,
-    favorite::{FavoriteServiceImpl, InmemoryFavoriteRepositoryImpl},
-    portfolio::{InmemoryPortfolioRepositoryImpl, PortfolioServiceImpl},
-    stock::InmemoryStockQueryServiceImpl,
-    user::{InmemoryUserRepositoryImpl, UserServiceImpl},
+    favorite::FavoriteServiceImpl, portfolio::PortfolioServiceImpl, user::UserServiceImpl,
 };
 use domain::user::UserDomainService;
+use financial_report::init_app;
 use infrastructures::{
     auth::{OICDClient, OICDserviceImpl},
+    company::PostgresCompanyQueryServiceImpl,
+    favorite::PostgresFavoriteRepositoryImpl,
+    portfolio::PostgresPortfolioRepositoryImpl,
     session::{SessionRepositoryImpl, SessionServiceImpl},
+    stock::PostgresStockQueryServiceImpl,
+    user::PostgresUserRepositoryImpl,
 };
-use presentation::{
-    common::{api_controllers, AppStateImpl},
-    session::session_manage_layer,
-};
+use presentation::common::AppStateImpl;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -34,7 +32,7 @@ async fn main() -> anyhow::Result<()> {
     // Default Logger初期化
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(
-            dotenvy::var("RUST_LOG").context("enviroment variable RUST_LOG was not found")?,
+            dotenvy::var("RUST_LOG").context("RUST_LOG does not exist")?,
         ))
         .with(tracing_subscriber::fmt::layer())
         .init();
@@ -52,33 +50,53 @@ async fn main() -> anyhow::Result<()> {
     )
     .await?;
 
-    let user_repository = Arc::new(InmemoryUserRepositoryImpl::new());
+    let state = setup_state().await?;
+
+    let app = init_app(state);
+
+    let addr = dotenvy::var("SOCKET_ADDRESS").context("SOCKET_ADDRESS does not exist")?;
+    let addr = SocketAddr::from_str(&addr)?;
+
+    axum_server::bind_rustls(addr, tls_config)
+        .serve(app.into_make_service())
+        .await?;
+
+    Ok(())
+}
+
+async fn setup_state() -> anyhow::Result<AppStateImpl> {
+    let pg_connection = sqlx::postgres::PgPoolOptions::new()
+        .max_connections(20)
+        .connect(&dotenvy::var("DATABASE_URL").context("DATABASE_URL does not exist")?)
+        .await?;
+
+    let user_repository = Arc::new(PostgresUserRepositoryImpl::new(pg_connection.clone()));
     let user_service = UserServiceImpl::new(&user_repository);
 
-    let session_repository = Arc::new(SessionRepositoryImpl::new(MemoryStore::new()));
+    let redis =
+        RedisSessionStore::new(dotenvy::var("SESSION_URL").context("SESSION_URL does not exist")?)?;
+    let session_repository = Arc::new(SessionRepositoryImpl::new(redis));
     let session_service = SessionServiceImpl::new(&session_repository);
 
     let oicd_client = OICDClient::new(
         "https://accounts.google.com".to_string(),
-        dotenvy::var("GOOGLE_CLIENT_ID")
-            .context("enviroment variable GOOGLE_CLIENT_ID was not found")?,
-        dotenvy::var("GOOGLE_CLIENT_SECRET")
-            .context("enviroment variable GOOGLE_CLIENT_SECRET was not found")?,
+        dotenvy::var("GOOGLE_CLIENT_ID").context("GOOGLE_CLIENT_ID does not exist")?,
+        dotenvy::var("GOOGLE_CLIENT_SECRET").context("GOOGLE_CLIENT_SECRET does not exist")?,
         "https://127.0.0.1:3000/api/auth/redirect".to_string(),
     )
     .await?;
     let oicd_service = OICDserviceImpl::new(oicd_client);
 
-    let stock_query_service = InmemoryStockQueryServiceImpl::new();
+    let stock_query_service = PostgresStockQueryServiceImpl::new(pg_connection.clone());
 
-    let company_query_service = InmemoryCompanyQueryServiceImpl::new();
+    let company_query_service = PostgresCompanyQueryServiceImpl::new(pg_connection.clone());
 
-    let favorite_repository = Arc::new(InmemoryFavoriteRepositoryImpl::new());
+    let favorite_repository = Arc::new(PostgresFavoriteRepositoryImpl::new(pg_connection.clone()));
     let user_domain_service = UserDomainService::new(&user_repository);
     let favorite_service =
         FavoriteServiceImpl::new(&favorite_repository, user_domain_service.clone());
 
-    let portfolio_repository = Arc::new(InmemoryPortfolioRepositoryImpl::new());
+    let portfolio_repository = Arc::new(PostgresPortfolioRepositoryImpl::new(pg_connection));
     let portfolio_service = PortfolioServiceImpl::new(
         &portfolio_repository,
         stock_query_service.clone(),
@@ -95,18 +113,5 @@ async fn main() -> anyhow::Result<()> {
         Arc::new(portfolio_service),
     );
 
-    let app = api_controllers(state.clone()).layer(middleware::from_fn_with_state(
-        state.clone(),
-        session_manage_layer,
-    ));
-
-    let addr = dotenvy::var("SOCKET_ADDRESS")
-        .context("enviroment variable SOCKET_ADDRESS was not found")?;
-    let addr = SocketAddr::from_str(&addr)?;
-
-    axum_server::bind_rustls(addr, tls_config)
-        .serve(app.into_make_service())
-        .await?;
-
-    Ok(())
+    Ok(state)
 }

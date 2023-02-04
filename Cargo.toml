@@ -20,6 +20,11 @@ tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
 tower-http = { version = "0.3.5", features = ["trace"] }
 async-session = "3.0.0"
 async-redis-session = "0.2.2"
+sqlx = { version = "0.6.2", features = [
+    "runtime-tokio-native-tls",
+    "postgres",
+    "time",
+] }
 
 [workspace]
 members = ["domain", "applications", "presentation", "infrastructures"]

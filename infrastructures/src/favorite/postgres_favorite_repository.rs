@@ -6,12 +6,19 @@ use domain::{
     user::UserId,
 };
 
-pub struct PosgtresFavoriteRepository {
+#[derive(Clone, Debug)]
+pub struct PostgresFavoriteRepositoryImpl {
     connection: PgPool,
 }
 
+impl PostgresFavoriteRepositoryImpl {
+    pub fn new(connection: PgPool) -> Self {
+        Self { connection }
+    }
+}
+
 #[async_trait::async_trait]
-impl FavoriteRepository for PosgtresFavoriteRepository {
+impl FavoriteRepository for PostgresFavoriteRepositoryImpl {
     async fn save(&self, favorite: Favorite) -> FavoriteDomainResult<()> {
         sqlx::query!(
             r#"
