@@ -58,8 +58,8 @@
 |/api/users/me/favorites/{stock id}|Delete|お気に入り削除|なし|
 |/api/users/me/portfolio/{stock id}|Post|ポートフォリオ登録|なし|
 |/api/users/me/portfolio/{stock id}|Delete|ポートフォリオ削除|なし|
-|/api/users/me/portfolio/{stock id}|Patch|ポートフォリオ更新|stock_count<br>purchase|
-|/api/companies|Get|企業情報取得|name<br>stock_id<br>sector<br>industry|
+|/api/users/me/portfolio/{stock id}|Patch|ポートフォリオ更新|stock_count: 購入株数<br>purchase: 購入価格|
+|/api/companies|Get|企業情報取得|name： 企業名<br>stock_id: 証券コード<br>sector: セクター<br>industry: 産業|
 |/api/stocks/{stock_id}|Get|株価情報取得|start: 開始日付<br>end: 終了日付<br>|
 
 # 使用方法
