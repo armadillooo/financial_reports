@@ -45,6 +45,10 @@ impl CompanyQueryService for PostgresCompanyQueryServiceImpl {
     }
 
     async fn find_list(&self, stock_id_list: Vec<String>) -> CompanyQueryResult<Vec<CompanyData>> {
+        if stock_id_list.is_empty() {
+            return Ok(vec![]);
+        }
+
         let mut query_builder: QueryBuilder<Postgres> =
             QueryBuilder::new("select * from companies where stock_id in (");
 
