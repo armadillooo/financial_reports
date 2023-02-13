@@ -18,16 +18,30 @@ impl PostgresCompanyQueryServiceImpl {
 #[async_trait::async_trait]
 impl CompanyQueryService for PostgresCompanyQueryServiceImpl {
     async fn find(&self, param: CompanyQueryCommand) -> CompanyQueryResult<Vec<CompanyData>> {
-        let result = sqlx::query_as!(
-            CompanyData,
-            r#"select * from companies where stock_id=$1"#,
-            param.stock_id
-        )
-        .fetch_all(&self.connection)
-        .await
-        .map_err(|e| anyhow::anyhow!(e))?;
+        let mut query: QueryBuilder<Postgres> =
+            QueryBuilder::new("select * from companies where stock_id");
+        query.push_bind(&param.stock_id);
 
-        let result = result.into_iter().map(|s| s.into()).collect();
+        if let Some(name) = &param.name {
+            query.push(" and name=");
+            query.push_bind(name);
+        }
+        if let Some(sector) = &param.sector {
+            query.push(" and sector=");
+            query.push_bind(sector);
+        }
+        if let Some(industry) = &param.industry {
+            query.push(" and industry=");
+            query.push_bind(industry);
+        }
+
+        let query = query.build_query_as();
+        let result: Vec<CompanyModel> = query
+            .fetch_all(&self.connection)
+            .await
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let result = result.into_iter().map(|c| c.into()).collect();
         Ok(result)
     }
 
