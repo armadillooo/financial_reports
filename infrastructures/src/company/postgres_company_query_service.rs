@@ -19,9 +19,12 @@ impl PostgresCompanyQueryServiceImpl {
 impl CompanyQueryService for PostgresCompanyQueryServiceImpl {
     async fn find(&self, param: CompanyQueryCommand) -> CompanyQueryResult<Vec<CompanyData>> {
         let mut query: QueryBuilder<Postgres> =
-            QueryBuilder::new("select * from companies where stock_id");
-        query.push_bind(&param.stock_id);
+            QueryBuilder::new("select * from companies where true");
 
+        if let Some(stock_id) = &param.stock_id {
+            query.push(" and stock_id=");
+            query.push_bind(stock_id);
+        }
         if let Some(name) = &param.name {
             query.push(" and name=");
             query.push_bind(name);
