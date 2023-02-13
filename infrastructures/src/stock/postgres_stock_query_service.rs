@@ -1,5 +1,5 @@
 use chrono::NaiveDate;
-use sqlx::postgres::PgPool;
+use sqlx::{postgres::PgPool, Postgres, QueryBuilder};
 
 use applications::stock::{StockData, StockQueryCommand, StockQueryResult, StockQueryService};
 
@@ -17,14 +17,23 @@ impl PostgresStockQueryServiceImpl {
 #[async_trait::async_trait]
 impl StockQueryService for PostgresStockQueryServiceImpl {
     async fn find(&self, param: StockQueryCommand) -> StockQueryResult<Vec<StockData>> {
-        let result = sqlx::query_as!(
-            StockModel,
-            r#"select * from stocks where stock_id=$1"#,
-            param.stock_id
-        )
-        .fetch_all(&self.connection)
-        .await
-        .map_err(|e| anyhow::anyhow!(e))?;
+        let mut query: QueryBuilder<Postgres> = QueryBuilder::new("select * from stocks where id=");
+        query.push_bind(&param.stock_id);
+
+        if let Some(start) = &param.start {
+            query.push(" and date>=");
+            query.push_bind(start.format("%Y-%m-%d").to_string());
+        }
+        if let Some(end) = &param.end {
+            query.push(" and date<=");
+            query.push_bind(end.format("%Y-%m-%d").to_string());
+        }
+
+        let query = query.build_query_as();
+        let result: Vec<StockModel> = query
+            .fetch_all(&self.connection)
+            .await
+            .map_err(|e| anyhow::anyhow!(e))?;
 
         let result = result.into_iter().map(|s| s.into()).collect();
         Ok(result)
