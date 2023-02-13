@@ -4,11 +4,11 @@ use axum::{
     extract::{Path, Query, State},
     response::{IntoResponse, Response},
     routing::get,
-    Router,
+    Json, Router,
 };
 use chrono::NaiveDate;
 
-use crate::common::{ApiResponse, ApiResult, AppState, AppStateImpl};
+use crate::common::{ApiResult, AppState, AppStateImpl};
 use applications::stock::{StockQueryCommand, StockQueryError};
 
 use super::StockResponse;
@@ -54,9 +54,13 @@ async fn get_stocks(
         None
     };
 
-    let result = state.stock_query_service().find(params).await?;
+    let result: Vec<StockResponse> = state
+        .stock_query_service()
+        .find(params)
+        .await?
+        .into_iter()
+        .map(|s| StockResponse::from(s))
+        .collect();
 
-    let res: ApiResponse<Vec<StockResponse>> =
-        ApiResponse::new(result.into_iter().map(|s| StockResponse::from(s)).collect());
-    Ok(res.into_response())
+    Ok(Json(result).into_response())
 }

@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 
 use axum::{
-    extract::{Query, State},
+    extract::{Json, Query, State},
     response::{IntoResponse, Response},
     routing::get,
     Router,
 };
 
 use crate::{
-    common::{ApiResponse, ApiResult, AppState, AppStateImpl},
+    common::{ApiResult, AppState, AppStateImpl},
     company::CompanyResponse,
 };
 use applications::company::{CompanyQueryCommand, CompanyQueryError};
@@ -43,12 +43,13 @@ async fn get_companies(
         None
     };
 
-    let result = state.company_query_service().find(params).await.unwrap();
-    let res: ApiResponse<Vec<CompanyResponse>> = ApiResponse::new(
-        result
-            .into_iter()
-            .map(|c| CompanyResponse::from(c))
-            .collect(),
-    );
-    Ok(res.into_response())
+    let result: Vec<CompanyResponse> = state
+        .company_query_service()
+        .find(params)
+        .await?
+        .into_iter()
+        .map(|c| CompanyResponse::from(c))
+        .collect();
+
+    Ok(Json(result).into_response())
 }

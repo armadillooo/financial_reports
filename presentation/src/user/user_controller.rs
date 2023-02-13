@@ -4,11 +4,11 @@ use axum::{
     extract::{Path, Query, State},
     response::{IntoResponse, Response},
     routing::{get, post},
-    Router,
+    Json, Router,
 };
 
 use crate::{
-    common::{ApiResponse, ApiResult, AppState, AppStateImpl},
+    common::{ApiResult, AppState, AppStateImpl},
     user::LoginUserId,
 };
 use applications::{
@@ -47,9 +47,9 @@ async fn get_user(state: State<AppStateImpl>, user_id: LoginUserId) -> ApiResult
         .await?
         .ok_or(UserApplicationError::UserNotExist(user_id.to_string()))?;
 
-    let res = ApiResponse::new(UserResponse::from(user));
+    let result = UserResponse::from(user);
 
-    Ok(res.into_response())
+    Ok(Json(result).into_response())
 }
 
 #[tracing::instrument(skip(state), err)]
@@ -61,19 +61,17 @@ async fn get_favorites(state: State<AppStateImpl>, user_id: LoginUserId) -> ApiR
         .iter()
         .map(|favo| favo.stock_id.to_string())
         .collect();
+
     let result = state
         .company_query_service()
         .find_list(stock_id_list)
         .await?;
+    let result: Vec<FavoriteResponse> = result
+        .into_iter()
+        .map(|c| FavoriteResponse::from(c))
+        .collect();
 
-    let res: ApiResponse<Vec<FavoriteResponse>> = ApiResponse::new(
-        result
-            .into_iter()
-            .map(|c| FavoriteResponse::from(c))
-            .collect(),
-    );
-
-    Ok(res.into_response())
+    Ok(Json(result).into_response())
 }
 
 #[tracing::instrument(skip(state), err)]
@@ -85,7 +83,7 @@ async fn insert_favorite(
     let favorite = FavoriteData::new(user_id.to_string(), stock_id);
     state.favorite_service().add(favorite).await?;
 
-    Ok(ApiResponse::new(serde_json::json!({
+    Ok(Json(serde_json::json!({
         "message": "succeed in regist favorite"
     }))
     .into_response())
@@ -100,7 +98,7 @@ async fn delete_favorite(
     let favorite = FavoriteData::new(user_id.to_string(), stock_id);
     state.favorite_service().remove(favorite).await?;
 
-    Ok(ApiResponse::new(serde_json::json!({
+    Ok(Json(serde_json::json!({
         "message": "succeed in delete favorite"
     }))
     .into_response())
@@ -110,13 +108,13 @@ async fn delete_favorite(
 async fn get_portfolio(state: State<AppStateImpl>, user_id: LoginUserId) -> ApiResult<Response> {
     let portfolio = state.portfolio_service().get_all(&user_id).await?;
 
-    let res = portfolio
+    let result = portfolio
         .into_iter()
         .map(|p| PortfolioResponse::from(p))
         .collect();
-    let res: ApiResponse<Vec<PortfolioResponse>> = ApiResponse::new(res);
+    let result: Vec<PortfolioResponse> = result;
 
-    Ok(res.into_response())
+    Ok(Json(result).into_response())
 }
 
 #[tracing::instrument(skip(state), err)]
@@ -128,7 +126,7 @@ async fn insert_portfolio(
     let portfolio = PortfolioData::new(user_id.to_string(), stock_id);
     state.portfolio_service().add(portfolio).await?;
 
-    Ok(ApiResponse::new(serde_json::json!({
+    Ok(Json(serde_json::json!({
         "message": "succeed in regist portfolio"
     }))
     .into_response())
@@ -157,7 +155,7 @@ async fn update_portfolio(
 
     state.portfolio_service().update(command).await?;
 
-    Ok(ApiResponse::new(serde_json::json!({
+    Ok(Json(serde_json::json!({
         "message": "succeed in update portfolio"
     }))
     .into_response())
@@ -174,7 +172,7 @@ async fn delete_portfolio(
         .remove(&user_id, &stock_id)
         .await?;
 
-    Ok(ApiResponse::new(serde_json::json!({
+    Ok(Json(serde_json::json!({
         "message": "succeed in update portfolio"
     }))
     .into_response())

@@ -6,13 +6,13 @@ use axum::{
     http,
     response::{IntoResponse, Response},
     routing::get,
-    Router,
+    Router, Json,
 };
 use serde::{Deserialize, Serialize};
 
 use crate::{
     auth::OICDData,
-    common::{ApiResponse, ApiResult, AppState, AppStateImpl},
+    common::{ApiResult, AppState, AppStateImpl},
     session::{SessionError, SessionId, SessionItem},
     user::{LoginUserId, UserResponse},
 };
@@ -99,9 +99,9 @@ async fn auth_verify_google(
         .insert_item(session_id, item)
         .await?;
 
-    let res = ApiResponse::new(UserResponse::from(auth_user));
+    let result = UserResponse::from(auth_user);
 
-    Ok(res.into_response())
+    Ok(Json(result).into_response())
 }
 
 /// ログアウト
@@ -116,9 +116,9 @@ async fn logout(
         .remove_item(session_id, &key)
         .await?;
 
-    let res = serde_json::json!({ "message": "succeed in logout"});
-    let res = ApiResponse::new(res);
-    Ok(res.into_response())
+    let result = serde_json::json!({ "message": "succeed in logout"});
+    
+    Ok(Json(result).into_response())
 }
 
 async fn oicd_redirect(session_id: SessionId, state: &AppStateImpl) -> ApiResult<Response> {
