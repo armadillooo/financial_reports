@@ -17,11 +17,11 @@ create table if not exists companies(
 create table if not exists stocks(
     stock_id varchar(10) not null,
     date date not null,
-    volume integer not null,
     start_price integer not null,
     end_price integer not null,
     high_price integer not null,
     low_price integer not null,
+    volume integer not null,
     foreign key (stock_id) references companies(stock_id) on delete cascade,
     primary key (stock_id, date)
 );

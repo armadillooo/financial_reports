@@ -16,8 +16,11 @@ pub enum PortfolioApplicationError {
     UserNotFound(String),
     #[error("invalid parameter: {name}={value}")]
     InvalidParameter { name: &'static str, value: String },
-    #[error("start date exceeds end date")]
-    InvalidRangeOfDate { start: NaiveDate, end: NaiveDate },
+    #[error("invalid date parameter: {name}={value}")]
+    InvalidRangeOfDate {
+        name: &'static str,
+        value: NaiveDate,
+    },
     #[error("stock data not found: id={0}")]
     StockDataNotFound(String),
 }
@@ -49,8 +52,8 @@ impl From<StockQueryError> for PortfolioApplicationError {
             StockQueryError::InvalidParameter { name, value } => {
                 Self::InvalidParameter { name, value }
             }
-            StockQueryError::InvalidRangeOfDate { start, end } => {
-                Self::InvalidRangeOfDate { start, end }
+            StockQueryError::InvalidRangeOfDate { name, value } => {
+                Self::InvalidRangeOfDate { name, value }
             }
             StockQueryError::StockDataNotFound(stock_id) => Self::StockDataNotFound(stock_id),
         }

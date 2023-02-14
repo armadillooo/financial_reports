@@ -23,7 +23,10 @@ impl StockQueryService for InmemoryStockQueryServiceImpl {
         // パラメータチェック
         if let (Some(start), Some(end)) = (param.start, param.end) {
             if start > end {
-                return Err(StockQueryError::InvalidRangeOfDate { start, end });
+                return Err(StockQueryError::InvalidRangeOfDate {
+                    name: "end",
+                    value: end,
+                });
             }
         };
         // ID検索

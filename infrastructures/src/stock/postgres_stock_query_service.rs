@@ -1,7 +1,10 @@
-use chrono::NaiveDate;
+use chrono::{Datelike, NaiveDate};
 use sqlx::{postgres::PgPool, Postgres, QueryBuilder};
+use time::Month;
 
-use applications::stock::{StockData, StockQueryCommand, StockQueryResult, StockQueryService};
+use applications::stock::{
+    StockData, StockQueryCommand, StockQueryError, StockQueryResult, StockQueryService,
+};
 
 #[derive(Clone, Debug)]
 pub struct PostgresStockQueryServiceImpl {
@@ -17,16 +20,45 @@ impl PostgresStockQueryServiceImpl {
 #[async_trait::async_trait]
 impl StockQueryService for PostgresStockQueryServiceImpl {
     async fn find(&self, param: StockQueryCommand) -> StockQueryResult<Vec<StockData>> {
-        let mut query: QueryBuilder<Postgres> = QueryBuilder::new("select * from stocks where id=");
+        let mut query: QueryBuilder<Postgres> =
+            QueryBuilder::new("select * from stocks where stock_id=");
         query.push_bind(&param.stock_id);
 
         if let Some(start) = &param.start {
+            let date = sqlx::types::time::Date::from_calendar_date(
+                start.year(),
+                Month::try_from(start.month() as u8).map_err(|_| {
+                    StockQueryError::InvalidRangeOfDate {
+                        name: "start",
+                        value: start.clone(),
+                    }
+                })?,
+                start.day() as u8,
+            )
+            .map_err(|_| StockQueryError::InvalidRangeOfDate {
+                name: "start",
+                value: start.clone(),
+            })?;
             query.push(" and date>=");
-            query.push_bind(start.format("%Y-%m-%d").to_string());
+            query.push_bind(date);
         }
         if let Some(end) = &param.end {
+            let date = sqlx::types::time::Date::from_calendar_date(
+                end.year(),
+                Month::try_from(end.month() as u8).map_err(|_| {
+                    StockQueryError::InvalidRangeOfDate {
+                        name: "end",
+                        value: end.clone(),
+                    }
+                })?,
+                end.day() as u8,
+            )
+            .map_err(|_| StockQueryError::InvalidRangeOfDate {
+                name: "end",
+                value: end.clone(),
+            })?;
             query.push(" and date<=");
-            query.push_bind(end.format("%Y-%m-%d").to_string());
+            query.push_bind(date);
         }
 
         let query = query.build_query_as();

@@ -14,7 +14,6 @@ use crate::{
 
 const COOKIE_VALUE_KEY: &str = "Cookie Value";
 
-#[tracing::instrument(skip(state, req, next, cookie_value), err)]
 /// Sessionが新規作成された場合にCookiにSession IDを自動で追加する
 pub async fn session_manage_layer<B: std::fmt::Debug>(
     state: State<AppStateImpl>,

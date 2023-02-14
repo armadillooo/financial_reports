@@ -21,6 +21,7 @@ sqlx = { version = "0.6.2", features = [
     "time",
 ] }
 chrono = "0.4.23"
+time = "0.3.17"
 
 [dev-dependencies]
 base64 = "0.20.0"
